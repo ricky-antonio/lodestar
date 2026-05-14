@@ -1,0 +1,1 @@
+Read the current phase file from `.claude/phases/`. Determine which phase we are in by checking which checklist items remain incomplete. Print the full checklist with completion status and highlight the next 3 items to tackle.

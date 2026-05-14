@@ -1,0 +1,1 @@
+Show the current database schema from `.claude/schema.md`. Summarise any tables that have changed since last session by diffing against the git history if available. List all tables and their key columns in a scannable format.

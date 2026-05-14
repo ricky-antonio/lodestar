@@ -1,0 +1,1 @@
+Show the design system reference from `.claude/design.md`. Focus on the component being built or discussed. If a component name is provided as an argument, show only the relevant spec for that component.

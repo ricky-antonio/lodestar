@@ -25,6 +25,9 @@ export const mockSupabase = {
     signOut: vi.fn(),
     resetPasswordForEmail: vi.fn(),
     updateUser: vi.fn(),
+    resend: vi.fn(),
+    exchangeCodeForSession: vi.fn(),
+    verifyOtp: vi.fn(),
     admin: {
       deleteUser: vi.fn(),
     },
@@ -38,4 +41,4 @@ export const mockSupabase = {
 }
 
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => mockSupabase }))
-vi.mock('@/lib/supabase/server', () => ({ createClient: () => mockSupabase }))
+vi.mock('@/lib/supabase/server', () => ({ createClient: async () => mockSupabase }))

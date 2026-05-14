@@ -1,26 +1,157 @@
 @import "tailwindcss";
 
+@theme {
+  /* Fonts */
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+
+  /* Cerulean */
+  --color-cerulean-50:  #E8F8FD;
+  --color-cerulean-100: #B8ECFA;
+  --color-cerulean-200: #66D9F5;
+  --color-cerulean-400: #00B6EC;
+  --color-cerulean-500: #009AC8;
+  --color-cerulean-600: #007DA4;
+  --color-cerulean-700: #005F7D;
+  --color-cerulean-800: #003D52;
+  --color-cerulean-900: #061419;
+
+  /* Steel */
+  --color-steel-50:  #F4F8FA;
+  --color-steel-100: #E2EDF2;
+  --color-steel-200: #C5DCE6;
+  --color-steel-300: #9DBFCF;
+  --color-steel-400: #7D99AA;
+  --color-steel-500: #5E7F91;
+  --color-steel-800: #0F2530;
+  --color-steel-900: #061419;
+}
+
+/* ── Design-system custom properties ─────────────────────────────────────── */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg:           #F2FAFB;
+  --surface:      #FFFFFF;
+  --surface-2:    #E8F4F8;
+  --border:       #C5DCE6;
+  --border-2:     #9DBFCF;
+  --tx-1:         #0F2530;
+  --tx-2:         #3E6070;
+  --tx-3:         #7D99AA;
+  --accent:       #00B6EC;
+  --accent-hover: #009AC8;
+  --accent-bg:    #E8F8FD;
+  --accent-border:#B8ECFA;
+  --focus-ring:   rgba(102, 196, 255, 0.18);
+  --action:       #EA6400;
+  --action-bg:    #FFF8EC;
+  --action-border:#FFD98A;
+  --radius:       8px;
+  --radius-lg:    12px;
+  --radius-xl:    16px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --bg:           #061419;
+  --surface:      #0F2530;
+  --surface-2:    #1F3D4A;
+  --border:       #2C5060;
+  --border-2:     #3E6070;
+  --tx-1:         #E2EDF2;
+  --tx-2:         #7D99AA;
+  --tx-3:         #3E6070;
+  --accent:       #00B6EC;
+  --accent-hover: #1AC4EF;
+  --accent-bg:    rgba(0, 182, 236, 0.1);
+  --accent-border:rgba(0, 182, 236, 0.2);
+  --focus-ring:   rgba(102, 196, 255, 0.15);
+  --action:       #FFC067;
+  --action-bg:    rgba(255, 192, 103, 0.1);
+  --action-border:rgba(255, 192, 103, 0.2);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg);
+  color: var(--tx-1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Shared auth-form primitives ──────────────────────────────────────────── */
+
+@layer components {
+  .auth-input {
+    height: 36px;
+    width: 100%;
+    border-radius: var(--radius);
+    border: 0.5px solid var(--border-2);
+    padding: 0 12px;
+    font-size: 14px;
+    color: var(--tx-1);
+    background: var(--surface);
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .auth-input::placeholder {
+    color: var(--tx-3);
+  }
+
+  .auth-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  .btn-primary {
+    height: 36px;
+    width: 100%;
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0 14px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 150ms ease;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary {
+    height: 36px;
+    width: 100%;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 0.5px solid var(--border-2);
+    color: var(--tx-1);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 0 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 150ms ease;
+  }
+
+  .btn-secondary:hover {
+    background: var(--surface-2);
+  }
 }

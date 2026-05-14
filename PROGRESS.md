@@ -43,9 +43,6 @@ Phase 1 — Foundation (in progress — remaining items tracked in PHASE1ROADMAP
 ## In progress
 Phase 1 remaining items — see PHASE1ROADMAP.md for full prompts.
 
-Uncommitted Phase 2 foundation work (app shell, contexts, lib helpers) exists on
-disk but is NOT committed. Do not build Phase 2 features until Phase 1 is complete.
-
 ## Next task
 Phase 1 — PHASE1ROADMAP.md in order:
 1. ~~P1.1 — Error pages + broken nav stubs (/matrix, /projects, /settings)~~ ✓ Complete
@@ -96,6 +93,11 @@ Without this, the service role client gets "permission denied for table workspac
 
 ## Test status
 - `npm run type-check`: PASS (0 errors)
-- `npm run type-check`: PASS (0 errors)
 - `npm test`: PASS (13 files, 124 tests)
+- `npm run test:coverage`: PASS
+  - Statements: 92.4% (365/395)
+  - Branches: 83.48% (182/218)
+  - Functions: 92.39% (85/92)
+  - Lines: 93.98% (297/316)
+- `npm run build`: PASS (15 pages, 0 errors)
 - Phase 1 threshold (Lines ≥ 70%, Functions ≥ 70%, Branches ≥ 65%): MET

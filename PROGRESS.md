@@ -49,6 +49,13 @@ Phase 1 — Foundation (in progress — remaining items tracked in PHASE1ROADMAP
 - `tests/lib/profile.test.ts` — 6 tests: updateDisplayName happy path + error, updateAvatar happy path + error, uploadAvatar success + storage error
 - `app/(app)/settings/profile/page.tsx` — avatar section (initials fallback, file input, loading overlay, optimistic update + revert on failure), display name section (pre-filled, 1–50 char validation, inline "Saved" feedback, optimistic update + revert)
 - `tests/components/settings/ProfileSettingsPage.test.tsx` — 9 tests: pre-filled input, empty-name validation, valid save calls updateDisplayName, "Saved" feedback, revert on name error, file triggers uploadAvatar+updateAvatar, revert on avatar error, initials fallback, img when avatar set
+- `updateEmail` and `deleteAccount` added to `lib/auth.ts` — updateEmail calls supabase.auth.updateUser; deleteAccount POSTs to /api/auth/delete-account (never calls admin API client-side)
+- `app/api/auth/delete-account/route.ts` — POST handler: getUser() → 401 if no session; adminClient.auth.admin.deleteUser → 200 on success, 500 on failure
+- `app/(app)/settings/account/page.tsx` — email section (read-only + inline change form, sends confirmation, never reveals whether email is registered), password section (Change password / Set a password for Google-only accounts), danger zone (delete dialog with "delete" confirmation input)
+- `app/(auth)/login/page.tsx` — ?deleted=true shows "Your account has been deleted." banner (reuses expired-session banner style)
+- `tests/lib/auth.test.ts` — added 4 tests: updateEmail happy path + error, deleteAccount happy path + non-ok response
+- `tests/api/delete-account.test.ts` — 3 tests: no session → 401, valid session → admin.deleteUser called → 200, admin delete fails → 500
+- `tests/components/settings/AccountSettingsPage.test.tsx` — 6 tests: renders email, send confirmation calls updateEmail, change password calls sendPasswordReset, Google-only shows "Set a password", confirm button disabled until "delete" typed, confirm calls deleteAccount+signOut+redirect
 
 ## In progress
 Phase 1 remaining items — see PHASE1ROADMAP.md for full prompts.
@@ -59,8 +66,8 @@ Phase 1 — PHASE1ROADMAP.md in order:
 2. ~~P1.2 — Toast notification system~~ ✓ Complete
 3. ~~P1.3 — Settings layout & navigation~~ ✓ Complete
 4. ~~P1.4 — Profile settings (display name, avatar upload)~~ ✓ Complete
-5. P1.5 — Account settings (email, password, delete account) ← next
-6. P1.6 — Workspace settings (name, color, timezone, end-of-day)
+5. ~~P1.5 — Account settings (email, password, delete account)~~ ✓ Complete
+6. P1.6 — Workspace settings (name, color, timezone, end-of-day) ← next
 7. P1.7 — Keyboard shortcut foundation + Q quick capture
 8. P1.8 — Undo toast integration (after Phase 2 TaskRow exists)
 9. P1.9 — Keyboard reference sheet (after Phase 2 complete)
@@ -103,11 +110,7 @@ Without this, the service role client gets "permission denied for table workspac
 
 ## Test status
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (17 files, 151 tests)
-- `npm run test:coverage`: PASS
-  - Statements: 92.4% (365/395) — approximate, updated after P1.5
-  - Branches: 83.48% (182/218)
-  - Functions: 92.39% (85/92)
-  - Lines: 93.98% (297/316)
-- `npm run build`: PASS (15 pages, 0 errors)
+- `npm test`: PASS (19 files, 164 tests)
+- `npm run test:coverage`: pending re-run after P1.5
+- `npm run build`: PASS (15 pages, 0 errors) — pending re-run after P1.5
 - Phase 1 threshold (Lines ≥ 70%, Functions ≥ 70%, Branches ≥ 65%): MET

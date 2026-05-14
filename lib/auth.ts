@@ -49,6 +49,20 @@ export async function updatePassword(password: string): Promise<void> {
   if (error) throw error
 }
 
+export async function updateEmail(newEmail: string): Promise<void> {
+  const supabase = createClient()
+  const { error } = await supabase.auth.updateUser({ email: newEmail })
+  if (error) throw error
+}
+
+export async function deleteAccount(_userId: string): Promise<void> {
+  const res = await fetch('/api/auth/delete-account', { method: 'POST' })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error((body as { message?: string }).message ?? 'Failed to delete account')
+  }
+}
+
 export async function resendVerificationEmail(email: string): Promise<void> {
   const supabase = createClient()
   const { error } = await supabase.auth.resend({

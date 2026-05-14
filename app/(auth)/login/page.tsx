@@ -10,6 +10,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const isExpired = searchParams.get('reason') === 'expired'
+  const isDeleted = searchParams.get('deleted') === 'true'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -60,6 +61,12 @@ function LoginForm() {
         {isExpired && (
           <div className="mb-4 rounded-lg bg-[#FFF8EC] border border-[#FFD98A] px-4 py-3 text-sm text-[#EA6400]">
             Your session has expired. Please sign in again.
+          </div>
+        )}
+
+        {isDeleted && (
+          <div className="mb-4 rounded-lg bg-[#FFF8EC] border border-[#FFD98A] px-4 py-3 text-sm text-[#EA6400]">
+            Your account has been deleted.
           </div>
         )}
 

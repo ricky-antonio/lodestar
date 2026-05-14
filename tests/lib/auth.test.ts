@@ -8,6 +8,8 @@ import {
   sendPasswordReset,
   updatePassword,
   resendVerificationEmail,
+  updateEmail,
+  deleteAccount,
 } from '@/lib/auth'
 
 beforeEach(() => vi.clearAllMocks())
@@ -96,6 +98,38 @@ describe('updatePassword', () => {
       error: new Error('Auth session missing'),
     })
     await expect(updatePassword('newpass123')).rejects.toThrow('Auth session missing')
+  })
+})
+
+describe('updateEmail', () => {
+  it('resolves on success', async () => {
+    mockSupabase.auth.updateUser.mockResolvedValueOnce({ data: {}, error: null })
+    await expect(updateEmail('new@b.com')).resolves.toBeUndefined()
+    expect(mockSupabase.auth.updateUser).toHaveBeenCalledWith({ email: 'new@b.com' })
+  })
+
+  it('throws on error', async () => {
+    mockSupabase.auth.updateUser.mockResolvedValueOnce({
+      data: null,
+      error: new Error('Invalid email'),
+    })
+    await expect(updateEmail('bad')).rejects.toThrow('Invalid email')
+  })
+})
+
+describe('deleteAccount', () => {
+  it('resolves when server returns ok', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({ ok: true } as Response)
+    await expect(deleteAccount('user-1')).resolves.toBeUndefined()
+    expect(global.fetch).toHaveBeenCalledWith('/api/auth/delete-account', { method: 'POST' })
+  })
+
+  it('throws with server message when response is not ok', async () => {
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ message: 'Unauthorized' }),
+    } as unknown as Response)
+    await expect(deleteAccount('user-1')).rejects.toThrow('Unauthorized')
   })
 })
 

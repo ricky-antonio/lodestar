@@ -39,6 +39,7 @@ function LoginForm() {
   }
 
   async function handleGoogle() {
+    setError(null)
     try {
       await signInWithGoogle()
     } catch {

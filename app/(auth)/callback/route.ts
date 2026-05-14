@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextResponse, type NextRequest } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { createRouteHandlerClient } from '@/lib/supabase/route-handler'
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const code = url.searchParams.get('code')
   const next = url.searchParams.get('next') ?? '/dashboard'
@@ -11,7 +12,11 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${siteUrl}/login`)
   }
 
-  const supabase = await createClient()
+  // Create the redirect response first so exchangeCodeForSession can write
+  // session cookies directly onto it via the cookie handlers in the client.
+  const destination = next !== '/dashboard' ? `${siteUrl}${next}` : `${siteUrl}/dashboard`
+  const response = NextResponse.redirect(destination)
+  const supabase = createRouteHandlerClient(request, response)
 
   try {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
@@ -22,13 +27,16 @@ export async function GET(request: Request) {
 
     const user = data.user
 
-    // For non-dashboard destinations (e.g. password reset), skip workspace creation
     if (next !== '/dashboard') {
-      return NextResponse.redirect(`${siteUrl}${next}`)
+      return response
     }
 
-    // Check whether this user already has a workspace
-    const { data: existingMember } = await supabase
+    // Use service role client for workspace bootstrapping — the anon client's
+    // RLS policies are self-referential and block inserts for brand-new users
+    // who have no workspace memberships yet.
+    const admin = createAdminClient()
+
+    const { data: existingMember } = await admin
       .from('workspace_members')
       .select('id')
       .eq('user_id', user.id)
@@ -50,7 +58,7 @@ export async function GET(request: Request) {
         '-' +
         Math.random().toString(36).slice(2, 7)
 
-      const { data: workspace, error: wsError } = await supabase
+      const { data: workspace, error: wsError } = await admin
         .from('workspaces')
         .insert({ name: baseName, slug, owner_id: user.id })
         .select('id')
@@ -60,14 +68,14 @@ export async function GET(request: Request) {
         return NextResponse.redirect(`${siteUrl}/login`)
       }
 
-      await supabase.from('workspace_members').insert({
+      await admin.from('workspace_members').insert({
         workspace_id: workspace.id,
         user_id: user.id,
         role: 'owner',
       })
     }
 
-    return NextResponse.redirect(`${siteUrl}/dashboard`)
+    return response
   } catch {
     return NextResponse.redirect(`${siteUrl}/login`)
   }

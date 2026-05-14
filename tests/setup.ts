@@ -7,7 +7,8 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }))
 
+const mockSetTheme = vi.fn()
 vi.mock('next-themes', () => ({
-  useTheme: () => ({ theme: 'light', setTheme: vi.fn() }),
+  useTheme: () => ({ theme: 'light', setTheme: mockSetTheme }),
   ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
 }))

@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# lodestar
 
-## Getting Started
+**Navigate what matters.**
 
-First, run the development server:
+A focused task management app built with Next.js 14, Supabase, and Claude AI.
+
+---
+
+## Stack
+
+- **Next.js 14** (App Router, TypeScript strict mode)
+- **Tailwind CSS** + shadcn/ui + @tabler/icons-react
+- **Supabase** — Postgres + Auth (email/password + Google OAuth)
+- **Anthropic API** — claude-sonnet-4-6
+- **@dnd-kit** — drag and drop
+- **Chart.js** + react-chartjs-2
+- **next-themes** — light/dark, persisted in DB
+- **Vitest** + React Testing Library
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env.local  # fill in your keys
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+ANTHROPIC_API_KEY=
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+```
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run dev           # start dev server
+npm run build         # production build
+npm run type-check    # tsc --noEmit
+npm run test          # vitest run
+npm run test:watch    # vitest watch
+npm run test:coverage # coverage report
+npm run lint          # eslint
+```

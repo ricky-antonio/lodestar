@@ -39,6 +39,16 @@ Phase 1 — Foundation (in progress — remaining items tracked in PHASE1ROADMAP
 - `app/(app)/projects/page.tsx` — real projects list: color-bordered cards, Open links, New project dialog with name + 6 preset color swatches, optimistic via useProjects().addProject
 - `app/(app)/settings/page.tsx` — server redirect to /settings/profile (fixes broken BottomNav link)
 - `tests/components/projects/ProjectsPage.test.tsx` — 6 tests: card render, empty state, loading state, dialog open, addProject called with name+color, color swatch selection
+- `UndoItem` interface extended with `message?: string` and `undo?: () => void` (optional) — supports pure info toasts
+- `components/ui/Toast.tsx` — fixed bottom-right overlay, one toast per undoStack item, Undo action + × close, 5s auto-dismiss, slide-up+fade entrance animation
+- `tests/components/ui/Toast.test.tsx` — 6 tests: empty stack renders nothing, item renders toast, message overrides label, × dismisses, Undo calls fn + dismisses, auto-dismiss at 5000ms
+- `app/(app)/settings/layout.tsx` — two-column settings layout: 200px dark left nav (Profile/Account/Workspace) with cerulean active state; mobile collapses to horizontal tab strip above content
+- `tests/components/settings/SettingsLayout.test.tsx` — 6 tests: three nav links render, active class per path (profile/account/workspace), children in content area, mobile nav links
+- `lib/context/AuthContext.tsx` — added `updateProfile(updates: Partial<Profile>)` to context interface and provider for out-of-context profile state updates
+- `lib/profile.ts` — `updateDisplayName`, `updateAvatar`, `uploadAvatar` (compresses to 256×256 via browser-image-compression, uploads to Supabase Storage `avatars` bucket, returns public URL)
+- `tests/lib/profile.test.ts` — 6 tests: updateDisplayName happy path + error, updateAvatar happy path + error, uploadAvatar success + storage error
+- `app/(app)/settings/profile/page.tsx` — avatar section (initials fallback, file input, loading overlay, optimistic update + revert on failure), display name section (pre-filled, 1–50 char validation, inline "Saved" feedback, optimistic update + revert)
+- `tests/components/settings/ProfileSettingsPage.test.tsx` — 9 tests: pre-filled input, empty-name validation, valid save calls updateDisplayName, "Saved" feedback, revert on name error, file triggers uploadAvatar+updateAvatar, revert on avatar error, initials fallback, img when avatar set
 
 ## In progress
 Phase 1 remaining items — see PHASE1ROADMAP.md for full prompts.
@@ -46,10 +56,10 @@ Phase 1 remaining items — see PHASE1ROADMAP.md for full prompts.
 ## Next task
 Phase 1 — PHASE1ROADMAP.md in order:
 1. ~~P1.1 — Error pages + broken nav stubs (/matrix, /projects, /settings)~~ ✓ Complete
-2. P1.2 — Toast notification system
-3. P1.3 — Settings layout & navigation
-4. P1.4 — Profile settings (display name, avatar upload)
-5. P1.5 — Account settings (email, password, delete account)
+2. ~~P1.2 — Toast notification system~~ ✓ Complete
+3. ~~P1.3 — Settings layout & navigation~~ ✓ Complete
+4. ~~P1.4 — Profile settings (display name, avatar upload)~~ ✓ Complete
+5. P1.5 — Account settings (email, password, delete account) ← next
 6. P1.6 — Workspace settings (name, color, timezone, end-of-day)
 7. P1.7 — Keyboard shortcut foundation + Q quick capture
 8. P1.8 — Undo toast integration (after Phase 2 TaskRow exists)
@@ -93,9 +103,9 @@ Without this, the service role client gets "permission denied for table workspac
 
 ## Test status
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (13 files, 124 tests)
+- `npm test`: PASS (17 files, 151 tests)
 - `npm run test:coverage`: PASS
-  - Statements: 92.4% (365/395)
+  - Statements: 92.4% (365/395) — approximate, updated after P1.5
   - Branches: 83.48% (182/218)
   - Functions: 92.39% (85/92)
   - Lines: 93.98% (297/316)

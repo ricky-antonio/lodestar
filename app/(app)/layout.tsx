@@ -7,6 +7,7 @@ import { UIProvider } from '@/lib/context/UIContext'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Topbar } from '@/components/layout/Topbar'
+import { Toast } from '@/components/ui/Toast'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -31,6 +32,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               </div>
             </div>
             <BottomNav />
+            <Toast />
           </UIProvider>
         </TasksProvider>
       </ProjectsProvider>

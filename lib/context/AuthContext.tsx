@@ -25,6 +25,7 @@ interface AuthContextValue {
   loading: boolean
   signOut: () => Promise<void>
   toggleTheme: () => Promise<void>
+  updateProfile: (updates: Partial<Profile>) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -102,6 +103,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setMember(null)
   }, [])
 
+  const updateProfile = useCallback((updates: Partial<Profile>) => {
+    setProfile(prev => prev ? { ...prev, ...updates } : prev)
+  }, [])
+
   const toggleTheme = useCallback(async () => {
     const next = profile?.theme === 'dark' ? 'light' : 'dark'
     setTheme(next)
@@ -125,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, workspace, member, loading, signOut, toggleTheme }}
+      value={{ user, profile, workspace, member, loading, signOut, toggleTheme, updateProfile }}
     >
       {children}
     </AuthContext.Provider>

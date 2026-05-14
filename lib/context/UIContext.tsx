@@ -5,7 +5,8 @@ import type { ProjectDefaultView } from '@/lib/types'
 
 export interface UndoItem {
   label: string
-  undo: () => void
+  message?: string
+  undo?: () => void
 }
 
 interface UIContextValue {

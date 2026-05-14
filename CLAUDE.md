@@ -1,7 +1,18 @@
 # Lodestar
 
+## Required reading
+Before writing any code, read these files in order:
+1. CLAUDE.md (this file)
+2. `.claude/rules/testing.md` — testing discipline, shared mocks, end-of-session checklist
+3. `.claude/phases/` — read the file for the current phase only
+4. `PROGRESS.md` — current phase, last completed task, next task
+
+Confirm you have read all four by stating: the current phase, the last completed task, and the next task to build. Do not write a single line of code until this confirmation is complete.
+
+---
+
 **Tagline:** Navigate what matters.
-**Status:** Pre-build — completing setup & API verification
+**Status:** Phase 1 — Foundation
 
 ---
 

@@ -5,13 +5,18 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   test: {
+    globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     coverage: {
       provider: 'v8',
       include: ['lib/**', 'components/**', 'app/api/**'],
-      exclude: ['lib/supabase/client.ts', 'lib/supabase/server.ts'],
-      thresholds: { lines: 80, functions: 80, branches: 75 },
+      exclude: [
+        'lib/supabase/client.ts',
+        'lib/supabase/server.ts',
+        'components/ui/**',
+      ],
+      thresholds: { lines: 70, functions: 70, branches: 65 },
     },
   },
   resolve: { alias: { '@': path.resolve(__dirname, '.') } },

@@ -12,6 +12,9 @@ import {
 } from '@tabler/icons-react'
 import { SubtaskList } from '@/components/tasks/SubtaskList'
 import { LabelPicker } from '@/components/tasks/LabelPicker'
+import { TaskDependencies } from '@/components/tasks/TaskDependencies'
+import { DueDatePicker } from '@/components/tasks/DueDatePicker'
+import { SnoozeMenu } from '@/components/tasks/SnoozeMenu'
 import { useUI } from '@/lib/context/UIContext'
 import { useTasks } from '@/lib/context/TasksContext'
 import { useProjects } from '@/lib/context/ProjectsContext'
@@ -143,6 +146,10 @@ export function TaskDetail() {
         {/* Header */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border)] shrink-0">
           <div className="flex-1" />
+          <SnoozeMenu
+            taskId={task.id}
+            onSnooze={until => editTask(task.id, { snoozed_until: until })}
+          />
           <button
             onClick={() => { archiveTask(task.id); handleClose() }}
             className="p-1.5 rounded hover:bg-[var(--surface-2)] text-[var(--tx-3)] hover:text-[var(--tx-2)] transition-colors"
@@ -258,18 +265,9 @@ export function TaskDetail() {
             <label className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
               Due date
             </label>
-            <input
-              type="date"
-              value={task.due_date ?? ''}
-              onChange={e => editTask(task.id, { due_date: e.target.value || null })}
-              className={[
-                'h-9 px-3 rounded-[var(--radius)]',
-                'border border-[var(--border-2)] bg-[var(--surface)]',
-                'text-sm text-[var(--tx-1)]',
-                'focus:outline-none focus:border-[var(--accent)]',
-                'focus:shadow-[0_0_0_3px_var(--focus-ring)]',
-              ].join(' ')}
-              aria-label="Due date"
+            <DueDatePicker
+              value={task.due_date}
+              onChange={date => editTask(task.id, { due_date: date })}
             />
           </div>
 
@@ -364,16 +362,20 @@ export function TaskDetail() {
             <LabelPicker taskId={task.id} workspaceId={task.workspace_id} />
           </div>
 
-          {/* Stub sections */}
-          <div className="flex flex-col gap-4">
-            {(['Dependencies', 'Activity'] as const).map(section => (
-              <div key={section}>
-                <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)] mb-1">
-                  {section}
-                </p>
-                <p className="text-sm text-[var(--tx-3)]">— coming soon</p>
-              </div>
-            ))}
+          {/* Dependencies */}
+          <div className="flex flex-col gap-2 pt-2 border-t border-[var(--border)]">
+            <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
+              Dependencies
+            </p>
+            <TaskDependencies taskId={task.id} allTasks={tasks} />
+          </div>
+
+          {/* Activity stub */}
+          <div className="pt-2 border-t border-[var(--border)]">
+            <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)] mb-1">
+              Activity
+            </p>
+            <p className="text-sm text-[var(--tx-3)]">— coming soon</p>
           </div>
         </div>
       </div>

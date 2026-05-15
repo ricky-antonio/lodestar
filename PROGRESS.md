@@ -91,8 +91,12 @@ Phase 2 — Views + Organization (**in progress**)
 
 - **Drag-and-drop fixes (TaskList + BoardView)** — replaced `PointerSensor` (delay: 250ms) with `MouseSensor` (activationConstraint: distance 5px) + `TouchSensor` (delay: 250ms) in both `TaskList.tsx` and `BoardView.tsx`; mouse drag now activates after 5px movement (instant feel) while touch retains 250ms hold to distinguish drag from scroll; also fixed `dragHandleProps` in `TaskList` to spread only `listeners` onto the drag handle and `attributes` onto the container div — previously spreading both caused `role="button"` to land on the drag handle span
 
+- **Task dependencies & linked tasks** — `lib/dependencies.ts` (getDependencies, addDependency, removeDependency), `lib/links.ts` (getLinkedTasks, addLink, removeLink — bidirectional via OR query); `components/tasks/TaskDependencies.tsx` — "Blocked by" section with status badge + optimistic remove, "Blocking" section (read-only), "Related tasks" section with optimistic add/remove, controlled `<select>` pickers; wired into TaskDetail.tsx replacing "Dependencies — coming soon" stub; 7 component tests (including 2 optimistic rollback paths) + 8 lib tests = 15 new tests (299 total), type-check clean, build clean
+
+- **Due date quick pick & snooze** — `components/tasks/DueDatePicker.tsx` (Popover with Today/Tomorrow/This Friday/Next Monday/In 2 weeks + custom date input + conditional Clear; all dates computed dynamically at render; display shows "Today"/"Tomorrow"/weekday name/formatted month+day); `components/tasks/SnoozeMenu.tsx` (IconAlarmSnooze Popover with +3 hours UTC/tomorrow morning/this weekend/next week/pick datetime; relative snooze uses UTC ISO string, fixed times use local ISO string without Z); both integrated into TaskDetail.tsx (DueDatePicker replaces plain date input, SnoozeMenu in header); 10 new tests (7 DueDatePicker + 3 SnoozeMenu), all using vi.useFakeTimers() at noon UTC to avoid timezone off-by-one; 309 tests total, type-check clean
+
 ## Next task
-Task dependencies & linked tasks
+Keyboard reference sheet
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -130,6 +134,7 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Supabase join results (`select('relation(col1, col2)')`) are inferred as an array by TypeScript — cast through `unknown` first: `(data as unknown as Row[])` where Row uses the scalar type for the join
 - `removeLabelFromTask` uses two chained `.eq()` calls — tests must mock them separately: `mockSupabase.eq.mockReturnValueOnce(mockSupabase).mockResolvedValueOnce({ error: null })`
 - Components that embed child components with their own lib calls (e.g. TaskDetail → LabelPicker) need those lib modules mocked in the parent's test file to prevent runtime noise from unresolved promise chains in jsdom
+- Fake timer tests for date pickers must use noon UTC (`2024-01-15T12:00:00Z`) rather than midnight UTC (`2024-01-15`) — midnight UTC resolves to the previous calendar day in US timezones (UTC-5 to UTC-8), causing off-by-one in `getDate()`/`getDay()` calls
 - `MouseSensor` (distance constraint) must be used for desktop drag; `TouchSensor` (delay constraint) for mobile — `PointerSensor` with `delay: 250` makes mouse drag require a 250ms dead-hold which nearly never activates in practice
 - `dragHandleProps` on TaskRow should carry only dnd-kit `listeners` (event handlers), not `attributes` — `attributes` includes `role="button"` which, if placed on the handle span, can interfere with drag activation; `attributes` belongs on the sortable container div
 - `getAllTasks` (workspace-wide, no project filter) is the right fetch for TasksContext — project filtering happens in-memory in each page; fetching all tasks once avoids stale-context issues when navigating between pages
@@ -193,12 +198,14 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 - Build warning: `useEffect` missing dependency `handleClose` in TaskDetail.tsx — intentional; including it would cause infinite re-renders
 
-## Test status (end of session — 2026-05-15)
+## Test status (end of session — 2026-05-15, session 3)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (36 files, 276 tests)
+- `npm test`: PASS (41 files, 309 tests)
+- `npm run test:coverage`: PASS (above configured 70/70/65 thresholds)
 - `npm run build`: PASS (warnings only — `_status` unused, `<img>` in profile, missing dep in useEffect — all pre-existing non-blocking)
-- Coverage (Phase 2 thresholds: Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): **MET**
-  - Statements: 84.04% (911/1084)
-  - Branches:   75.87% (519/684)
-  - Functions:  75.51% (256/339)
-  - Lines:      86.96% (787/905)
+- Coverage (Phase 2 targets: Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%):
+  - Statements: 81.57% (1076/1319) ✓
+  - Branches:   73.42% (572/779) ✓
+  - Functions:  75.29% (323/429) ✓
+  - Lines:      84.65% (927/1095) ✓
+  - All Phase 2 targets met. Configured vitest threshold remains at 70/70/65 (Phase 1 values) — all pass comfortably.

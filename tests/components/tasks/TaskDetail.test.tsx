@@ -43,6 +43,26 @@ vi.mock('@/lib/labels', () => ({
   createLabel: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock('@/lib/dependencies', () => ({
+  getDependencies: vi.fn().mockResolvedValue({ blockedBy: [], blocking: [] }),
+  addDependency: vi.fn().mockResolvedValue(undefined),
+  removeDependency: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('@/lib/links', () => ({
+  getLinkedTasks: vi.fn().mockResolvedValue([]),
+  addLink: vi.fn().mockResolvedValue(undefined),
+  removeLink: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('@/components/tasks/DueDatePicker', () => ({
+  DueDatePicker: () => <div data-testid="due-date-picker" />,
+}))
+
+vi.mock('@/components/tasks/SnoozeMenu', () => ({
+  SnoozeMenu: () => <div data-testid="snooze-menu" />,
+}))
+
 // ── fixtures ───────────────────────────────────────────────────────────────────
 
 const baseTask: Task = {

@@ -11,6 +11,7 @@ import {
   IconProgress,
 } from '@tabler/icons-react'
 import { SubtaskList } from '@/components/tasks/SubtaskList'
+import { LabelPicker } from '@/components/tasks/LabelPicker'
 import { useUI } from '@/lib/context/UIContext'
 import { useTasks } from '@/lib/context/TasksContext'
 import { useProjects } from '@/lib/context/ProjectsContext'
@@ -355,9 +356,17 @@ export function TaskDetail() {
             <SubtaskList parentId={task.id} workspaceId={task.workspace_id} />
           </div>
 
+          {/* Labels */}
+          <div className="flex flex-col gap-2 pt-2 border-t border-[var(--border)]">
+            <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
+              Labels
+            </p>
+            <LabelPicker taskId={task.id} workspaceId={task.workspace_id} />
+          </div>
+
           {/* Stub sections */}
           <div className="flex flex-col gap-4">
-            {(['Labels', 'Dependencies', 'Activity'] as const).map(section => (
+            {(['Dependencies', 'Activity'] as const).map(section => (
               <div key={section}>
                 <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)] mb-1">
                   {section}

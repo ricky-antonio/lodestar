@@ -80,9 +80,10 @@ Phase 2 — Views + Organization (**in progress**)
 - **TaskDetail wired into app** — `<TaskDetail />` mounted globally in `app/(app)/layout.tsx`; `TaskRow` title click calls `openDetail(task.id)` (inline-title editing removed from TaskRow — editing lives in TaskDetail); Inbox placeholder panel removed
 - **TaskDetail animations** — slide-in on open (`@keyframes` CSS, GPU transform, zero layout cost); slide-out on close (200ms `setTimeout` matches CSS duration); backdrop fades in/out at `bg-black/40`; `closeTimerRef` cancels pending close when a new task opens — fixes stale `isClosing` persisting across open/close cycles (component stays mounted in layout tree, never truly unmounts)
 - **Subtasks** — `lib/subtasks.ts` (getSubtasks, createSubtask, toggleSubtask); `components/tasks/SubtaskList.tsx` (progress bar, checkbox toggle with optimistic UI + rollback, inline add-subtask input); wired into TaskDetail replacing stub; 12 new tests (8 lib + 4 component), all passing
+- **Labels** — `lib/labels.ts` (getLabels, createLabel, updateLabel, deleteLabel, getTaskLabels, addLabelToTask, removeLabelFromTask); `components/tasks/LabelPicker.tsx` (popover trigger showing current label pills, checkbox list with optimistic add/remove + rollback, inline "New label" form with 6 color swatches); wired into TaskDetail replacing stub; 18 new tests (14 lib + 4 component), all passing
 
 ## Next task
-Labels — `lib/labels.ts` + `components/tasks/LabelPicker.tsx`
+Filter bar — priority, label, due date, status filters
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -115,6 +116,9 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - CSS animation events (`onAnimationEnd`) are unreliable in jsdom — use `setTimeout` matching the animation duration + fake timers in tests instead
 - `fireEvent` (synchronous) must be used instead of `userEvent` when fake timers are active — `userEvent` has internal async timers that deadlock with `vi.useFakeTimers()`
 - Fake timer tests must use a nested `describe` with `beforeEach(() => vi.useFakeTimers())` + `afterEach(() => vi.useRealTimers())` — inline `vi.useRealTimers()` inside a test body does not run if the test times out, leaking fake timers into subsequent tests
+- Supabase join results (`select('relation(col1, col2)')`) are inferred as an array by TypeScript — cast through `unknown` first: `(data as unknown as Row[])` where Row uses the scalar type for the join
+- `removeLabelFromTask` uses two chained `.eq()` calls — tests must mock them separately: `mockSupabase.eq.mockReturnValueOnce(mockSupabase).mockResolvedValueOnce({ error: null })`
+- Components that embed child components with their own lib calls (e.g. TaskDetail → LabelPicker) need those lib modules mocked in the parent's test file to prevent runtime noise from unresolved promise chains in jsdom
 
 ## Known issues / one-time setup required
 
@@ -174,9 +178,9 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `<img>` in profile/page.tsx — pre-existing, not a bug
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 
-## Test status (Subtasks — 2026-05-15)
+## Test status (Labels — 2026-05-15)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (31 files, 233 tests)
-- `npm run test:coverage`: PASS — Statements 89.34% (637/713) · Lines 91.72% (543/592) · Functions 82.82% (164/198) · Branches 80.73% (373/462)
+- `npm test`: PASS (33 files, 251 tests)
+- `npm run test:coverage`: PASS — Statements 89.93% (724/805) · Lines 92.49% (616/666) · Functions 84.51% (191/226) · Branches 81.07% (407/502)
 - `npm run build`: PASS
 - Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded by wide margin)

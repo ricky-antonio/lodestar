@@ -35,6 +35,14 @@ vi.mock('@/lib/context/ProjectsContext', () => ({
   useProjects: () => ({ projects: [] as Project[] }),
 }))
 
+vi.mock('@/lib/labels', () => ({
+  getLabels: vi.fn().mockResolvedValue([]),
+  getTaskLabels: vi.fn().mockResolvedValue([]),
+  addLabelToTask: vi.fn().mockResolvedValue(undefined),
+  removeLabelFromTask: vi.fn().mockResolvedValue(undefined),
+  createLabel: vi.fn().mockResolvedValue(undefined),
+}))
+
 // ── fixtures ───────────────────────────────────────────────────────────────────
 
 const baseTask: Task = {

@@ -52,6 +52,7 @@ function setupAuth(profileOverrides: Partial<Profile> = {}) {
     signOut: vi.fn(),
     toggleTheme: vi.fn(),
     updateProfile: mockUpdateProfile,
+    setWorkspace: vi.fn(),
   })
 }
 

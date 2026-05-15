@@ -26,6 +26,7 @@ interface AuthContextValue {
   signOut: () => Promise<void>
   toggleTheme: () => Promise<void>
   updateProfile: (updates: Partial<Profile>) => void
+  setWorkspace: (ws: Workspace) => void
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -33,7 +34,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
-  const [workspace, setWorkspace] = useState<Workspace | null>(null)
+  const [workspace, setWorkspaceState] = useState<Workspace | null>(null)
   const [member, setMember] = useState<WorkspaceMember | null>(null)
   const [loading, setLoading] = useState(true)
   const { setTheme } = useTheme()
@@ -79,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .select(WORKSPACE_COLUMNS)
             .eq('id', memberData.workspace_id)
             .single()
-          if (!cancelled && workspaceData) setWorkspace(workspaceData)
+          if (!cancelled && workspaceData) setWorkspaceState(workspaceData)
         }
       } catch {
         // Failed to load user data — treated as logged-out state
@@ -99,12 +100,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut()
     setUser(null)
     setProfile(null)
-    setWorkspace(null)
+    setWorkspaceState(null)
     setMember(null)
   }, [])
 
   const updateProfile = useCallback((updates: Partial<Profile>) => {
     setProfile(prev => prev ? { ...prev, ...updates } : prev)
+  }, [])
+
+  const setWorkspace = useCallback((ws: Workspace) => {
+    setWorkspaceState(ws)
   }, [])
 
   const toggleTheme = useCallback(async () => {
@@ -130,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, workspace, member, loading, signOut, toggleTheme, updateProfile }}
+      value={{ user, profile, workspace, member, loading, signOut, toggleTheme, updateProfile, setWorkspace }}
     >
       {children}
     </AuthContext.Provider>

@@ -44,6 +44,7 @@ function setupAuth(identities: Array<{ provider: string }> = [{ provider: 'email
     signOut: mockSignOut,
     toggleTheme: vi.fn(),
     updateProfile: vi.fn(),
+    setWorkspace: vi.fn(),
   })
 }
 

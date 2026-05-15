@@ -30,7 +30,11 @@ PROMPT 11  ListView                                     ← needs PROMPT 1 + 2
 PROMPT 12  Task dependencies & linked tasks             ← needs PROMPT 6
 PROMPT 13  Due date quick pick + Snooze                 ← needs PROMPT 6
 P1.9       Keyboard reference sheet                     ← do after PROMPT 13 (all shortcuts defined)
-PROMPT 14  Phase 2 close-out checklist                  ← do last
+PROMPT 14  Bulk board actions & search correctness      ← needs PROMPT 10 + 11
+PROMPT 15  Saved filters                               ← needs PROMPT 9
+PROMPT 16  Comments + activity feed                    ← needs PROMPT 6
+RLS check  Two-account verification                    ← do after PROMPT 16, before close-out
+PROMPT 17  Phase 2 close-out checklist                 ← do last
 ```
 
 ---
@@ -810,12 +814,232 @@ Step 2 — `tests/components/ui/KeyboardReferenceSheet.test.tsx`:
   - Pressing Escape closes the dialog
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
-Update PROGRESS.md: mark Keyboard reference sheet complete, next = Phase 2 close-out.
+Update PROGRESS.md: mark Keyboard reference sheet complete, next = Bulk board actions & search correctness.
 ```
 
 ---
 
-## PROMPT 14 — Phase 2 close-out checklist
+## PROMPT 14 — Bulk board actions & search correctness
+
+```
+Read CLAUDE.md, .claude/rules/testing.md, .claude/phases/2-views.md, and PROGRESS.md
+in that order. Confirm: current phase, last completed task, next task.
+
+Two items in one prompt: bulk selection on BoardView, and verifying search hits Supabase.
+
+--- Part A: Bulk board actions ---
+
+Extend `components/views/BoardView.tsx` to support shift-click multi-select and a
+bulk action bar.
+
+Selection model:
+  - Local Set<string> selectedIds in BoardView state
+  - Clicking a card selects it (adds to Set)
+  - Shift-clicking a card selects all cards between the last clicked and this one
+    (within the same column; across columns select both endpoints only)
+  - Clicking a selected card deselects it
+  - When selectedIds is non-empty, show a bulk action bar fixed at the bottom of the
+    board (above the page footer) with:
+      "Move to: [To do] [In progress] [Done]" — calls onBulkMove(ids, newStatus)
+      "Set priority: [Urgent] [High] [Medium] [Low]" — calls onBulkSetPriority(ids, priority)
+      "Archive" — calls onBulkArchive(ids)
+      "× Clear selection" — clears selectedIds
+  - Deselect all after any bulk action completes
+
+Add new props to BoardView:
+  onBulkMove: (ids: string[], newStatus: TaskStatus) => void
+  onBulkSetPriority: (ids: string[], priority: TaskPriority) => void
+  onBulkArchive: (ids: string[]) => void
+
+Wire these into the project page (pass through from TasksContext).
+
+--- Part B: Full-text search via ilike ---
+
+Open `components/filters/FilterBar.tsx` and trace how the search field value flows.
+If it is currently filtering the already-loaded in-memory task list (e.g. calling
+filterTasks() client-side), that is wrong — it will miss tasks not yet loaded.
+
+Correct approach: when search is non-empty, call getTasksBySearch from lib/tasks.ts,
+which runs:
+  .ilike('title', `%${term}%`)
+against Supabase (case-insensitive, server-side).
+
+Add to `lib/tasks.ts`:
+  getTasksBySearch(workspaceId: string, projectId: string | null, term: string): Promise<Task[]>
+
+Wire into TasksContext: when filters.search changes (debounce 300ms), call
+getTasksBySearch and merge results into the displayed task list, or replace entirely
+while search is active and restore getAllTasks results when search is cleared.
+
+Tests — `tests/components/views/BoardView.test.tsx` (add to existing file):
+  - Clicking a card selects it (selected class applied)
+  - Shift-clicking a second card selects both
+  - Bulk action bar hidden when nothing selected
+  - Bulk action bar visible when one card selected
+  - "Archive" in bulk bar calls onBulkArchive with selected ids
+  - "Move to Done" calls onBulkMove with correct status
+  - Selection cleared after bulk action
+
+Tests — `tests/lib/tasks.test.ts` (add):
+  - getTasksBySearch calls .ilike with correct pattern
+  - Returns empty array on Supabase error
+
+Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
+Update PROGRESS.md: mark bulk board actions & search correctness complete,
+next = Saved filters.
+```
+
+---
+
+## PROMPT 15 — Saved filters
+
+```
+Read CLAUDE.md, .claude/rules/testing.md, .claude/phases/2-views.md, and PROGRESS.md
+in that order. Confirm: current phase, last completed task, next task.
+
+Build saved filter support — persisting a named FilterState per workspace.
+
+Read .claude/schema.md to check if a saved_filters table exists. If not, create a
+migration (or add it via Supabase SQL editor) with:
+  saved_filters: id uuid PK, workspace_id uuid FK, name text, filter_state jsonb,
+  created_at timestamptz
+
+Step 1 — `lib/saved-filters.ts`:
+  - getSavedFilters(workspaceId: string): Promise<SavedFilter[]>
+  - createSavedFilter(workspaceId: string, name: string, state: FilterState): Promise<SavedFilter>
+  - deleteSavedFilter(id: string): Promise<void>
+
+  SavedFilter type:
+    { id: string; workspace_id: string; name: string; filter_state: FilterState; created_at: string }
+
+Step 2 — `tests/lib/saved-filters.test.ts`:
+  Each function: happy path + error throw.
+
+Run `npm test` after this step.
+
+Step 3 — Extend `components/filters/FilterBar.tsx`:
+  Add a "Save filter" button (only shown when any filter is active).
+  Clicking opens a small inline input to name the filter, then calls createSavedFilter.
+
+  Add a "Saved" dropdown button that lists saved filters (loaded via getSavedFilters).
+  Clicking a saved filter applies its filter_state via onChange.
+  Each saved filter chip has an × to delete it (calls deleteSavedFilter).
+
+Step 4 — `tests/components/filters/FilterBar.test.tsx` (add):
+  - "Save filter" button appears when filters are active
+  - Submitting name calls createSavedFilter with correct args
+  - Saved filters dropdown lists existing saved filters
+  - Clicking a saved filter calls onChange with its filter_state
+  - × on a saved filter calls deleteSavedFilter
+
+Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
+Update PROGRESS.md: mark saved filters complete, next = Comments + activity feed.
+```
+
+---
+
+## PROMPT 16 — Comments + activity feed + relative timestamps
+
+```
+Read CLAUDE.md, .claude/rules/testing.md, .claude/phases/2-views.md, and PROGRESS.md
+in that order. Confirm: current phase, last completed task, next task.
+
+Build the comments UI and activity feed for TaskDetail. The task_comments table
+already exists with: id, workspace_id, task_id, user_id, body, created_at.
+
+Read .claude/schema.md for exact column names.
+
+Step 1 — `lib/comments.ts`:
+  - getComments(taskId: string): Promise<Comment[]>
+    Select: id, task_id, user_id, body, created_at — join profiles(display_name, avatar_url)
+  - addComment(workspaceId: string, taskId: string, userId: string, body: string): Promise<Comment>
+  - deleteComment(id: string): Promise<void>
+
+  Comment type: { id, task_id, user_id, body, created_at,
+                  profile: { display_name: string; avatar_url: string | null } }
+
+Step 2 — `lib/relative-time.ts`:
+  - relativeTime(date: string | Date): string
+    Returns: "just now" (<1min), "X minutes ago", "X hours ago", "yesterday",
+    "X days ago", then falls back to formatted date "May 14" for >7 days
+  All logic is pure (no Date.now() calls inline — accept a `now` param defaulting to
+  new Date() so tests can inject a fixed reference time).
+
+Step 3 — Tests:
+  tests/lib/comments.test.ts — each function: happy path + error
+  tests/lib/relative-time.test.ts — use vi.useFakeTimers():
+    - 30 seconds ago → "just now"
+    - 5 minutes ago → "5 minutes ago"
+    - 2 hours ago → "2 hours ago"
+    - Yesterday → "yesterday"
+    - 3 days ago → "3 days ago"
+    - 10 days ago → formatted date string
+
+Run `npm test` after this step.
+
+Step 4 — `components/tasks/CommentThread.tsx`:
+  Props: taskId: string; workspaceId: string; userId: string
+
+  - Loads comments via getComments on mount
+  - Renders each comment: avatar (initials fallback) + display_name + relativeTime +
+    body text; own comments have a delete button (calls deleteComment + removes optimistically)
+  - Textarea at bottom to write a new comment; submit button (or Ctrl+Enter)
+    Calls addComment; optimistically appends before DB response; reverts on error
+
+Step 5 — `tests/components/tasks/CommentThread.test.tsx`:
+  - Renders existing comments with display name and body
+  - relativeTime shown for each comment
+  - Delete button visible on own comment; calls deleteComment; comment removed optimistically
+  - Typing and submitting calls addComment; input cleared
+  - Reverts optimistic add on error
+
+Step 6 — Replace the "Activity — coming soon" stub in TaskDetail.tsx with:
+  <CommentThread taskId={task.id} workspaceId={task.workspace_id} userId={currentUser.id} />
+
+Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
+Update PROGRESS.md: mark comments + activity feed complete, next = RLS verification.
+```
+
+---
+
+## RLS two-account verification *(required before close-out — no code, manual step)*
+
+```
+Security rule from .claude/rules/security.md: before calling any phase complete,
+verify RLS with two real accounts. Do this in two browser profiles — no email needed.
+
+Checklist (check each manually):
+
+1. Sign in as User A in Profile 1. Sign in as User B in Profile 2.
+
+2. Workspaces: User B cannot see User A's workspace in any API call or UI.
+
+3. Projects: create a project as User A. Confirm it does not appear for User B
+   (check /projects page and any API call to /api/projects).
+
+4. Tasks: create a task under User A's project. Confirm User B gets zero results
+   when querying tasks (check Inbox, My Day, project page).
+
+5. Labels: workspace-wide labels created by User A are invisible to User B.
+
+6. Subtasks, dependencies, links: spot-check one of each — User B should get
+   empty results or 404, never User A's data.
+
+7. Comments: User B cannot read or delete User A's task comments.
+
+If any check fails: identify the missing or incorrect RLS policy in Supabase,
+fix it (ALTER POLICY or CREATE POLICY in SQL editor), re-run the check.
+
+Document the result in PROGRESS.md under "Known issues / one-time setup required":
+  - Pass: "RLS two-account verification — PASS (date)"
+  - Fail items get their fix documented before phase can close.
+
+After all checks pass, proceed to PROMPT 17.
+```
+
+---
+
+## PROMPT 17 — Phase 2 close-out checklist
 
 ```
 Read CLAUDE.md, .claude/rules/testing.md, .claude/phases/2-views.md, and PROGRESS.md
@@ -869,4 +1093,8 @@ Do not commit — leave that for the user.
 | 12 | Dependencies & links | task_dependencies + task_links |
 | 13 | Due date quick pick + Snooze | Date shortcuts + snooze menu |
 | P1.9 | Keyboard reference sheet | ? dialog showing all shortcuts |
-| 14 | Phase 2 close-out | Coverage ≥ 75%, PROGRESS.md updated |
+| 14 | Bulk board actions & search correctness | Shift-click multi-select, ilike search |
+| 15 | Saved filters | Named filter presets persisted per workspace |
+| 16 | Comments + activity feed | CommentThread, relativeTime, activity stub replaced |
+| RLS | Two-account verification | Manual security check — required before close-out |
+| 17 | Phase 2 close-out | Coverage ≥ 75%, PROGRESS.md updated |

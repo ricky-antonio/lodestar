@@ -7,19 +7,16 @@ import { Button } from '@/components/ui/button'
 import { TaskList } from '@/components/tasks/TaskList'
 import { TaskForm, type TaskFormValues } from '@/components/tasks/TaskForm'
 import { useTasks } from '@/lib/context/TasksContext'
-import { useUI } from '@/lib/context/UIContext'
 import type { Task } from '@/lib/types'
 
 export default function InboxPage() {
   const { tasks, addTask, editTask, removeTask, archiveTask } = useTasks()
-  const { detailTaskId, closeDetail } = useUI()
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
   const [captureValue, setCaptureValue] = useState('')
 
   const inboxTasks = tasks.filter(t => t.project_id === null && !t.is_archived)
-  const detailTask = detailTaskId ? tasks.find(t => t.id === detailTaskId) : undefined
 
   async function handleCapture(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== 'Enter') return
@@ -60,8 +57,7 @@ export default function InboxPage() {
   }
 
   return (
-    <div className="flex h-full" style={{ background: 'var(--bg)' }}>
-      <div className="flex flex-col flex-1 min-w-0 p-6 gap-4">
+    <div className="flex flex-col flex-1 min-w-0 p-6 gap-4" style={{ background: 'var(--bg)' }}>
         {/* Page header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -118,42 +114,7 @@ export default function InboxPage() {
             emptyMessage="No unscheduled tasks. Capture something above."
           />
         </div>
-      </div>
 
-      {/* Task detail panel — placeholder until TaskDetail component is built */}
-      {detailTask && (
-        <div
-          className="w-[400px] flex-none border-l flex flex-col md:flex md:w-full md:max-w-none"
-          style={{
-            background: 'var(--surface)',
-            borderColor: 'var(--border)',
-            transition: 'transform 200ms ease',
-          }}
-        >
-          <div
-            className="flex items-center justify-between p-4 border-b"
-            style={{ borderColor: 'var(--border)' }}
-          >
-            <h2 className="font-medium text-sm truncate" style={{ color: 'var(--tx-1)' }}>
-              {detailTask.title}
-            </h2>
-            <button
-              type="button"
-              onClick={closeDetail}
-              aria-label="Close detail"
-              className="w-7 h-7 flex items-center justify-center rounded text-lg leading-none hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#66C4FF]"
-              style={{ color: 'var(--tx-3)' }}
-            >
-              ×
-            </button>
-          </div>
-          <div className="p-4 text-sm" style={{ color: 'var(--tx-2)' }}>
-            {detailTask.description ?? 'No description'}
-          </div>
-        </div>
-      )}
-
-      {/* Task form dialog */}
       <TaskForm
         open={formOpen}
         onClose={handleCloseForm}

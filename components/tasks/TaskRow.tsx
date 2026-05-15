@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useRef } from 'react'
 import { IconGripVertical, IconDotsVertical } from '@tabler/icons-react'
 import {
   DropdownMenu,
@@ -55,36 +54,11 @@ export function TaskRow({
   onAddToMyDay,
   onRemoveFromMyDay,
 }: Props) {
-  const { pushUndo } = useUI()
+  const { pushUndo, openDetail } = useUI()
   const { editTask } = useTasks()
-
-  const [editingTitle, setEditingTitle] = useState(false)
-  const [editValue, setEditValue] = useState(task.title)
-  const inputRef = useRef<HTMLInputElement>(null)
 
   const isDone = task.status === 'done'
   const overdue = !isDone && task.due_date != null && isOverdue(task.due_date)
-
-  function startEdit() {
-    setEditValue(task.title)
-    setEditingTitle(true)
-    requestAnimationFrame(() => inputRef.current?.focus())
-  }
-
-  function commitEdit() {
-    setEditingTitle(false)
-    if (editValue.trim() && editValue.trim() !== task.title) {
-      onEdit(task.id)
-    }
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter') inputRef.current?.blur()
-    else if (e.key === 'Escape') {
-      setEditValue(task.title)
-      setEditingTitle(false)
-    }
-  }
 
   return (
     <div
@@ -140,30 +114,17 @@ export function TaskRow({
 
       {/* Title */}
       <div className="flex-1 min-w-0">
-        {editingTitle ? (
-          <input
-            ref={inputRef}
-            value={editValue}
-            onChange={e => setEditValue(e.target.value)}
-            onBlur={commitEdit}
-            onKeyDown={handleKeyDown}
-            className="w-full text-sm bg-transparent focus:outline-none"
-            style={{ color: 'var(--tx-1)' }}
-            aria-label="Edit task title"
-          />
-        ) : (
-          <button
-            type="button"
-            onClick={startEdit}
-            className="w-full text-left text-sm truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#66C4FF] rounded"
-            style={{
-              color: isDone ? 'var(--tx-3)' : 'var(--tx-1)',
-              textDecoration: isDone ? 'line-through' : 'none',
-            }}
-          >
-            {task.title}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => openDetail(task.id)}
+          className="w-full text-left text-sm truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#66C4FF] rounded"
+          style={{
+            color: isDone ? 'var(--tx-3)' : 'var(--tx-1)',
+            textDecoration: isDone ? 'line-through' : 'none',
+          }}
+        >
+          {task.title}
+        </button>
       </div>
 
       {/* Due date */}

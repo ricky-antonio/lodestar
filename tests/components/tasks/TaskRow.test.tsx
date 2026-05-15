@@ -8,8 +8,10 @@ import '@/tests/mocks/supabase'
 const mockPushUndo = vi.fn()
 const mockEditTask = vi.fn()
 
+const mockOpenDetail = vi.fn()
+
 vi.mock('@/lib/context/UIContext', () => ({
-  useUI: () => ({ pushUndo: mockPushUndo }),
+  useUI: () => ({ pushUndo: mockPushUndo, openDetail: mockOpenDetail }),
 }))
 
 vi.mock('@/lib/context/TasksContext', () => ({

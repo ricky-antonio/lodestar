@@ -66,9 +66,10 @@ Phase 2 — Views + Organization (**in progress**)
 - `app/(app)/layout.tsx` — added `<QuickCapture />` inside UIProvider
 - **Phase 2 foundation (PROMPT 0)** — app shell, contexts (`AuthContext`, `ProjectsContext`, `TasksContext`, `UIContext`), data helpers (`lib/projects.ts`, `lib/tasks.ts`), layout components (`Sidebar`, `BottomNav`, `Topbar`), `app/providers.tsx`, `app/(app)/dashboard/page.tsx`, `lib/supabase/admin.ts`, `lib/supabase/route-handler.ts`, and all tests — validated: type-check PASS, 182 tests PASS, coverage 93.35% lines / 88.28% functions / 83.26% branches (Phase 2 thresholds exceeded), build PASS
 - **TaskForm** — `components/tasks/TaskForm.tsx` — Dialog-based modal for creating and editing tasks; title/description/priority button group/due date/project select/est. mins; inline title validation; spinner + disabled state on submit; form resets on re-open via key; 6 tests all passing, type-check clean
+- **TaskRow** — `components/tasks/TaskRow.tsx` — single task row for list views; drag handle (hover-only on desktop, always on mobile), checkbox circle, 8px priority dot, truncated title with inline edit (click→input, blur saves via onEdit), due date badge (overdue = red), three-dot DropdownMenu (Edit/Archive/Delete); 8 tests all passing, type-check clean
 
 ## Next task
-TaskRow — single row component for the list view; title, priority badge, due date, project dot, status chip, and a hover action bar (edit, archive)
+Undo toast integration — wire TaskRow actions (archive/delete) through the undo stack so they show the 5s undo toast with rollback on dismiss
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:

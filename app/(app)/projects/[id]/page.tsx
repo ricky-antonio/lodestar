@@ -6,7 +6,7 @@ import { IconList, IconLayoutKanban, IconPlus } from '@tabler/icons-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BoardView } from '@/components/views/BoardView'
-import { TaskList } from '@/components/tasks/TaskList'
+import { ListView } from '@/components/views/ListView'
 import { TaskForm, type TaskFormValues } from '@/components/tasks/TaskForm'
 import { FilterBar } from '@/components/filters/FilterBar'
 import { filterTasks } from '@/lib/tasks'
@@ -163,14 +163,14 @@ export default function ProjectPage() {
             onAddTask={status => handleOpenNew(status)}
           />
         ) : (
-          <TaskList
+          <ListView
             tasks={visibleTasks}
             onToggleDone={handleToggleDone}
             onEdit={handleEdit}
             onArchive={id => archiveTask(id)}
             onDelete={id => removeTask(id)}
             onReorder={(id, position) => editTask(id, { position })}
-            emptyMessage="No tasks yet. Add your first task above."
+            onBulkArchive={async (ids) => { for (const id of ids) await archiveTask(id) }}
           />
         )}
       </div>

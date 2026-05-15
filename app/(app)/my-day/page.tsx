@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { IconPlus } from '@tabler/icons-react'
+import { IconPlus, IconList, IconTable } from '@tabler/icons-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TaskList } from '@/components/tasks/TaskList'
+import { ListView } from '@/components/views/ListView'
 import { TaskForm, type TaskFormValues } from '@/components/tasks/TaskForm'
 import { FilterBar } from '@/components/filters/FilterBar'
 import { filterTasks } from '@/lib/tasks'
@@ -37,6 +38,7 @@ export default function MyDayPage() {
   const [pinnedTaskIds, setPinnedTaskIds] = useState<Set<string>>(new Set())
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
+  const [tableView, setTableView] = useState(false)
 
   const todayStr = getTodayStr()
 
@@ -120,10 +122,45 @@ export default function MyDayPage() {
               {totalCount}
             </Badge>
           </div>
-          <Button onClick={handleOpenNew} className="flex items-center gap-1.5">
-            <IconPlus size={16} aria-hidden />
-            New task
-          </Button>
+          <div className="flex items-center gap-2">
+            <div
+              className="flex items-center rounded-lg p-0.5 gap-0.5"
+              style={{ background: 'var(--surface-2)', border: '0.5px solid var(--border)' }}
+              role="group"
+              aria-label="View toggle"
+            >
+              <button
+                type="button"
+                onClick={() => setTableView(false)}
+                aria-label="Simple list"
+                aria-pressed={!tableView}
+                className="flex items-center justify-center w-7 h-7 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#66C4FF]"
+                style={{
+                  background: !tableView ? 'var(--surface)' : 'transparent',
+                  color: !tableView ? 'var(--accent)' : 'var(--tx-3)',
+                }}
+              >
+                <IconList size={16} aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={() => setTableView(true)}
+                aria-label="Table view"
+                aria-pressed={tableView}
+                className="flex items-center justify-center w-7 h-7 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#66C4FF]"
+                style={{
+                  background: tableView ? 'var(--surface)' : 'transparent',
+                  color: tableView ? 'var(--accent)' : 'var(--tx-3)',
+                }}
+              >
+                <IconTable size={16} aria-hidden />
+              </button>
+            </div>
+            <Button onClick={handleOpenNew} className="flex items-center gap-1.5">
+              <IconPlus size={16} aria-hidden />
+              New task
+            </Button>
+          </div>
         </div>
 
         {/* Filter bar */}
@@ -131,46 +168,61 @@ export default function MyDayPage() {
           <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} />
         )}
 
-        {/* Due today section */}
-        {dueTodayTasks.length > 0 && (
-          <section aria-label="Due today">
-            <h2
-              className="text-xs font-medium uppercase tracking-widest mb-3"
-              style={{ color: 'var(--tx-3)', letterSpacing: '0.06em' }}
-            >
-              Due today
-            </h2>
-            <TaskList
-              tasks={dueTodayTasks}
-              onToggleDone={handleToggleDone}
-              onEdit={handleEdit}
-              onArchive={id => archiveTask(id)}
-              onDelete={id => removeTask(id)}
-              onReorder={(id, position) => editTask(id, { position })}
-              onAddToMyDay={addToMyDay}
-            />
-          </section>
-        )}
+        {tableView ? (
+          /* Table view: combine all tasks into one ListView */
+          <ListView
+            tasks={[...dueTodayTasks, ...pinnedTasks]}
+            onToggleDone={handleToggleDone}
+            onEdit={handleEdit}
+            onArchive={id => archiveTask(id)}
+            onDelete={id => removeTask(id)}
+            onReorder={(id, position) => editTask(id, { position })}
+            onBulkArchive={async (ids) => { for (const id of ids) await archiveTask(id) }}
+          />
+        ) : (
+          <>
+            {/* Due today section */}
+            {dueTodayTasks.length > 0 && (
+              <section aria-label="Due today">
+                <h2
+                  className="text-xs font-medium uppercase tracking-widest mb-3"
+                  style={{ color: 'var(--tx-3)', letterSpacing: '0.06em' }}
+                >
+                  Due today
+                </h2>
+                <TaskList
+                  tasks={dueTodayTasks}
+                  onToggleDone={handleToggleDone}
+                  onEdit={handleEdit}
+                  onArchive={id => archiveTask(id)}
+                  onDelete={id => removeTask(id)}
+                  onReorder={(id, position) => editTask(id, { position })}
+                  onAddToMyDay={addToMyDay}
+                />
+              </section>
+            )}
 
-        {/* Added to My Day section */}
-        {pinnedTasks.length > 0 && (
-          <section aria-label="Added to My Day">
-            <h2
-              className="text-xs font-medium uppercase tracking-widest mb-3"
-              style={{ color: 'var(--tx-3)', letterSpacing: '0.06em' }}
-            >
-              Added to My Day
-            </h2>
-            <TaskList
-              tasks={pinnedTasks}
-              onToggleDone={handleToggleDone}
-              onEdit={handleEdit}
-              onArchive={id => archiveTask(id)}
-              onDelete={id => removeTask(id)}
-              onReorder={(id, position) => editTask(id, { position })}
-              onRemoveFromMyDay={removeFromMyDay}
-            />
-          </section>
+            {/* Added to My Day section */}
+            {pinnedTasks.length > 0 && (
+              <section aria-label="Added to My Day">
+                <h2
+                  className="text-xs font-medium uppercase tracking-widest mb-3"
+                  style={{ color: 'var(--tx-3)', letterSpacing: '0.06em' }}
+                >
+                  Added to My Day
+                </h2>
+                <TaskList
+                  tasks={pinnedTasks}
+                  onToggleDone={handleToggleDone}
+                  onEdit={handleEdit}
+                  onArchive={id => archiveTask(id)}
+                  onDelete={id => removeTask(id)}
+                  onReorder={(id, position) => editTask(id, { position })}
+                  onRemoveFromMyDay={removeFromMyDay}
+                />
+              </section>
+            )}
+          </>
         )}
 
         {/* Empty state */}

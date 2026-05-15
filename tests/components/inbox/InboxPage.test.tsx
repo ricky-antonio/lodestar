@@ -37,6 +37,10 @@ vi.mock('@/components/tasks/TaskList', () => ({
   ),
 }))
 
+vi.mock('@/components/views/ListView', () => ({
+  ListView: () => null,
+}))
+
 vi.mock('@/components/tasks/TaskForm', () => ({
   TaskForm: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
     open ? (

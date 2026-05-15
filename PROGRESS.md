@@ -85,8 +85,10 @@ Phase 2 — Views + Organization (**in progress**)
 - **BoardView** — `components/views/BoardView.tsx` — Kanban board with three columns (To do / In progress / Done); dnd-kit cross-column and within-column drag with PointerSensor (delay 250ms, tolerance 5), DragOverlay ghost card, optimistic move with rollback on failure; column headers show count badge; "+ Add task" button per column; cards show priority left-border (design colors), title (2-line clamp), priority dot, overdue due date badge, three-dot menu (Edit/Archive/Delete); archived tasks excluded; 9 tests all passing
 - **Project page** — `app/(app)/projects/[id]/page.tsx` — reads project id from params, sets `activeProject` in ProjectsContext (clears on unmount), renders FilterBar + BoardView or TaskList (list view) based on `UIContext.activeView`, view toggle buttons (list/board icons) in page header; project color dot + name + task count badge
 
+- **ListView** — `components/views/ListView.tsx` — sortable table (Priority/Title/Status/Due Date column headers, click to sort asc, click again desc); inline status and priority editing via `<select>` on cell click; inline title editing on click with blur-save via `editTask`; row checkboxes + select-all tracked in local `Set<string>`; bulk action bar ("Archive N tasks") calls `onBulkArchive` and clears selection; uses `sortTasks` from `lib/tasks.ts`; wired into project page (replaces TaskList in list branch), Inbox, and My Day (both get a list/table toggle button in the page header); 7 tests all passing
+
 ## Next task
-ListView — list view with click-to-sort columns, inline status/priority editing, bulk select
+Task dependencies & linked tasks
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -184,7 +186,7 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 - Build warning: `useEffect` missing dependency `handleClose` in TaskDetail.tsx — intentional; including it would cause infinite re-renders
 
-## Test status (BoardView — 2026-05-15)
+## Test status (ListView — 2026-05-15)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (35 files, 266 tests)
+- `npm test`: PASS (36 files, 273 tests)
 - Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (previously verified)

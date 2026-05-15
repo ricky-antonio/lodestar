@@ -40,11 +40,12 @@ describe('Sidebar', () => {
     expect(screen.getByText('Acme')).toBeInTheDocument()
   })
 
-  it('renders all four nav items', () => {
+  it('renders all five nav items', () => {
     renderSidebar()
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
     expect(screen.getByText('Inbox')).toBeInTheDocument()
     expect(screen.getByText('My Day')).toBeInTheDocument()
+    expect(screen.getAllByText('Projects').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('Matrix')).toBeInTheDocument()
   })
 

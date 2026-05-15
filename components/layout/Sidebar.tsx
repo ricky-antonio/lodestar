@@ -7,6 +7,7 @@ import {
   IconInbox,
   IconSun,
   IconLayoutGrid,
+  IconFolder,
   IconChevronLeft,
   IconChevronRight,
   IconCircleFilled,
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: IconLayoutDashboard },
   { href: '/inbox',     label: 'Inbox',     icon: IconInbox },
   { href: '/my-day',   label: 'My Day',    icon: IconSun },
+  { href: '/projects',  label: 'Projects',  icon: IconFolder },
   { href: '/matrix',   label: 'Matrix',    icon: IconLayoutGrid },
 ]
 

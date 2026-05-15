@@ -69,9 +69,11 @@ Phase 2 — Views + Organization (**in progress**)
 - **TaskRow** — `components/tasks/TaskRow.tsx` — single task row for list views; drag handle (hover-only on desktop, always on mobile), checkbox circle, 8px priority dot, truncated title with inline edit (click→input, blur saves via onEdit), due date badge (overdue = red), three-dot DropdownMenu (Edit/Archive/Delete); 8 tests all passing, type-check clean
 - **Undo toast integration** — `UndoItem.canUndo?: boolean` added; Toast hides Undo button when `canUndo === false`; TaskRow archive pushes undoable toast (undo restores via editTask), delete pushes confirmation-only toast (`canUndo: false`); 11 new tests added (199 total), type-check clean
 - **TaskList** — `components/tasks/TaskList.tsx` — virtualized (@tanstack/react-virtual, estimateSize 48px) + draggable (@dnd-kit, PointerSensor, activationConstraint delay 250ms) list; SortableRow wraps TaskRow with useSortable attrs/listeners as dragHandleProps; handleDragEnd computes fractional position via arrayMove + getFractionalPosition and calls onReorder; empty state shows emptyMessage or "No tasks"; 5 tests all passing, type-check clean
+- **Inbox page** — `app/(app)/inbox/page.tsx` — page header (heading + cerulean count badge + "New task" button), quick-capture bar (Enter creates task with project_id=null, clears input), TaskList filtered to project_id===null && !is_archived, TaskDetail placeholder panel (slide-in right, shows title + description), TaskForm dialog (create via "New task" or "Edit" three-dot menu); 5 tests all passing, type-check clean
+- **Dashboard stats** — `app/(app)/dashboard/page.tsx` — converted to 'use client'; real stats via useTasks(): due today, overdue, completed this week, in progress
 
 ## Next task
-Inbox page — `app/(app)/inbox/page.tsx`
+My Day page — `app/(app)/my-day/page.tsx`
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -157,9 +159,9 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `<img>` in profile/page.tsx — pre-existing, not a bug
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 
-## Test status (P2.4 end-of-session — 2026-05-14)
+## Test status (P2.5 end-of-session — 2026-05-14)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (26 files, 204 tests)
+- `npm test`: PASS (27 files, 209 tests)
 - `npm run test:coverage`: PASS
   - Statements : 89.66% (503/561)
   - Branches   : 82.16% (281/342)

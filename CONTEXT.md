@@ -36,6 +36,7 @@ Storage → New bucket:
 Name: avatars
 Public: on
 Then go to SQL Editor and run the storage RLS policy from the bottom of .claude/schema.md
+
 Step 2 — Google OAuth
 Google Cloud Console:
 
@@ -45,12 +46,14 @@ User type: External
 App name: Lodestar
 Support email: your email
 Click through the remaining screens, no other changes needed
+
 APIs & Services → Credentials → Create Credentials → OAuth Client ID
 Application type: Web application
 Name: Lodestar Dev
 Authorised JavaScript origins: http://localhost:3000
 Authorised redirect URIs: https://[YOUR_SUPABASE_PROJECT_REF].supabase.co/auth/v1/callback (your project ref is the subdomain in your Supabase URL)
 Copy the Client ID and Client Secret
+
 Wire up in Supabase:
 Authentication → Providers → Google → Enable → paste Client ID and Client Secret → Save
 
@@ -80,6 +83,7 @@ From the database detail page, copy:
 
 UPSTASH_REDIS_REST_URL=https://...
 UPSTASH_REDIS_REST_TOKEN=...
+
 Step 5 — GitHub repo
 Go to github.com → New repository
 Name: lodestar

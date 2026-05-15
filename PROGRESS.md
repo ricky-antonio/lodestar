@@ -1,9 +1,7 @@
 # Lodestar — Progress
 
 ## Current phase
-Phase 1 — Foundation (**complete**)
-
-**Phase 2 begins at PHASE2ROADMAP.md PROMPT 0.**
+Phase 2 — Views + Organization (**in progress**)
 
 ## Completed
 - Pre-build setup: Supabase (18 tables, RLS, triggers, constraints all verified), Google OAuth, Anthropic API, Upstash Redis
@@ -66,9 +64,10 @@ Phase 1 — Foundation (**complete**)
 - `components/ui/QuickCapture.tsx` — floating modal, auto-focus, Q shortcut via keyboard singleton, Enter creates task via addTask, Escape/backdrop closes without creating
 - `tests/components/ui/QuickCapture.test.tsx` — 4 tests: hidden initially, q keydown opens modal, Enter calls addTask + closes, Escape closes without addTask
 - `app/(app)/layout.tsx` — added `<QuickCapture />` inside UIProvider
+- **Phase 2 foundation (PROMPT 0)** — app shell, contexts (`AuthContext`, `ProjectsContext`, `TasksContext`, `UIContext`), data helpers (`lib/projects.ts`, `lib/tasks.ts`), layout components (`Sidebar`, `BottomNav`, `Topbar`), `app/providers.tsx`, `app/(app)/dashboard/page.tsx`, `lib/supabase/admin.ts`, `lib/supabase/route-handler.ts`, and all tests — validated: type-check PASS, 182 tests PASS, coverage 93.35% lines / 88.28% functions / 83.26% branches (Phase 2 thresholds exceeded), build PASS
 
 ## Next task
-Phase 2 — PHASE2ROADMAP.md → start with PROMPT 0 (validate & commit foundation work)
+TaskForm — inline task creation form used at the bottom of board columns and list views
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:

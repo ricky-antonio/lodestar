@@ -15,6 +15,14 @@ vi.mock('@/lib/context/UIContext', () => ({
   useUI: () => mockUseUI(),
 }))
 
+vi.mock('@/lib/context/AuthContext', () => ({
+  useAuth: () => ({ workspace: { id: 'ws-1' }, user: null, profile: null, loading: false }),
+}))
+
+vi.mock('@/components/filters/FilterBar', () => ({
+  FilterBar: () => null,
+}))
+
 // Mock TaskList to expose onAddToMyDay / onRemoveFromMyDay for testing
 vi.mock('@/components/tasks/TaskList', () => ({
   TaskList: ({

@@ -81,9 +81,10 @@ Phase 2 — Views + Organization (**in progress**)
 - **TaskDetail animations** — slide-in on open (`@keyframes` CSS, GPU transform, zero layout cost); slide-out on close (200ms `setTimeout` matches CSS duration); backdrop fades in/out at `bg-black/40`; `closeTimerRef` cancels pending close when a new task opens — fixes stale `isClosing` persisting across open/close cycles (component stays mounted in layout tree, never truly unmounts)
 - **Subtasks** — `lib/subtasks.ts` (getSubtasks, createSubtask, toggleSubtask); `components/tasks/SubtaskList.tsx` (progress bar, checkbox toggle with optimistic UI + rollback, inline add-subtask input); wired into TaskDetail replacing stub; 12 new tests (8 lib + 4 component), all passing
 - **Labels** — `lib/labels.ts` (getLabels, createLabel, updateLabel, deleteLabel, getTaskLabels, addLabelToTask, removeLabelFromTask); `components/tasks/LabelPicker.tsx` (popover trigger showing current label pills, checkbox list with optimistic add/remove + rollback, inline "New label" form with 6 color swatches); wired into TaskDetail replacing stub; 18 new tests (14 lib + 4 component), all passing
+- **FilterBar** — `components/filters/FilterBar.tsx` — horizontal filter bar with search input (× clear), "Filter" dropdown (priority + status checkboxes), "Due date" dropdown (Today/This week/Overdue, dynamically computed), "Label" dropdown (loads via getLabels, checkbox list), active filter chips (each with × to remove), "Clear all" button; wired into Inbox and My Day pages above TaskList, consuming `filters`/`setFilters` from TasksContext; 6 tests all passing, type-check clean
 
 ## Next task
-Filter bar — priority, label, due date, status filters
+BoardView — board view with @dnd-kit drag and drop
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -107,6 +108,8 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - `createAdminClient` (service role) used for workspace/member bootstrapping — anon client's self-referential RLS blocks new users' first INSERT
 - Downgraded Next.js 16 → 15 — Next.js 16 uses Turbopack by default causing OOM crashes; Next.js 15 uses Webpack by default
 - `pool: 'forks'` in vitest.config.ts — prevents cross-file mock contamination on Windows
+- `testTimeout: 15000` in vitest.config.ts — Windows full-suite parallelism starves `userEvent` tests which time out at the default 5000ms; increasing to 15s resolves it. `maxForks` is not a valid top-level option in Vitest 4's InlineConfig type (use `poolOptions.forks.maxForks` if needed, but deprecated; timeout alone is sufficient)
+- FilterBar page tests mock `@/components/filters/FilterBar` as a null stub AND mock `@/lib/context/AuthContext` — both needed because wiring FilterBar into Inbox/My Day pages introduced `useAuth()` calls that page tests didn't previously need
 - `editTask` in TasksContext re-sorts tasks by position when position is in the update payload — keeps context array order in sync with fractional position values without a separate fetch
 - TaskList uses DragOverlay pattern for virtualizer + dnd-kit — dragged item is invisible placeholder, overlay floats at cursor, transition suppressed on drop; this is the canonical fix for the stacked-transform conflict between @tanstack/react-virtual absolute positioning and dnd-kit's settle animation
 - All test mocks must use `mockResolvedValueOnce` (never bare `mockResolvedValue`) — permanent defaults survive `vi.clearAllMocks()` and leak across test files on Windows
@@ -177,10 +180,11 @@ Without this, the service role client gets "permission denied for table workspac
 - Next.js 15 webpack build shows two "Serializing big strings" warnings — non-breaking, cosmetic only
 - Build warning: `<img>` in profile/page.tsx — pre-existing, not a bug
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
+- Build warning: `useEffect` missing dependency `handleClose` in TaskDetail.tsx — intentional; including it would cause infinite re-renders
 
-## Test status (Labels — 2026-05-15)
+## Test status (FilterBar — 2026-05-15)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (33 files, 251 tests)
-- `npm run test:coverage`: PASS — Statements 89.93% (724/805) · Lines 92.49% (616/666) · Functions 84.51% (191/226) · Branches 81.07% (407/502)
+- `npm test`: PASS (34 files, 257 tests)
+- `npm run test:coverage`: PASS — Statements 88.28% (761/862) · Branches 79.18% (445/562) · Functions 81.49% (207/254) · Lines 91.06% (652/716)
 - `npm run build`: PASS
-- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded by wide margin)
+- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded)

@@ -6,17 +6,22 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TaskList } from '@/components/tasks/TaskList'
 import { TaskForm, type TaskFormValues } from '@/components/tasks/TaskForm'
+import { FilterBar } from '@/components/filters/FilterBar'
+import { filterTasks } from '@/lib/tasks'
 import { useTasks } from '@/lib/context/TasksContext'
+import { useAuth } from '@/lib/context/AuthContext'
 import type { Task } from '@/lib/types'
 
 export default function InboxPage() {
-  const { tasks, addTask, editTask, removeTask, archiveTask } = useTasks()
+  const { tasks, filters, setFilters, addTask, editTask, removeTask, archiveTask } = useTasks()
+  const { workspace } = useAuth()
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
   const [captureValue, setCaptureValue] = useState('')
 
-  const inboxTasks = tasks.filter(t => t.project_id === null && !t.is_archived)
+  const allInboxTasks = tasks.filter(t => t.project_id === null && !t.is_archived)
+  const inboxTasks = filterTasks(allInboxTasks, filters)
 
   async function handleCapture(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key !== 'Enter') return
@@ -80,6 +85,11 @@ export default function InboxPage() {
             New task
           </Button>
         </div>
+
+        {/* Filter bar */}
+        {workspace && (
+          <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} />
+        )}
 
         {/* Quick capture */}
         <div

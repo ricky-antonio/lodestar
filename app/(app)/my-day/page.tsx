@@ -6,8 +6,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TaskList } from '@/components/tasks/TaskList'
 import { TaskForm, type TaskFormValues } from '@/components/tasks/TaskForm'
+import { FilterBar } from '@/components/filters/FilterBar'
+import { filterTasks } from '@/lib/tasks'
 import { useTasks } from '@/lib/context/TasksContext'
 import { useUI } from '@/lib/context/UIContext'
+import { useAuth } from '@/lib/context/AuthContext'
 import type { Task } from '@/lib/types'
 
 function getTodayStr(): string {
@@ -27,8 +30,9 @@ function formatHeaderDate(): string {
 }
 
 export default function MyDayPage() {
-  const { tasks, addTask, editTask, removeTask, archiveTask } = useTasks()
+  const { tasks, filters, setFilters, addTask, editTask, removeTask, archiveTask } = useTasks()
   const { detailTaskId, closeDetail } = useUI()
+  const { workspace } = useAuth()
 
   const [pinnedTaskIds, setPinnedTaskIds] = useState<Set<string>>(new Set())
   const [formOpen, setFormOpen] = useState(false)
@@ -37,8 +41,9 @@ export default function MyDayPage() {
   const todayStr = getTodayStr()
 
   // Due today excludes explicitly pinned tasks (pinning moves them to "Added to My Day")
-  const dueTodayTasks = tasks.filter(
-    t => t.due_date === todayStr && !t.is_archived && !pinnedTaskIds.has(t.id),
+  const dueTodayTasks = filterTasks(
+    tasks.filter(t => t.due_date === todayStr && !t.is_archived && !pinnedTaskIds.has(t.id)),
+    filters,
   )
 
   const pinnedTasks = tasks.filter(
@@ -120,6 +125,11 @@ export default function MyDayPage() {
             New task
           </Button>
         </div>
+
+        {/* Filter bar */}
+        {workspace && (
+          <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} />
+        )}
 
         {/* Due today section */}
         {dueTodayTasks.length > 0 && (

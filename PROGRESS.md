@@ -68,9 +68,10 @@ Phase 2 — Views + Organization (**in progress**)
 - **TaskForm** — `components/tasks/TaskForm.tsx` — Dialog-based modal for creating and editing tasks; title/description/priority button group/due date/project select/est. mins; inline title validation; spinner + disabled state on submit; form resets on re-open via key; 6 tests all passing, type-check clean
 - **TaskRow** — `components/tasks/TaskRow.tsx` — single task row for list views; drag handle (hover-only on desktop, always on mobile), checkbox circle, 8px priority dot, truncated title with inline edit (click→input, blur saves via onEdit), due date badge (overdue = red), three-dot DropdownMenu (Edit/Archive/Delete); 8 tests all passing, type-check clean
 - **Undo toast integration** — `UndoItem.canUndo?: boolean` added; Toast hides Undo button when `canUndo === false`; TaskRow archive pushes undoable toast (undo restores via editTask), delete pushes confirmation-only toast (`canUndo: false`); 11 new tests added (199 total), type-check clean
+- **TaskList** — `components/tasks/TaskList.tsx` — virtualized (@tanstack/react-virtual, estimateSize 48px) + draggable (@dnd-kit, PointerSensor, activationConstraint delay 250ms) list; SortableRow wraps TaskRow with useSortable attrs/listeners as dragHandleProps; handleDragEnd computes fractional position via arrayMove + getFractionalPosition and calls onReorder; empty state shows emptyMessage or "No tasks"; 5 tests all passing, type-check clean
 
 ## Next task
-TaskList — renders a list of TaskRow components, handles reordering via @dnd-kit, connects to TasksContext
+Inbox page — `app/(app)/inbox/page.tsx`
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -156,13 +157,13 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `<img>` in profile/page.tsx — pre-existing, not a bug
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 
-## Test status (P2.3 end-of-session — 2026-05-14)
+## Test status (P2.4 end-of-session — 2026-05-14)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (25 files, 199 tests)
+- `npm test`: PASS (26 files, 204 tests)
 - `npm run test:coverage`: PASS
-  - Statements : 89.88% (480/534)
-  - Branches   : 82.60% (266/322)
-  - Functions  : 85.29% (116/136)
-  - Lines      : 91.42% (405/443)
+  - Statements : 89.66% (503/561)
+  - Branches   : 82.16% (281/342)
+  - Functions  : 84.82% (123/145)
+  - Lines      : 91.41% (426/466)
 - `npm run build`: PASS (0 errors, 2 pre-existing warnings)
-- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded by ≥ 12%)
+- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded by ≥ 9%)

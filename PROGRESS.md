@@ -61,26 +61,26 @@ Phase 1 — Foundation (in progress — remaining items tracked in PHASE1ROADMAP
 - `lib/context/AuthContext.tsx` — added `setWorkspace: (ws: Workspace) => void` to context interface and provider (optimistic workspace updates)
 - `app/(app)/settings/workspace/page.tsx` — owner: name (1–60 chars + save), color (6 cerulean/steel swatches + custom hex), timezone (select, ~20 IANA zones), end-of-day (time input, saves on blur); non-owner: read-only view; all saves optimistic with toast revert on failure
 - `tests/components/settings/WorkspaceSettingsPage.test.tsx` — 5 tests: renders name, non-owner read-only, save name calls updateWorkspace, color swatch calls updateWorkspace, timezone select calls updateWorkspace + revert on failure
+- `lib/keyboard.ts` — `KeyboardManager` class + `keyboard` singleton; `register()` returns unregister fn; listener skips inputs/textareas/contenteditable; `mount()`/`unmount()` control window listener; `getAll()` for ? reference sheet
+- `tests/lib/keyboard.test.ts` — 5 tests: unregister removes shortcut, handler called for matching key, ignored on input, ignored on textarea, getAll returns all shortcuts
+- `components/ui/QuickCapture.tsx` — floating modal, auto-focus, Q shortcut via keyboard singleton, Enter creates task via addTask, Escape/backdrop closes without creating
+- `tests/components/ui/QuickCapture.test.tsx` — 4 tests: hidden initially, q keydown opens modal, Enter calls addTask + closes, Escape closes without addTask
+- `app/(app)/layout.tsx` — added `<QuickCapture />` inside UIProvider
 
 ## In progress
 Phase 1 remaining items — see PHASE1ROADMAP.md for full prompts.
 
 ## Next task
-Phase 1 — PHASE1ROADMAP.md in order:
-1. ~~P1.1 — Error pages + broken nav stubs (/matrix, /projects, /settings)~~ ✓ Complete
-2. ~~P1.2 — Toast notification system~~ ✓ Complete
-3. ~~P1.3 — Settings layout & navigation~~ ✓ Complete
-4. ~~P1.4 — Profile settings (display name, avatar upload)~~ ✓ Complete
-5. ~~P1.5 — Account settings (email, password, delete account)~~ ✓ Complete
-6. ~~P1.6 — Workspace settings (name, color, timezone, end-of-day)~~ ✓ Complete
-7. P1.7 — Keyboard shortcut foundation + Q quick capture ← next
-7. P1.7 — Keyboard shortcut foundation + Q quick capture ← next
-8. P1.8 — Undo toast integration (after Phase 2 TaskRow exists)
-9. P1.9 — Keyboard reference sheet (after Phase 2 complete)
-10. P1.10 — Manual auth + RLS verification (browser testing, no code)
-11. P1.11 — Phase 1 final checklist
+Phase 1 remaining (PHASE1ROADMAP.md):
+1. ~~P1.1–P1.7~~ ✓ Complete
+2. ~~P1.8~~ → moved to PHASE2ROADMAP.md after PROMPT 2 (TaskRow)
+3. ~~P1.9~~ → moved to PHASE2ROADMAP.md after PROMPT 13 (Due date & Snooze)
+4. P1.10 — Manual auth & RLS verification (in progress — email items blocked by rate
+   limit; resume after adding custom SMTP in Supabase Dashboard → Auth → SMTP)
+5. P1.11 — Phase 1 final checklist ← do after P1.10 email items verified
 
-Phase 2 begins only after P1.11 passes.
+Phase 2 — PHASE2ROADMAP.md (can begin now, P1.10 email items complete in parallel):
+→ Start with PROMPT 0 (validate & commit foundation work)
 
 ## Decisions made
 - Using legacy Supabase JWT keys (eyJ...) — REST API requires JWT format, not new sb_publishable_ format
@@ -97,8 +97,49 @@ Phase 2 begins only after P1.11 passes.
 - `pool: 'forks'` in vitest.config.ts — prevents cross-file mock contamination on Windows
 - All test mocks must use `mockResolvedValueOnce` (never bare `mockResolvedValue`) — permanent defaults survive `vi.clearAllMocks()` and leak across test files on Windows
 - TasksContext reads `authLoading` from AuthContext before deciding to setLoading(false) — prevents loading flickering to false before auth resolves, which caused race conditions in tests and incorrect UX
+- `workspace_members` RLS policy changed from self-referential to `user_id = auth.uid()` — the original policy caused PostgreSQL to detect recursion and return empty rows, making workspace permanently null in AuthContext (verified 2026-05-14)
 
 ## Known issues / one-time setup required
+
+### P1.10 auth checklist status (2026-05-14)
+- ✓ Email signup → verify → workspace created → dashboard loads with workspace name
+- ✓ Resend verification (60s cooldown works; 429 rate limit hit from Supabase free tier — not an app bug. Fix: add custom SMTP in Supabase Dashboard → Auth → SMTP Settings)
+- ✓ Login with unverified email → correct "please verify" message shown
+- ✓ Google OAuth → new user → workspace created → dashboard loads
+- ✓ Sign out → /login → /dashboard redirects back to /login
+- ✓ workspace_members RLS self-referential bug fixed (see RLS fix below)
+- ✓ Google OAuth always shows account picker (prompt: select_account added)
+- ✗ Google OAuth + same email/password account merge — needs email sending
+- ✗ Forgot password flow — needs email sending
+- ✗ Reset link used twice — needs email sending
+- ✗ Change email — needs email sending
+- ✗ Change password — needs email sending
+- ✓ Delete account → data removed → cannot log in → login page shows deleted-account banner (FK cascades fixed — see Known Issues)
+- ✗ Session expiry redirect — not yet tested
+- ✗ RLS two-account verification — not yet tested
+
+### workspace_members RLS fix (already run — 2026-05-14)
+The original self-referential policy caused PostgreSQL to return zero rows for all workspace_members queries, making workspace permanently null. Fixed by running in Supabase SQL Editor:
+```sql
+DROP POLICY IF EXISTS "members can see workspace members" ON workspace_members;
+CREATE POLICY "members can see workspace members" ON workspace_members
+FOR ALL USING (user_id = auth.uid());
+```
+For v2 collaboration, expand this to also show co-members in shared workspaces.
+
+### Manual workspace bootstrap for pre-existing accounts
+Any Google OAuth account that first logged in BEFORE the workspace-creation code was added to `/callback` will have no `workspace_members` row. Create one manually in the SQL Editor:
+```sql
+WITH new_ws AS (
+  INSERT INTO workspaces (name, slug, owner_id)
+  VALUES ('Name''s workspace', 'name-workspace-' || substr(gen_random_uuid()::text, 1, 8), '<user_id>')
+  RETURNING id
+)
+INSERT INTO workspace_members (workspace_id, user_id, role)
+SELECT id, '<user_id>', 'owner' FROM new_ws;
+```
+
+
 
 ### Supabase table grants (already run — documented for fresh environments)
 "Automatically expose new tables" is disabled, so PostgreSQL table-level grants are not applied automatically. Must run once in Supabase SQL Editor:
@@ -118,7 +159,7 @@ Without this, the service role client gets "permission denied for table workspac
 
 ## Test status
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (21 files, 173 tests)
+- `npm test`: PASS (23 files, 182 tests)
 - `npm run test:coverage`: PASS
   - Statements : 92.09% (408/443)
   - Branches   : 83.47% (202/242)

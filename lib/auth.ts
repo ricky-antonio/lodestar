@@ -24,6 +24,7 @@ export async function signInWithGoogle(): Promise<void> {
     provider: 'google',
     options: {
       redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/callback`,
+      queryParams: { prompt: 'select_account' },
     },
   })
   if (error) throw error

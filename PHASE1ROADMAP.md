@@ -1,28 +1,24 @@
 # Phase 1 — Remaining Items Roadmap
 
-Phase 1 auth and data foundation are complete. The items below were specified in
-`.claude/phases/1-foundation.md` but were not built before Phase 2 began. They are
-tracked here so they can be completed alongside or between Phase 2 sessions.
-
-Each prompt is self-contained. Paste it into a fresh context window. The required
-reading step at the top of every prompt keeps Claude aligned with the project rules.
+P1.1–P1.7 are complete. P1.8 and P1.9 have been moved to PHASE2ROADMAP.md where
+their dependencies live. Only P1.10 (in progress) and P1.11 (final checklist) remain.
 
 ---
 
-## Dependency map
+## Status
 
 ```
-P1.1  Error pages & broken nav stubs   ← do first, no deps
-P1.2  Toast system                     ← no deps
-P1.3  Settings layout                  ← no deps
-P1.4  Profile settings                 ← needs P1.3
-P1.5  Account settings                 ← needs P1.3
-P1.6  Workspace settings               ← needs P1.3
-P1.7  Keyboard foundation + Q capture  ← no deps
-P1.8  Undo toast integration           ← needs Phase 2 TaskRow (PROMPT 2)
-P1.9  ? Keyboard reference sheet       ← needs P1.7 + all Phase 2 shortcuts defined
-P1.10 Manual auth & RLS verification   ← no code; do any time after auth is stable
-P1.11 Phase 1 final checklist          ← do last
+P1.1  Error pages & broken nav stubs   ✓ Complete
+P1.2  Toast system                     ✓ Complete
+P1.3  Settings layout                  ✓ Complete
+P1.4  Profile settings                 ✓ Complete
+P1.5  Account settings                 ✓ Complete
+P1.6  Workspace settings               ✓ Complete
+P1.7  Keyboard foundation + Q capture  ✓ Complete
+P1.8  Undo toast integration           → moved to PHASE2ROADMAP.md after PROMPT 2
+P1.9  Keyboard reference sheet         → moved to PHASE2ROADMAP.md after PROMPT 13
+P1.10 Manual auth & RLS verification   ← in progress (see verified items below)
+P1.11 Phase 1 final checklist          ← do after P1.10 complete
 ```
 
 ---
@@ -455,141 +451,55 @@ next = Undo toast integration (after Phase 2 TaskRow is built).
 
 ---
 
-## PROMPT P1.8 — Undo toast integration *(do after Phase 2 PROMPT 2 — TaskRow)*
+## P1.8 — Undo toast integration
 
-```
-Read CLAUDE.md, .claude/rules/testing.md, .claude/phases/1-foundation.md, and
-PROGRESS.md in that order. Confirm: current phase, last completed task, next task.
-
-PREREQUISITE: Phase 2 PROMPT 2 (TaskRow) must be complete before this prompt.
-The undo toast is wired to archive and delete actions in TaskRow.
-
-UIContext already has pushUndo / dismissUndo / undoStack.
-The Toast component (P1.2) already renders undoStack items.
-
-Wire the undo actions into TaskRow:
-
-In `components/tasks/TaskRow.tsx`, replace the direct onArchive / onDelete calls
-with wrapped versions that push an undo item first:
-
-Archive:
-  1. Call onArchive(task.id) immediately (optimistic — TasksContext handles rollback)
-  2. Push to UIContext:
-       pushUndo({
-         label: `Archived "${task.title}"`,
-         message: `Archived "${task.title}"`,
-         undo: () => editTask(id, { is_archived: false }),
-       })
-  3. Auto-dismiss after 5s (Toast component handles this already)
-
-Delete:
-  1. Call onDelete(task.id) immediately
-  2. Push to UIContext:
-       pushUndo({
-         label: `Deleted "${task.title}"`,
-         message: `Deleted "${task.title}"`,
-         undo: () => { /* re-create not possible — notify user */ },
-       })
-     For delete, the undo button is not shown (undo is impossible after DB delete).
-     The toast just confirms the action. Only show an × dismiss button.
-
-To distinguish "has undo action" from "confirmation only", add a boolean to UndoItem:
-  canUndo?: boolean  (default true)
-In Toast.tsx: show "Undo" button only when canUndo !== false.
-
-Update the UndoItem interface in UIContext.tsx. Update Toast.tsx accordingly.
-
-Update `tests/components/tasks/TaskRow.test.tsx`:
-  - Archive calls pushUndo with correct label
-  - Delete calls pushUndo without an undo button (canUndo false)
-
-Update `tests/components/ui/Toast.test.tsx`:
-  - Toast with canUndo: false does not render "Undo" button
-
-Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
-Update PROGRESS.md: mark Undo toast integration complete,
-next = Keyboard reference sheet (after all Phase 2 shortcuts are defined).
-```
+**Moved to PHASE2ROADMAP.md** — inserted after PROMPT 2 (TaskRow), which is its dependency.
 
 ---
 
-## PROMPT P1.9 — Keyboard reference sheet *(do after Phase 2 is complete)*
+## P1.9 — Keyboard reference sheet
 
-```
-Read CLAUDE.md, .claude/rules/testing.md, .claude/phases/1-foundation.md, and
-PROGRESS.md in that order. Confirm: current phase, last completed task, next task.
-
-PREREQUISITE: Phase 2 must be complete and all keyboard shortcuts defined.
-
-Build the ? keyboard reference sheet.
-
-When the user presses ? anywhere in the app (outside inputs), open a Dialog showing
-all registered shortcuts. This uses the keyboard singleton from lib/keyboard.ts.
-
-Step 1 — `components/ui/KeyboardReferenceSheet.tsx`:
-  A Dialog (shadcn) that opens on ? keypress.
-  Title: "Keyboard shortcuts"
-  Content: a two-column list of all keyboard.getAll() entries.
-  Each row: key badge (monospace, rounded, dark) + description text.
-  Close on Escape or clicking X.
-
-  Register the ? shortcut in a useEffect (same pattern as QuickCapture).
-
-  Render <KeyboardReferenceSheet /> in app/(app)/layout.tsx alongside QuickCapture.
-
-Step 2 — `tests/components/ui/KeyboardReferenceSheet.test.tsx`:
-  - Dialog hidden initially
-  - Pressing ? opens the dialog
-  - Renders at least one shortcut (mock keyboard.getAll())
-  - Pressing Escape closes the dialog
-
-Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
-Update PROGRESS.md: mark Keyboard reference sheet complete.
-```
+**Moved to PHASE2ROADMAP.md** — inserted after PROMPT 13 (Due date & Snooze), once all
+Phase 2 keyboard shortcuts are defined.
 
 ---
 
-## PROMPT P1.10 — Manual auth & RLS verification *(no code)*
+## PROMPT P1.10 — Manual auth & RLS verification *(in progress)*
 
-```
-This prompt contains no code to write. It is a manual testing checklist required
-by .claude/rules/security.md and .claude/phases/1-foundation.md before Phase 1
-can be called fully complete.
+Verified 2026-05-14 (partial — email-dependent items blocked by Supabase rate limit):
 
-AUTH TESTING CHECKLIST — test each in a real browser:
+AUTH TESTING CHECKLIST:
 
-  [ ] Email signup → verification email received → confirm link → workspace created
+  [x] Email signup → verification email received → confirm link → workspace created
       → /dashboard loads with workspace name showing in sidebar
-  [ ] Resend verification email with 60s cooldown — button disables for 60s
-  [ ] Login with unverified email → shows correct "please verify" message
-  [ ] Google OAuth → new user → workspace created → /dashboard loads
-  [ ] Google OAuth → existing email/password user with same email → accounts merged
-      → single workspace (no duplicate workspace)
-  [ ] Forgot password → email received → reset link loads /reset-password
-      → new password saved → can log in with new password
-  [ ] Reset link used a second time → "expired or already used" message shown
-  [ ] Session expiry → /login?reason=expired → banner shows "session expired"
-  [ ] Sign out → redirected to /login → /dashboard redirects back to /login
-  [ ] Change email (Account settings) → confirmation sent → old email still works
-      until confirmed
-  [ ] Change password (Account settings) → reset email sent → new password works
-  [ ] Delete account → all data removed → cannot log in → login page shows
-      deleted-account message
+  [x] Resend verification email — 60s cooldown works; Supabase 429 rate limit hit
+      during testing (not an app bug — fix: add custom SMTP in Supabase Dashboard)
+  [x] Login with unverified email → correct "please verify" message shown
+  [x] Google OAuth → new user → workspace created → /dashboard loads
+  [x] Sign out → redirected to /login → /dashboard redirects back to /login
+  [x] Delete account → data removed → cannot log in → deleted banner on login page
+  [x] Session expiry banner — middleware logic verified correct (requires real JWT
+      expiry to trigger; manual cookie deletion is not equivalent)
+  [ ] Google OAuth + same email/password account → merged → single workspace
+      (blocked: needs email sending)
+  [ ] Forgot password flow (blocked: needs email sending)
+  [ ] Reset link used twice → expired message (blocked: needs email sending)
+  [ ] Change email (blocked: needs email sending)
+  [ ] Change password (blocked: needs email sending)
 
-RLS VERIFICATION CHECKLIST — requires two real Supabase accounts:
+RLS VERIFICATION CHECKLIST:
+  [ ] User B cannot see User A's workspaces/projects/tasks
+  [ ] User B cannot update User A's tasks
+  [ ] User B cannot see User A's workspace_members row
 
-  [ ] Sign in as User A. Note workspace ID.
-  [ ] Sign in as User B in a separate browser/incognito.
-  [ ] From User B's session: attempt to query User A's workspaces, projects, tasks
-      via the Supabase dashboard or browser console. Result must be empty.
-  [ ] From User B's session: attempt to update a task in User A's workspace via
-      the browser console. Must return an RLS error.
-  [ ] Confirm workspace_members RLS: User B cannot see User A's members row.
+Bugs found and fixed during P1.10 (see PROGRESS.md Known Issues):
+  - workspace_members self-referential RLS → fixed to user_id = auth.uid()
+  - Missing workspace for pre-OAuth accounts → manual SQL bootstrap documented
+  - Google OAuth button showed account picker only once → prompt: select_account added
+  - FK cascade missing on auth.users → added ON DELETE CASCADE/SET NULL to 7 tables
+  - No sign-out button in UI → avatar dropdown added to Topbar
 
-After completing all checks, update PROGRESS.md:
-  - Mark manual auth and RLS verification complete
-  - Note date verified and any issues found
-```
+Resume remaining items after setting up custom SMTP in Supabase.
 
 ---
 

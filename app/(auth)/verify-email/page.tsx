@@ -30,8 +30,9 @@ function VerifyEmailContent() {
       await resendVerificationEmail(email)
       setResendSuccess(true)
       setCountdown(60)
-    } catch {
-      setResendError('Failed to resend. Please try again.')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to resend. Please try again.'
+      setResendError(msg)
     } finally {
       setLoading(false)
     }

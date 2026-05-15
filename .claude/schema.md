@@ -13,7 +13,7 @@ create table workspaces (
   name            text not null,
   slug            text unique not null,
   color           text not null default '#6366f1',
-  owner_id        uuid references auth.users(id) not null,
+  owner_id        uuid references auth.users(id) on delete cascade not null,
   timezone        text not null default 'America/New_York',
   end_of_day_time time not null default '17:00',
   created_at      timestamptz default now(),
@@ -98,7 +98,7 @@ create table tasks (
   description     text,
   status          text not null default 'todo',
   priority        text not null default 'medium',
-  assignee_id     uuid references auth.users(id),
+  assignee_id     uuid references auth.users(id) on delete set null,
   due_date        date,
   estimated_mins  integer,
   position        float not null default 0,
@@ -161,7 +161,7 @@ create table task_comments (
   id           uuid primary key default gen_random_uuid(),
   workspace_id uuid references workspaces(id) on delete cascade,
   task_id      uuid references tasks(id) on delete cascade,
-  user_id      uuid references auth.users(id),
+  user_id      uuid references auth.users(id) on delete set null,
   body         text not null,
   created_at   timestamptz default now()
 );
@@ -173,7 +173,7 @@ create table activity_log (
   id           uuid primary key default gen_random_uuid(),
   workspace_id uuid references workspaces(id) on delete cascade,
   task_id      uuid references tasks(id) on delete cascade,
-  user_id      uuid references auth.users(id),
+  user_id      uuid references auth.users(id) on delete set null,
   action       text not null, -- 'created' | 'updated' | 'status_changed' | 'comment_added' | 'assigned'
   payload      jsonb,         -- { field, from, to }
   created_at   timestamptz default now()
@@ -187,7 +187,7 @@ create table time_entries (
   id            uuid primary key default gen_random_uuid(),
   workspace_id  uuid references workspaces(id) on delete cascade,
   task_id       uuid references tasks(id) on delete cascade,
-  user_id       uuid references auth.users(id),
+  user_id       uuid references auth.users(id) on delete set null,
   started_at    timestamptz not null,
   ended_at      timestamptz,
   duration_mins integer,
@@ -244,7 +244,7 @@ create table notifications (
   user_id      uuid references auth.users(id) on delete cascade,
   type         text not null,        -- 'task_assigned' | 'comment_added' | 'mentioned' | 'due_soon'
   task_id      uuid references tasks(id) on delete cascade,
-  actor_id     uuid references auth.users(id),
+  actor_id     uuid references auth.users(id) on delete set null,
   payload      jsonb,
   read_at      timestamptz,          -- null = unread
   created_at   timestamptz default now()
@@ -256,7 +256,7 @@ create table notifications (
 create table ai_usage (
   id           uuid primary key default gen_random_uuid(),
   workspace_id uuid references workspaces(id) on delete cascade,
-  user_id      uuid references auth.users(id),
+  user_id      uuid references auth.users(id) on delete set null,
   route        text not null,
   tokens_in    integer,
   tokens_out   integer,
@@ -328,10 +328,11 @@ create policy "members can access their workspaces"
 on workspaces for all
 using (id in (select workspace_id from workspace_members where user_id = auth.uid()));
 
--- workspace_members: members can see other members of shared workspaces
+-- workspace_members: simple non-self-referential policy (self-referential caused recursion → empty rows)
+-- v2: expand to also show co-members in shared workspaces
 create policy "members can see workspace members"
 on workspace_members for all
-using (workspace_id in (select workspace_id from workspace_members where user_id = auth.uid()));
+using (user_id = auth.uid());
 
 -- profiles: users can read profiles of people in their workspace; update own only
 create policy "workspace members can read profiles"

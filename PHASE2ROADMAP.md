@@ -17,6 +17,7 @@ before moving on.
 PROMPT 0   Validate & commit existing foundation work   ← do first
 PROMPT 1   TaskForm                                     ← no deps
 PROMPT 2   TaskRow                                      ← no deps
+P1.8       Undo toast integration                       ← do immediately after PROMPT 2
 PROMPT 3   TaskList (virtualized + drag)                ← needs PROMPT 1 + 2
 PROMPT 4   Inbox page                                   ← needs PROMPT 3
 PROMPT 5   My Day page                                  ← needs PROMPT 3
@@ -28,6 +29,7 @@ PROMPT 10  BoardView                                    ← needs PROMPT 1 + 2
 PROMPT 11  ListView                                     ← needs PROMPT 1 + 2
 PROMPT 12  Task dependencies & linked tasks             ← needs PROMPT 6
 PROMPT 13  Due date quick pick + Snooze                 ← needs PROMPT 6
+P1.9       Keyboard reference sheet                     ← do after PROMPT 13 (all shortcuts defined)
 PROMPT 14  Phase 2 close-out checklist                  ← do last
 ```
 
@@ -177,7 +179,64 @@ Tests — `tests/components/tasks/TaskRow.test.tsx`:
   - Drag handle has aria-label "Drag to reorder"
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
-Update PROGRESS.md: mark TaskRow complete, next = TaskList.
+Update PROGRESS.md: mark TaskRow complete, next = Undo toast integration.
+```
+
+---
+
+## P1.8 — Undo toast integration *(Phase 1 completion item — do immediately after PROMPT 2)*
+
+```
+Read CLAUDE.md, .claude/rules/testing.md, .claude/phases/1-foundation.md, and
+PROGRESS.md in that order. Confirm: current phase, last completed task, next task.
+
+PREREQUISITE: PROMPT 2 (TaskRow) must be complete before this prompt.
+The undo toast is wired to archive and delete actions in TaskRow.
+
+UIContext already has pushUndo / dismissUndo / undoStack.
+The Toast component (P1.2) already renders undoStack items.
+
+Wire the undo actions into TaskRow:
+
+In `components/tasks/TaskRow.tsx`, replace the direct onArchive / onDelete calls
+with wrapped versions that push an undo item first:
+
+Archive:
+  1. Call onArchive(task.id) immediately (optimistic — TasksContext handles rollback)
+  2. Push to UIContext:
+       pushUndo({
+         label: `Archived "${task.title}"`,
+         message: `Archived "${task.title}"`,
+         undo: () => editTask(id, { is_archived: false }),
+       })
+  3. Auto-dismiss after 5s (Toast component handles this already)
+
+Delete:
+  1. Call onDelete(task.id) immediately
+  2. Push to UIContext:
+       pushUndo({
+         label: `Deleted "${task.title}"`,
+         message: `Deleted "${task.title}"`,
+         undo: () => { /* re-create not possible — notify user */ },
+       })
+     For delete, the undo button is not shown (undo is impossible after DB delete).
+     The toast just confirms the action. Only show an × dismiss button.
+
+To distinguish "has undo action" from "confirmation only", add a boolean to UndoItem:
+  canUndo?: boolean  (default true)
+In Toast.tsx: show "Undo" button only when canUndo !== false.
+
+Update the UndoItem interface in UIContext.tsx. Update Toast.tsx accordingly.
+
+Update `tests/components/tasks/TaskRow.test.tsx`:
+  - Archive calls pushUndo with correct label
+  - Delete calls pushUndo without an undo button (canUndo false)
+
+Update `tests/components/ui/Toast.test.tsx`:
+  - Toast with canUndo: false does not render "Undo" button
+
+Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
+Update PROGRESS.md: mark Undo toast integration complete, next = TaskList.
 ```
 
 ---
@@ -714,7 +773,44 @@ Step 4 — Integrate into TaskDetail.tsx:
   - Add <SnoozeMenu> in the task header area
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
-Update PROGRESS.md: mark quick pick & snooze complete, next = Phase 2 close-out.
+Update PROGRESS.md: mark quick pick & snooze complete, next = Keyboard reference sheet.
+```
+
+---
+
+## P1.9 — Keyboard reference sheet *(Phase 1 completion item — do after PROMPT 13)*
+
+```
+Read CLAUDE.md, .claude/rules/testing.md, .claude/phases/1-foundation.md, and
+PROGRESS.md in that order. Confirm: current phase, last completed task, next task.
+
+PREREQUISITE: Phase 2 prompts 1–13 must be complete so all keyboard shortcuts
+are defined before building the reference sheet.
+
+Build the ? keyboard reference sheet.
+
+When the user presses ? anywhere in the app (outside inputs), open a Dialog showing
+all registered shortcuts. This uses the keyboard singleton from lib/keyboard.ts.
+
+Step 1 — `components/ui/KeyboardReferenceSheet.tsx`:
+  A Dialog (shadcn) that opens on ? keypress.
+  Title: "Keyboard shortcuts"
+  Content: a two-column list of all keyboard.getAll() entries.
+  Each row: key badge (monospace, rounded, dark) + description text.
+  Close on Escape or clicking X.
+
+  Register the ? shortcut in a useEffect (same pattern as QuickCapture).
+
+  Render <KeyboardReferenceSheet /> in app/(app)/layout.tsx alongside QuickCapture.
+
+Step 2 — `tests/components/ui/KeyboardReferenceSheet.test.tsx`:
+  - Dialog hidden initially
+  - Pressing ? opens the dialog
+  - Renders at least one shortcut (mock keyboard.getAll())
+  - Pressing Escape closes the dialog
+
+Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
+Update PROGRESS.md: mark Keyboard reference sheet complete, next = Phase 2 close-out.
 ```
 
 ---
@@ -760,6 +856,7 @@ Do not commit — leave that for the user.
 | 0 | Validate & commit foundation | Tests green, committed |
 | 1 | TaskForm | Create/edit modal |
 | 2 | TaskRow | Single row with actions |
+| P1.8 | Undo toast integration | Archive/delete toasts with undo |
 | 3 | TaskList | Virtualized + draggable |
 | 4 | Inbox page | Quick capture + dashboard stats |
 | 5 | My Day page | Due today + pinned |
@@ -771,4 +868,5 @@ Do not commit — leave that for the user.
 | 11 | ListView | Sortable + bulk select |
 | 12 | Dependencies & links | task_dependencies + task_links |
 | 13 | Due date quick pick + Snooze | Date shortcuts + snooze menu |
+| P1.9 | Keyboard reference sheet | ? dialog showing all shortcuts |
 | 14 | Phase 2 close-out | Coverage ≥ 75%, PROGRESS.md updated |

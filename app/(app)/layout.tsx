@@ -8,6 +8,7 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { Topbar } from '@/components/layout/Topbar'
 import { Toast } from '@/components/ui/Toast'
+import { QuickCapture } from '@/components/ui/QuickCapture'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -33,6 +34,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
             <BottomNav />
             <Toast />
+            <QuickCapture />
           </UIProvider>
         </TasksProvider>
       </ProjectsProvider>

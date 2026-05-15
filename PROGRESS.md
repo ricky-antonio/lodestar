@@ -87,6 +87,10 @@ Phase 2 — Views + Organization (**in progress**)
 
 - **ListView** — `components/views/ListView.tsx` — sortable table (Priority/Title/Status/Due Date column headers, click to sort asc, click again desc); inline status and priority editing via `<select>` on cell click; inline title editing on click with blur-save via `editTask`; row checkboxes + select-all tracked in local `Set<string>`; bulk action bar ("Archive N tasks") calls `onBulkArchive` and clears selection; uses `sortTasks` from `lib/tasks.ts`; wired into project page (replaces TaskList in list branch), Inbox, and My Day (both get a list/table toggle button in the page header); 7 tests all passing
 
+- **Project persistence fix** — `lib/context/ProjectsContext.tsx` + `lib/tasks.ts`: switched TasksContext from `getTasks` (project-scoped) to `getAllTasks` (workspace-wide fetch, no project filter); removed `activeProject` from TasksContext useEffect deps so navigating away no longer clears tasks; ProjectsContext now wraps `setActiveProject` to write `lodestar:lastProjectId` to localStorage on every project select and restores it on workspace load; removed `setActiveProject(null)` cleanup from project page unmount — tasks stay loaded across navigation
+
+- **Drag-and-drop fixes (TaskList + BoardView)** — replaced `PointerSensor` (delay: 250ms) with `MouseSensor` (activationConstraint: distance 5px) + `TouchSensor` (delay: 250ms) in both `TaskList.tsx` and `BoardView.tsx`; mouse drag now activates after 5px movement (instant feel) while touch retains 250ms hold to distinguish drag from scroll; also fixed `dragHandleProps` in `TaskList` to spread only `listeners` onto the drag handle and `attributes` onto the container div — previously spreading both caused `role="button"` to land on the drag handle span
+
 ## Next task
 Task dependencies & linked tasks
 
@@ -126,6 +130,9 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Supabase join results (`select('relation(col1, col2)')`) are inferred as an array by TypeScript — cast through `unknown` first: `(data as unknown as Row[])` where Row uses the scalar type for the join
 - `removeLabelFromTask` uses two chained `.eq()` calls — tests must mock them separately: `mockSupabase.eq.mockReturnValueOnce(mockSupabase).mockResolvedValueOnce({ error: null })`
 - Components that embed child components with their own lib calls (e.g. TaskDetail → LabelPicker) need those lib modules mocked in the parent's test file to prevent runtime noise from unresolved promise chains in jsdom
+- `MouseSensor` (distance constraint) must be used for desktop drag; `TouchSensor` (delay constraint) for mobile — `PointerSensor` with `delay: 250` makes mouse drag require a 250ms dead-hold which nearly never activates in practice
+- `dragHandleProps` on TaskRow should carry only dnd-kit `listeners` (event handlers), not `attributes` — `attributes` includes `role="button"` which, if placed on the handle span, can interfere with drag activation; `attributes` belongs on the sortable container div
+- `getAllTasks` (workspace-wide, no project filter) is the right fetch for TasksContext — project filtering happens in-memory in each page; fetching all tasks once avoids stale-context issues when navigating between pages
 
 ## Known issues / one-time setup required
 
@@ -186,7 +193,12 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 - Build warning: `useEffect` missing dependency `handleClose` in TaskDetail.tsx — intentional; including it would cause infinite re-renders
 
-## Test status (ListView — 2026-05-15)
+## Test status (end of session — 2026-05-15)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (36 files, 273 tests)
-- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (previously verified)
+- `npm test`: PASS (36 files, 276 tests)
+- `npm run build`: PASS (warnings only — `_status` unused, `<img>` in profile, missing dep in useEffect — all pre-existing non-blocking)
+- Coverage (Phase 2 thresholds: Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): **MET**
+  - Statements: 84.04% (911/1084)
+  - Branches:   75.87% (519/684)
+  - Functions:  75.51% (256/339)
+  - Lines:      86.96% (787/905)

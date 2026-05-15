@@ -41,6 +41,8 @@ interface Props {
   onArchive: (id: string) => void
   onDelete: (id: string) => void
   dragHandleProps?: React.HTMLAttributes<HTMLElement>
+  onAddToMyDay?: (id: string) => void
+  onRemoveFromMyDay?: (id: string) => void
 }
 
 export function TaskRow({
@@ -50,6 +52,8 @@ export function TaskRow({
   onArchive,
   onDelete,
   dragHandleProps,
+  onAddToMyDay,
+  onRemoveFromMyDay,
 }: Props) {
   const { pushUndo } = useUI()
   const { editTask } = useTasks()
@@ -190,6 +194,16 @@ export function TaskRow({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onSelect={() => onEdit(task.id)}>Edit</DropdownMenuItem>
+          {onAddToMyDay && (
+            <DropdownMenuItem onSelect={() => onAddToMyDay(task.id)}>
+              Add to My Day
+            </DropdownMenuItem>
+          )}
+          {onRemoveFromMyDay && (
+            <DropdownMenuItem onSelect={() => onRemoveFromMyDay(task.id)}>
+              Remove from My Day
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onSelect={() => {
             onArchive(task.id)
             pushUndo({

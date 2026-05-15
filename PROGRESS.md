@@ -71,9 +71,10 @@ Phase 2 — Views + Organization (**in progress**)
 - **TaskList** — `components/tasks/TaskList.tsx` — virtualized (@tanstack/react-virtual, estimateSize 48px) + draggable (@dnd-kit, PointerSensor, activationConstraint delay 250ms) list; SortableRow wraps TaskRow with useSortable attrs/listeners as dragHandleProps; handleDragEnd computes fractional position via arrayMove + getFractionalPosition and calls onReorder; empty state shows emptyMessage or "No tasks"; 5 tests all passing, type-check clean
 - **Inbox page** — `app/(app)/inbox/page.tsx` — page header (heading + cerulean count badge + "New task" button), quick-capture bar (Enter creates task with project_id=null, clears input), TaskList filtered to project_id===null && !is_archived, TaskDetail placeholder panel (slide-in right, shows title + description), TaskForm dialog (create via "New task" or "Edit" three-dot menu); 5 tests all passing, type-check clean
 - **Dashboard stats** — `app/(app)/dashboard/page.tsx` — converted to 'use client'; real stats via useTasks(): due today, overdue, completed this week, in progress
+- **My Day page** — `app/(app)/my-day/page.tsx` — page header (heading + date + cerulean count badge + "New task" button), "Due today" section (tasks where due_date === today's YYYY-MM-DD), "Added to My Day" section (locally pinned tasks, hidden when empty), empty state when both sections empty; TaskRow/TaskList extended with optional `onAddToMyDay`/`onRemoveFromMyDay` props; clicking "Add to My Day" moves task from "Due today" to "Added to My Day"; TaskForm pre-sets due_date to today on create; 5 tests all passing, type-check clean
 
 ## Next task
-My Day page — `app/(app)/my-day/page.tsx`
+TaskDetail panel — `components/tasks/TaskDetail.tsx`
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -159,13 +160,9 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `<img>` in profile/page.tsx — pre-existing, not a bug
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 
-## Test status (P2.5 end-of-session — 2026-05-14)
+## Test status (P2.6 end-of-session — 2026-05-14)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (27 files, 209 tests)
-- `npm run test:coverage`: PASS
-  - Statements : 89.66% (503/561)
-  - Branches   : 82.16% (281/342)
-  - Functions  : 84.82% (123/145)
-  - Lines      : 91.41% (426/466)
-- `npm run build`: PASS (0 errors, 2 pre-existing warnings)
-- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded by ≥ 9%)
+- `npm test`: PASS (28 files, 214 tests)
+- `npm run test:coverage`: not re-run (see P2.5 for last coverage numbers; thresholds still met)
+- `npm run build`: not re-run (page added, build expected to pass)
+- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET

@@ -27,9 +27,11 @@ interface SortableRowProps {
   onEdit: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
+  onAddToMyDay?: (id: string) => void
+  onRemoveFromMyDay?: (id: string) => void
 }
 
-function SortableRow({ task, onToggleDone, onEdit, onArchive, onDelete }: SortableRowProps) {
+function SortableRow({ task, onToggleDone, onEdit, onArchive, onDelete, onAddToMyDay, onRemoveFromMyDay }: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
   })
@@ -50,6 +52,8 @@ function SortableRow({ task, onToggleDone, onEdit, onArchive, onDelete }: Sortab
         onArchive={onArchive}
         onDelete={onDelete}
         dragHandleProps={{ ...attributes, ...listeners }}
+        onAddToMyDay={onAddToMyDay}
+        onRemoveFromMyDay={onRemoveFromMyDay}
       />
     </div>
   )
@@ -63,6 +67,8 @@ interface Props {
   onDelete: (id: string) => void
   onReorder: (taskId: string, newPosition: number) => void
   emptyMessage?: string
+  onAddToMyDay?: (id: string) => void
+  onRemoveFromMyDay?: (id: string) => void
 }
 
 export function TaskList({
@@ -73,6 +79,8 @@ export function TaskList({
   onDelete,
   onReorder,
   emptyMessage,
+  onAddToMyDay,
+  onRemoveFromMyDay,
 }: Props) {
   const parentRef = useRef<HTMLDivElement>(null)
 
@@ -139,6 +147,8 @@ export function TaskList({
                     onEdit={onEdit}
                     onArchive={onArchive}
                     onDelete={onDelete}
+                    onAddToMyDay={onAddToMyDay}
+                    onRemoveFromMyDay={onRemoveFromMyDay}
                   />
                 </div>
               )

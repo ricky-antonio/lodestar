@@ -5,8 +5,6 @@ import { UIProvider } from '@/lib/context/UIContext'
 
 beforeEach(() => vi.clearAllMocks())
 
-const mockSetActiveProject = vi.fn()
-
 vi.mock('@/lib/context/AuthContext', () => ({
   AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   useAuth: () => ({
@@ -24,10 +22,20 @@ vi.mock('@/lib/context/ProjectsContext', () => ({
       { id: 'p-1', name: 'Alpha', color: '#00B6EC', workspace_id: 'ws-1', description: null, status: 'active', default_view: 'list', created_at: '', updated_at: '' },
       { id: 'p-2', name: 'Beta',  color: '#EA6400', workspace_id: 'ws-1', description: null, status: 'active', default_view: 'list', created_at: '', updated_at: '' },
     ],
-    activeProject: null,
-    setActiveProject: mockSetActiveProject,
-    addProject: vi.fn(), editProject: vi.fn(), removeProject: vi.fn(), loading: false,
+    activeProject: { id: 'p-1', name: 'Alpha', color: '#00B6EC', workspace_id: 'ws-1', description: null, status: 'active', default_view: 'list', created_at: '', updated_at: '' },
+    setActiveProject: vi.fn(),
+    addProject: vi.fn(),
+    editProject: vi.fn(),
+    removeProject: vi.fn(),
+    loading: false,
   }),
+}))
+
+// ProjectSwitcher uses useRouter for navigation
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => '/dashboard',
+  useSearchParams: () => new URLSearchParams(),
 }))
 
 function renderSidebar() {
@@ -40,19 +48,17 @@ describe('Sidebar', () => {
     expect(screen.getByText('Acme')).toBeInTheDocument()
   })
 
-  it('renders all five nav items', () => {
+  it('renders all four nav items', () => {
     renderSidebar()
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
     expect(screen.getByText('Inbox')).toBeInTheDocument()
     expect(screen.getByText('My Day')).toBeInTheDocument()
-    expect(screen.getAllByText('Projects').length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('Matrix')).toBeInTheDocument()
   })
 
-  it('renders project list with names', () => {
+  it('shows the active project name in the switcher', () => {
     renderSidebar()
     expect(screen.getByText('Alpha')).toBeInTheDocument()
-    expect(screen.getByText('Beta')).toBeInTheDocument()
   })
 
   it('collapses and hides text labels', () => {
@@ -76,11 +82,10 @@ describe('Sidebar', () => {
     expect(screen.getByRole('complementary', { name: 'Sidebar' })).toBeInTheDocument()
   })
 
-  it('project items are links to /projects/[id]', () => {
+  it('project items in switcher link to /projects/[id]', () => {
     renderSidebar()
-    const alphaLink = screen.getByRole('link', { name: /Alpha/i })
-    expect(alphaLink).toHaveAttribute('href', '/projects/p-1')
-    const betaLink = screen.getByRole('link', { name: /Beta/i })
-    expect(betaLink).toHaveAttribute('href', '/projects/p-2')
+    // Open the switcher popover
+    fireEvent.click(screen.getByLabelText('Select project'))
+    expect(screen.getByText('Beta')).toBeInTheDocument()
   })
 })

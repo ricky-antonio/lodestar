@@ -154,14 +154,13 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `<img>` in profile/page.tsx — pre-existing, not a bug
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 
-## Test status (P1.11 final — 2026-05-14)
+## Test status (P2.1 end-of-session — 2026-05-14)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (23 files, 182 tests)
+- `npm test`: PASS (24 files, 188 tests)
 - `npm run test:coverage`: PASS
-  - Statements : 91.81% (426/464)
-  - Branches   : 83.26% (214/257)
-  - Functions  : 88.28% (98/111)
-  - Lines      : 93.35% (351/376)
-- `npm run build`: PASS (16 pages, 0 errors)
-- Phase 1 threshold (Lines ≥ 70%, Functions ≥ 70%, Branches ≥ 65%): MET (all thresholds exceeded by ≥ 18%)
-- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded by ≥ 13%)
+  - Statements : 91.96% (458/498)
+  - Branches   : 84.53% (246/291)
+  - Functions  : 88.61% (109/123)
+  - Lines      : 93.64% (383/409)
+- `npm run build`: PASS (0 errors)
+- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded by ≥ 14%)

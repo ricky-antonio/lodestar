@@ -62,6 +62,7 @@ export function Sidebar() {
             <Link
               key={href}
               href={href}
+              onClick={() => setActiveProject(null)}
               aria-label={sidebarCollapsed ? label : undefined}
               className={[
                 'flex items-center gap-2.5 px-2 py-2 rounded text-sm transition-colors',

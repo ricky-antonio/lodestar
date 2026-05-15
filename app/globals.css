@@ -25,6 +25,27 @@
   --color-steel-500: #5E7F91;
   --color-steel-800: #0F2530;
   --color-steel-900: #061419;
+
+  /* shadcn semantic tokens — map to design system CSS vars so dark mode works automatically */
+  --color-background:          var(--surface);
+  --color-foreground:          var(--tx-1);
+  --color-card:                var(--surface);
+  --color-card-foreground:     var(--tx-1);
+  --color-popover:             var(--surface);
+  --color-popover-foreground:  var(--tx-1);
+  --color-primary:             var(--accent);
+  --color-primary-foreground:  #ffffff;
+  --color-secondary:           var(--surface-2);
+  --color-secondary-foreground:var(--tx-1);
+  --color-muted:               var(--surface-2);
+  --color-muted-foreground:    var(--tx-3);
+  --color-accent:              var(--surface-2);
+  --color-accent-foreground:   var(--tx-1);
+  --color-destructive:         #EF4444;
+  --color-destructive-foreground:#ffffff;
+  --color-border:              var(--border);
+  --color-input:               var(--border-2);
+  --color-ring:                #66C4FF;
 }
 
 /* ── Design-system custom properties ─────────────────────────────────────── */

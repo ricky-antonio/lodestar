@@ -6,6 +6,7 @@ import { TasksProvider } from '@/lib/context/TasksContext'
 import { UIProvider } from '@/lib/context/UIContext'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { MobileProjectBar } from '@/components/layout/MobileProjectBar'
 import { Topbar } from '@/components/layout/Topbar'
 import { Toast } from '@/components/ui/Toast'
 import { QuickCapture } from '@/components/ui/QuickCapture'
@@ -26,13 +27,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
                 <Topbar />
                 <main
-                  className="flex-1 overflow-auto"
+                  className="flex-1 overflow-auto pb-[100px] md:pb-0"
                   style={{ background: 'var(--bg)' }}
                 >
                   {children}
                 </main>
               </div>
             </div>
+            <MobileProjectBar />
             <BottomNav />
             <Toast />
             <QuickCapture />

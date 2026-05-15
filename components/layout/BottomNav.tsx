@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   IconLayoutDashboard,
-  IconFolder,
   IconInbox,
   IconSun,
   IconSettings,
@@ -12,7 +11,6 @@ import {
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: IconLayoutDashboard },
-  { href: '/projects',  label: 'Projects',  icon: IconFolder },
   { href: '/inbox',     label: 'Inbox',     icon: IconInbox },
   { href: '/my-day',   label: 'My Day',    icon: IconSun },
   { href: '/settings',  label: 'Settings',  icon: IconSettings },

@@ -7,13 +7,13 @@ function renderBottomNav() {
 }
 
 describe('BottomNav', () => {
-  it('renders all five nav items', () => {
+  it('renders four nav items without Projects', () => {
     renderBottomNav()
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
-    expect(screen.getByText('Projects')).toBeInTheDocument()
     expect(screen.getByText('Inbox')).toBeInTheDocument()
     expect(screen.getByText('My Day')).toBeInTheDocument()
     expect(screen.getByText('Settings')).toBeInTheDocument()
+    expect(screen.queryByText('Projects')).not.toBeInTheDocument()
   })
 
   it('has correct aria-label', () => {

@@ -72,6 +72,9 @@ Phase 2 — Views + Organization (**in progress**)
 - **Inbox page** — `app/(app)/inbox/page.tsx` — page header (heading + cerulean count badge + "New task" button), quick-capture bar (Enter creates task with project_id=null, clears input), TaskList filtered to project_id===null && !is_archived, TaskDetail placeholder panel (slide-in right, shows title + description), TaskForm dialog (create via "New task" or "Edit" three-dot menu); 5 tests all passing, type-check clean
 - **Dashboard stats** — `app/(app)/dashboard/page.tsx` — converted to 'use client'; real stats via useTasks(): due today, overdue, completed this week, in progress
 - **My Day page** — `app/(app)/my-day/page.tsx` — page header (heading + date + cerulean count badge + "New task" button), "Due today" section (tasks where due_date === today's YYYY-MM-DD), "Added to My Day" section (locally pinned tasks, hidden when empty), empty state when both sections empty; TaskRow/TaskList extended with optional `onAddToMyDay`/`onRemoveFromMyDay` props; clicking "Add to My Day" moves task from "Due today" to "Added to My Day"; TaskForm pre-sets due_date to today on create; 5 tests all passing, type-check clean
+- **Drag reorder bug fixes** — two bugs resolved in `TaskList` + `TasksContext`:
+  - `editTask` now re-sorts the tasks array by position when a position update is included — fixes reorder not persisting visually after drop
+  - `TaskList` refactored to use `DragOverlay` + local `ordered` state + `isDragActive` flag — dragged item renders as invisible placeholder, overlay follows cursor, transition suppressed on drop to prevent competing animations with the virtualizer's absolute positioning; eliminates snap-back-then-animate glitch on release
 
 ## Next task
 TaskDetail panel — `components/tasks/TaskDetail.tsx`
@@ -98,6 +101,8 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - `createAdminClient` (service role) used for workspace/member bootstrapping — anon client's self-referential RLS blocks new users' first INSERT
 - Downgraded Next.js 16 → 15 — Next.js 16 uses Turbopack by default causing OOM crashes; Next.js 15 uses Webpack by default
 - `pool: 'forks'` in vitest.config.ts — prevents cross-file mock contamination on Windows
+- `editTask` in TasksContext re-sorts tasks by position when position is in the update payload — keeps context array order in sync with fractional position values without a separate fetch
+- TaskList uses DragOverlay pattern for virtualizer + dnd-kit — dragged item is invisible placeholder, overlay floats at cursor, transition suppressed on drop; this is the canonical fix for the stacked-transform conflict between @tanstack/react-virtual absolute positioning and dnd-kit's settle animation
 - All test mocks must use `mockResolvedValueOnce` (never bare `mockResolvedValue`) — permanent defaults survive `vi.clearAllMocks()` and leak across test files on Windows
 - TasksContext reads `authLoading` from AuthContext before deciding to setLoading(false) — prevents loading flickering to false before auth resolves, which caused race conditions in tests and incorrect UX
 - `workspace_members` RLS policy changed from self-referential to `user_id = auth.uid()` — the original policy caused PostgreSQL to detect recursion and return empty rows, making workspace permanently null in AuthContext (verified 2026-05-14)
@@ -160,9 +165,9 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `<img>` in profile/page.tsx — pre-existing, not a bug
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 
-## Test status (P2.6 end-of-session — 2026-05-14)
+## Test status (drag reorder fix — 2026-05-15)
 - `npm run type-check`: PASS (0 errors)
 - `npm test`: PASS (28 files, 214 tests)
-- `npm run test:coverage`: not re-run (see P2.5 for last coverage numbers; thresholds still met)
-- `npm run build`: not re-run (page added, build expected to pass)
+- `npm run test:coverage`: PASS — Lines 90.79% (434/478) · Functions 79.48% (124/156) · Branches 81.07% (287/354)
+- `npm run build`: PASS
 - Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET

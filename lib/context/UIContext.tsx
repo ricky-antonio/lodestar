@@ -7,6 +7,7 @@ export interface UndoItem {
   label: string
   message?: string
   undo?: () => void
+  canUndo?: boolean
 }
 
 interface UIContextValue {

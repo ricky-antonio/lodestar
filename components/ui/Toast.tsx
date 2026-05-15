@@ -39,7 +39,7 @@ function ToastItem({ item, onDismiss }: { item: UndoItem; onDismiss: () => void 
       <span className="flex-1 text-sm" style={{ color: 'var(--tx-1)' }}>
         {item.message ?? item.label}
       </span>
-      {item.undo && (
+      {item.undo && item.canUndo !== false && (
         <button
           onClick={handleUndo}
           className="text-sm font-medium shrink-0"

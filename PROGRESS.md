@@ -67,9 +67,10 @@ Phase 2 — Views + Organization (**in progress**)
 - **Phase 2 foundation (PROMPT 0)** — app shell, contexts (`AuthContext`, `ProjectsContext`, `TasksContext`, `UIContext`), data helpers (`lib/projects.ts`, `lib/tasks.ts`), layout components (`Sidebar`, `BottomNav`, `Topbar`), `app/providers.tsx`, `app/(app)/dashboard/page.tsx`, `lib/supabase/admin.ts`, `lib/supabase/route-handler.ts`, and all tests — validated: type-check PASS, 182 tests PASS, coverage 93.35% lines / 88.28% functions / 83.26% branches (Phase 2 thresholds exceeded), build PASS
 - **TaskForm** — `components/tasks/TaskForm.tsx` — Dialog-based modal for creating and editing tasks; title/description/priority button group/due date/project select/est. mins; inline title validation; spinner + disabled state on submit; form resets on re-open via key; 6 tests all passing, type-check clean
 - **TaskRow** — `components/tasks/TaskRow.tsx` — single task row for list views; drag handle (hover-only on desktop, always on mobile), checkbox circle, 8px priority dot, truncated title with inline edit (click→input, blur saves via onEdit), due date badge (overdue = red), three-dot DropdownMenu (Edit/Archive/Delete); 8 tests all passing, type-check clean
+- **Undo toast integration** — `UndoItem.canUndo?: boolean` added; Toast hides Undo button when `canUndo === false`; TaskRow archive pushes undoable toast (undo restores via editTask), delete pushes confirmation-only toast (`canUndo: false`); 11 new tests added (199 total), type-check clean
 
 ## Next task
-Undo toast integration — wire TaskRow actions (archive/delete) through the undo stack so they show the 5s undo toast with rollback on dismiss
+TaskList — renders a list of TaskRow components, handles reordering via @dnd-kit, connects to TasksContext
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -155,13 +156,13 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `<img>` in profile/page.tsx — pre-existing, not a bug
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 
-## Test status (P2.1 end-of-session — 2026-05-14)
+## Test status (P2.3 end-of-session — 2026-05-14)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (24 files, 188 tests)
+- `npm test`: PASS (25 files, 199 tests)
 - `npm run test:coverage`: PASS
-  - Statements : 91.96% (458/498)
-  - Branches   : 84.53% (246/291)
-  - Functions  : 88.61% (109/123)
-  - Lines      : 93.64% (383/409)
-- `npm run build`: PASS (0 errors)
-- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded by ≥ 14%)
+  - Statements : 89.88% (480/534)
+  - Branches   : 82.60% (266/322)
+  - Functions  : 85.29% (116/136)
+  - Lines      : 91.42% (405/443)
+- `npm run build`: PASS (0 errors, 2 pre-existing warnings)
+- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded by ≥ 12%)

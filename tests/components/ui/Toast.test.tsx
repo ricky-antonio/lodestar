@@ -81,4 +81,11 @@ describe('Toast', () => {
     })
     expect(screen.queryByText('Auto dismiss toast')).not.toBeInTheDocument()
   })
+
+  it('does not render Undo button when canUndo is false', () => {
+    const item: UndoItem = { label: 'Task deleted', undo: vi.fn(), canUndo: false }
+    render(<TestApp item={item} />)
+    expect(screen.getByText('Task deleted')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Undo' })).not.toBeInTheDocument()
+  })
 })

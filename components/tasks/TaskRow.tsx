@@ -9,6 +9,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { Task, TaskPriority } from '@/lib/types'
+import { useUI } from '@/lib/context/UIContext'
+import { useTasks } from '@/lib/context/TasksContext'
 
 const PRIORITY_COLORS: Record<TaskPriority, string> = {
   urgent: '#EF4444',
@@ -49,6 +51,9 @@ export function TaskRow({
   onDelete,
   dragHandleProps,
 }: Props) {
+  const { pushUndo } = useUI()
+  const { editTask } = useTasks()
+
   const [editingTitle, setEditingTitle] = useState(false)
   const [editValue, setEditValue] = useState(task.title)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -185,9 +190,23 @@ export function TaskRow({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem onSelect={() => onEdit(task.id)}>Edit</DropdownMenuItem>
-          <DropdownMenuItem onSelect={() => onArchive(task.id)}>Archive</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => {
+            onArchive(task.id)
+            pushUndo({
+              label: `Archived "${task.title}"`,
+              message: `Archived "${task.title}"`,
+              undo: () => editTask(task.id, { is_archived: false }),
+            })
+          }}>Archive</DropdownMenuItem>
           <DropdownMenuItem
-            onSelect={() => onDelete(task.id)}
+            onSelect={() => {
+              onDelete(task.id)
+              pushUndo({
+                label: `Deleted "${task.title}"`,
+                message: `Deleted "${task.title}"`,
+                canUndo: false,
+              })
+            }}
             style={{ color: '#EF4444' }}
           >
             Delete

@@ -77,6 +77,8 @@ Phase 2 — Views + Organization (**in progress**)
   - `TaskList` refactored to use `DragOverlay` + local `ordered` state + `isDragActive` flag — dragged item renders as invisible placeholder, overlay follows cursor, transition suppressed on drop to prevent competing animations with the virtualizer's absolute positioning; eliminates snap-back-then-animate glitch on release
 
 - **TaskDetail panel** — `components/tasks/TaskDetail.tsx` — slide-in detail panel (400px desktop, full-screen mobile); inline-editable title (click→input, blur saves), status dropdown, priority 4-button group, due date, project select, description textarea, estimated minutes; Archive + Delete (with confirmation) header buttons; four stub sections (Subtasks/Labels/Dependencies/Activity); Escape + backdrop close; auto-closes when task disappears from context; 7 tests all passing, type-check clean
+- **TaskDetail wired into app** — `<TaskDetail />` mounted globally in `app/(app)/layout.tsx`; `TaskRow` title click calls `openDetail(task.id)` (inline-title editing removed from TaskRow — editing lives in TaskDetail); Inbox placeholder panel removed
+- **TaskDetail animations** — slide-in on open (`@keyframes` CSS, GPU transform, zero layout cost); slide-out on close (200ms `setTimeout` matches CSS duration); backdrop fades in/out at `bg-black/40`; `closeTimerRef` cancels pending close when a new task opens — fixes stale `isClosing` persisting across open/close cycles (component stays mounted in layout tree, never truly unmounts)
 
 ## Next task
 Subtasks — `components/tasks/SubtaskList.tsx`
@@ -108,6 +110,10 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - All test mocks must use `mockResolvedValueOnce` (never bare `mockResolvedValue`) — permanent defaults survive `vi.clearAllMocks()` and leak across test files on Windows
 - TasksContext reads `authLoading` from AuthContext before deciding to setLoading(false) — prevents loading flickering to false before auth resolves, which caused race conditions in tests and incorrect UX
 - `workspace_members` RLS policy changed from self-referential to `user_id = auth.uid()` — the original policy caused PostgreSQL to detect recursion and return empty rows, making workspace permanently null in AuthContext (verified 2026-05-14)
+- `TaskDetail` stays mounted in the layout tree (returns null, never unmounts) — `isClosing` state and close timers must be reset via a `detailTaskId` effect when a new task opens, otherwise the second task opened immediately closes
+- CSS animation events (`onAnimationEnd`) are unreliable in jsdom — use `setTimeout` matching the animation duration + fake timers in tests instead
+- `fireEvent` (synchronous) must be used instead of `userEvent` when fake timers are active — `userEvent` has internal async timers that deadlock with `vi.useFakeTimers()`
+- Fake timer tests must use a nested `describe` with `beforeEach(() => vi.useFakeTimers())` + `afterEach(() => vi.useRealTimers())` — inline `vi.useRealTimers()` inside a test body does not run if the test times out, leaking fake timers into subsequent tests
 
 ## Known issues / one-time setup required
 
@@ -167,9 +173,9 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `<img>` in profile/page.tsx — pre-existing, not a bug
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 
-## Test status (TaskDetail — 2026-05-15)
+## Test status (TaskDetail + animations — 2026-05-15)
 - `npm run type-check`: PASS (0 errors)
 - `npm test`: PASS (29 files, 221 tests)
-- `npm run test:coverage`: PASS — Lines 90.79% (434/478) · Functions 79.48% (124/156) · Branches 81.07% (287/354)
+- `npm run test:coverage`: PASS — Statements 88.88% (568/639) · Lines 91.68% (485/529) · Functions 80.89% (144/178) · Branches 80.67% (334/414)
 - `npm run build`: PASS
-- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET
+- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded by wide margin)

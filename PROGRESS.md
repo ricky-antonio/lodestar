@@ -79,9 +79,10 @@ Phase 2 — Views + Organization (**in progress**)
 - **TaskDetail panel** — `components/tasks/TaskDetail.tsx` — slide-in detail panel (400px desktop, full-screen mobile); inline-editable title (click→input, blur saves), status dropdown, priority 4-button group, due date, project select, description textarea, estimated minutes; Archive + Delete (with confirmation) header buttons; four stub sections (Subtasks/Labels/Dependencies/Activity); Escape + backdrop close; auto-closes when task disappears from context; 7 tests all passing, type-check clean
 - **TaskDetail wired into app** — `<TaskDetail />` mounted globally in `app/(app)/layout.tsx`; `TaskRow` title click calls `openDetail(task.id)` (inline-title editing removed from TaskRow — editing lives in TaskDetail); Inbox placeholder panel removed
 - **TaskDetail animations** — slide-in on open (`@keyframes` CSS, GPU transform, zero layout cost); slide-out on close (200ms `setTimeout` matches CSS duration); backdrop fades in/out at `bg-black/40`; `closeTimerRef` cancels pending close when a new task opens — fixes stale `isClosing` persisting across open/close cycles (component stays mounted in layout tree, never truly unmounts)
+- **Subtasks** — `lib/subtasks.ts` (getSubtasks, createSubtask, toggleSubtask); `components/tasks/SubtaskList.tsx` (progress bar, checkbox toggle with optimistic UI + rollback, inline add-subtask input); wired into TaskDetail replacing stub; 12 new tests (8 lib + 4 component), all passing
 
 ## Next task
-Subtasks — `components/tasks/SubtaskList.tsx`
+Labels — `lib/labels.ts` + `components/tasks/LabelPicker.tsx`
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -173,9 +174,9 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `<img>` in profile/page.tsx — pre-existing, not a bug
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 
-## Test status (TaskDetail + animations — 2026-05-15)
+## Test status (Subtasks — 2026-05-15)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (29 files, 221 tests)
-- `npm run test:coverage`: PASS — Statements 88.88% (568/639) · Lines 91.68% (485/529) · Functions 80.89% (144/178) · Branches 80.67% (334/414)
+- `npm test`: PASS (31 files, 233 tests)
+- `npm run test:coverage`: PASS — Statements 89.34% (637/713) · Lines 91.72% (543/592) · Functions 82.82% (164/198) · Branches 80.73% (373/462)
 - `npm run build`: PASS
 - Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded by wide margin)

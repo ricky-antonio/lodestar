@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   closestCorners,
@@ -294,7 +295,10 @@ export function BoardView({
   }, [tasks])
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(TouchSensor, {
       activationConstraint: { delay: 250, tolerance: 5 },
     }),
   )

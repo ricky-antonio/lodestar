@@ -75,11 +75,11 @@ describe('Sidebar', () => {
     expect(screen.getByRole('complementary', { name: 'Sidebar' })).toBeInTheDocument()
   })
 
-  it('clicking a project calls setActiveProject', () => {
+  it('project items are links to /projects/[id]', () => {
     renderSidebar()
-    fireEvent.click(screen.getByText('Alpha'))
-    expect(mockSetActiveProject).toHaveBeenCalledWith(
-      expect.objectContaining({ id: 'p-1', name: 'Alpha' })
-    )
+    const alphaLink = screen.getByRole('link', { name: /Alpha/i })
+    expect(alphaLink).toHaveAttribute('href', '/projects/p-1')
+    const betaLink = screen.getByRole('link', { name: /Beta/i })
+    expect(betaLink).toHaveAttribute('href', '/projects/p-2')
   })
 })

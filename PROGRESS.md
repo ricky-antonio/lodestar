@@ -82,9 +82,11 @@ Phase 2 — Views + Organization (**in progress**)
 - **Subtasks** — `lib/subtasks.ts` (getSubtasks, createSubtask, toggleSubtask); `components/tasks/SubtaskList.tsx` (progress bar, checkbox toggle with optimistic UI + rollback, inline add-subtask input); wired into TaskDetail replacing stub; 12 new tests (8 lib + 4 component), all passing
 - **Labels** — `lib/labels.ts` (getLabels, createLabel, updateLabel, deleteLabel, getTaskLabels, addLabelToTask, removeLabelFromTask); `components/tasks/LabelPicker.tsx` (popover trigger showing current label pills, checkbox list with optimistic add/remove + rollback, inline "New label" form with 6 color swatches); wired into TaskDetail replacing stub; 18 new tests (14 lib + 4 component), all passing
 - **FilterBar** — `components/filters/FilterBar.tsx` — horizontal filter bar with search input (× clear), "Filter" dropdown (priority + status checkboxes), "Due date" dropdown (Today/This week/Overdue, dynamically computed), "Label" dropdown (loads via getLabels, checkbox list), active filter chips (each with × to remove), "Clear all" button; wired into Inbox and My Day pages above TaskList, consuming `filters`/`setFilters` from TasksContext; 6 tests all passing, type-check clean
+- **BoardView** — `components/views/BoardView.tsx` — Kanban board with three columns (To do / In progress / Done); dnd-kit cross-column and within-column drag with PointerSensor (delay 250ms, tolerance 5), DragOverlay ghost card, optimistic move with rollback on failure; column headers show count badge; "+ Add task" button per column; cards show priority left-border (design colors), title (2-line clamp), priority dot, overdue due date badge, three-dot menu (Edit/Archive/Delete); archived tasks excluded; 9 tests all passing
+- **Project page** — `app/(app)/projects/[id]/page.tsx` — reads project id from params, sets `activeProject` in ProjectsContext (clears on unmount), renders FilterBar + BoardView or TaskList (list view) based on `UIContext.activeView`, view toggle buttons (list/board icons) in page header; project color dot + name + task count badge
 
 ## Next task
-BoardView — board view with @dnd-kit drag and drop
+ListView — list view with click-to-sort columns, inline status/priority editing, bulk select
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -182,9 +184,7 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 - Build warning: `useEffect` missing dependency `handleClose` in TaskDetail.tsx — intentional; including it would cause infinite re-renders
 
-## Test status (FilterBar — 2026-05-15)
+## Test status (BoardView — 2026-05-15)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (34 files, 257 tests)
-- `npm run test:coverage`: PASS — Statements 88.28% (761/862) · Branches 79.18% (445/562) · Functions 81.49% (207/254) · Lines 91.06% (652/716)
-- `npm run build`: PASS
-- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded)
+- `npm test`: PASS (35 files, 266 tests)
+- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (previously verified)

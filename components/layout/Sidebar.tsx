@@ -25,7 +25,7 @@ const NAV_ITEMS = [
 export function Sidebar() {
   const pathname = usePathname()
   const { workspace } = useAuth()
-  const { projects, activeProject, setActiveProject } = useProjects()
+  const { projects } = useProjects()
   const { sidebarCollapsed, setSidebarCollapsed } = useUI()
 
   return (
@@ -62,7 +62,6 @@ export function Sidebar() {
             <Link
               key={href}
               href={href}
-              onClick={() => setActiveProject(null)}
               aria-label={sidebarCollapsed ? label : undefined}
               className={[
                 'flex items-center gap-2.5 px-2 py-2 rounded text-sm transition-colors',
@@ -83,26 +82,29 @@ export function Sidebar() {
             <p className="px-2 mb-1 text-[11px] font-medium uppercase tracking-widest text-steel-400">
               Projects
             </p>
-            {projects.map(project => (
-              <button
-                key={project.id}
-                onClick={() => setActiveProject(project)}
-                className={[
-                  'w-full flex items-center gap-2.5 px-2 py-1.5 rounded text-sm text-left transition-colors',
-                  activeProject?.id === project.id
-                    ? 'bg-[rgba(0,182,236,0.12)] text-cerulean-400'
-                    : 'text-steel-400 hover:bg-white/[0.04] hover:text-steel-100',
-                ].join(' ')}
-              >
-                <IconCircleFilled
-                  size={7}
-                  className="shrink-0"
-                  style={{ color: project.color }}
-                  aria-hidden
-                />
-                <span className="truncate">{project.name}</span>
-              </button>
-            ))}
+            {projects.map(project => {
+              const active = pathname.startsWith(`/projects/${project.id}`)
+              return (
+                <Link
+                  key={project.id}
+                  href={`/projects/${project.id}`}
+                  className={[
+                    'flex items-center gap-2.5 px-2 py-1.5 rounded text-sm transition-colors',
+                    active
+                      ? 'bg-[rgba(0,182,236,0.12)] text-cerulean-400'
+                      : 'text-steel-400 hover:bg-white/[0.04] hover:text-steel-100',
+                  ].join(' ')}
+                >
+                  <IconCircleFilled
+                    size={7}
+                    className="shrink-0"
+                    style={{ color: project.color }}
+                    aria-hidden
+                  />
+                  <span className="truncate">{project.name}</span>
+                </Link>
+              )
+            })}
           </div>
         )}
       </nav>

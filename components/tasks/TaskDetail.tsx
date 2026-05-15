@@ -41,6 +41,8 @@ export function TaskDetail() {
   const { tasks, editTask, archiveTask, removeTask } = useTasks()
   const { projects } = useProjects()
 
+  const [isClosing, setIsClosing] = useState(false)
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
@@ -49,7 +51,18 @@ export function TaskDetail() {
 
   const task = detailTaskId ? tasks.find(t => t.id === detailTaskId) ?? null : null
 
-  // Auto-close when task disappears from context (archived/deleted)
+  function handleClose() {
+    setIsClosing(true)
+    closeTimerRef.current = setTimeout(closeDetail, 200)
+  }
+
+  // Reset closing state and cancel any pending timer when a new task is opened
+  useEffect(() => {
+    setIsClosing(false)
+    clearTimeout(closeTimerRef.current)
+  }, [detailTaskId])
+
+  // Auto-close when task disappears from context (archived/deleted) — no animation needed
   useEffect(() => {
     if (detailTaskId && !task) closeDetail()
   }, [detailTaskId, task, closeDetail])
@@ -58,11 +71,11 @@ export function TaskDetail() {
   useEffect(() => {
     if (!detailTaskId) return
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') closeDetail()
+      if (e.key === 'Escape') handleClose()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [detailTaskId, closeDetail])
+  }, [detailTaskId])
 
   // Focus title input when editing starts
   useEffect(() => {
@@ -99,15 +112,15 @@ export function TaskDetail() {
       return
     }
     removeTask(task!.id)
-    closeDetail()
+    handleClose()
   }
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/20"
-        onClick={closeDetail}
+        className={`fixed inset-0 z-40 bg-black/40 ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
+        onClick={handleClose}
         aria-hidden="true"
       />
 
@@ -121,7 +134,7 @@ export function TaskDetail() {
           'w-full md:w-[400px]',
           'bg-[var(--surface)] border-l border-[var(--border)]',
           'flex flex-col',
-          'transition-transform duration-200 ease-in-out',
+          isClosing ? 'animate-slide-out-right' : 'animate-slide-in-right',
         ].join(' ')}
         style={{ boxShadow: '-4px 0 24px rgba(0,0,0,0.08)' }}
       >
@@ -129,7 +142,7 @@ export function TaskDetail() {
         <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border)] shrink-0">
           <div className="flex-1" />
           <button
-            onClick={() => { archiveTask(task.id); closeDetail() }}
+            onClick={() => { archiveTask(task.id); handleClose() }}
             className="p-1.5 rounded hover:bg-[var(--surface-2)] text-[var(--tx-3)] hover:text-[var(--tx-2)] transition-colors"
             aria-label="Archive task"
           >
@@ -148,7 +161,7 @@ export function TaskDetail() {
             <IconTrash size={16} />
           </button>
           <button
-            onClick={closeDetail}
+            onClick={handleClose}
             className="p-1.5 rounded hover:bg-[var(--surface-2)] text-[var(--tx-3)] hover:text-[var(--tx-2)] transition-colors"
             aria-label="Close detail panel"
           >

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TaskDetail } from '@/components/tasks/TaskDetail'
@@ -79,12 +79,19 @@ describe('TaskDetail', () => {
     expect(screen.getByText('Design the onboarding flow')).toBeInTheDocument()
   })
 
-  it('close button calls closeDetail', async () => {
-    mockDetailTaskId = 'task-1'
-    mockTasks = [baseTask]
-    render(<TaskDetail />)
-    await userEvent.click(screen.getByRole('button', { name: 'Close detail panel' }))
-    expect(mockCloseDetail).toHaveBeenCalledOnce()
+  describe('close animation', () => {
+    beforeEach(() => vi.useFakeTimers())
+    afterEach(() => vi.useRealTimers())
+
+    it('close button calls closeDetail after slide-out animation', () => {
+      mockDetailTaskId = 'task-1'
+      mockTasks = [baseTask]
+      render(<TaskDetail />)
+      // fireEvent is synchronous — safe to use with fake timers
+      fireEvent.click(screen.getByRole('button', { name: 'Close detail panel' }))
+      vi.runAllTimers()
+      expect(mockCloseDetail).toHaveBeenCalledOnce()
+    })
   })
 
   it('changing status dropdown calls editTask with new status', async () => {

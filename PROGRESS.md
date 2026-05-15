@@ -76,8 +76,10 @@ Phase 2 — Views + Organization (**in progress**)
   - `editTask` now re-sorts the tasks array by position when a position update is included — fixes reorder not persisting visually after drop
   - `TaskList` refactored to use `DragOverlay` + local `ordered` state + `isDragActive` flag — dragged item renders as invisible placeholder, overlay follows cursor, transition suppressed on drop to prevent competing animations with the virtualizer's absolute positioning; eliminates snap-back-then-animate glitch on release
 
+- **TaskDetail panel** — `components/tasks/TaskDetail.tsx` — slide-in detail panel (400px desktop, full-screen mobile); inline-editable title (click→input, blur saves), status dropdown, priority 4-button group, due date, project select, description textarea, estimated minutes; Archive + Delete (with confirmation) header buttons; four stub sections (Subtasks/Labels/Dependencies/Activity); Escape + backdrop close; auto-closes when task disappears from context; 7 tests all passing, type-check clean
+
 ## Next task
-TaskDetail panel — `components/tasks/TaskDetail.tsx`
+Subtasks — `components/tasks/SubtaskList.tsx`
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -165,9 +167,9 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `<img>` in profile/page.tsx — pre-existing, not a bug
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 
-## Test status (drag reorder fix — 2026-05-15)
+## Test status (TaskDetail — 2026-05-15)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (28 files, 214 tests)
+- `npm test`: PASS (29 files, 221 tests)
 - `npm run test:coverage`: PASS — Lines 90.79% (434/478) · Functions 79.48% (124/156) · Branches 81.07% (287/354)
 - `npm run build`: PASS
 - Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET

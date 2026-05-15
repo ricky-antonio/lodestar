@@ -19,6 +19,10 @@ vi.mock('@/lib/context/AuthContext', () => ({
   useAuth: () => ({ workspace: { id: 'ws-1' }, user: null, profile: null, loading: false }),
 }))
 
+vi.mock('@/lib/context/ProjectsContext', () => ({
+  useProjects: () => ({ activeProject: null, projects: [] }),
+}))
+
 vi.mock('@/components/filters/FilterBar', () => ({
   FilterBar: () => null,
 }))

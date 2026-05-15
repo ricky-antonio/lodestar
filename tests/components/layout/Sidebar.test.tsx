@@ -51,7 +51,7 @@ describe('Sidebar', () => {
   it('renders all four nav items', () => {
     renderSidebar()
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
-    expect(screen.getByText('Inbox')).toBeInTheDocument()
+    expect(screen.getByText('Tasks')).toBeInTheDocument()
     expect(screen.getByText('My Day')).toBeInTheDocument()
     expect(screen.getByText('Matrix')).toBeInTheDocument()
   })

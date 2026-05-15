@@ -187,7 +187,7 @@ interface ColumnProps {
   onEdit: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
-  onAddTask: (status: TaskStatus) => void
+  onAddTask?: (status: TaskStatus) => void
 }
 
 function BoardColumn({
@@ -243,15 +243,17 @@ function BoardColumn({
       </div>
 
       {/* Add task */}
-      <button
-        type="button"
-        onClick={() => onAddTask(status)}
-        className="flex items-center gap-1.5 px-3 py-2.5 text-sm hover:bg-[var(--surface)] rounded-b-xl transition-colors text-left"
-        style={{ color: 'var(--tx-3)' }}
-      >
-        <IconPlus size={14} aria-hidden />
-        Add task
-      </button>
+      {onAddTask && (
+        <button
+          type="button"
+          onClick={() => onAddTask(status)}
+          className="flex items-center gap-1.5 px-3 py-2.5 text-sm hover:bg-[var(--surface)] rounded-b-xl transition-colors text-left"
+          style={{ color: 'var(--tx-3)' }}
+        >
+          <IconPlus size={14} aria-hidden />
+          Add task
+        </button>
+      )}
     </div>
   )
 }
@@ -264,7 +266,7 @@ interface Props {
   onEdit: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
-  onAddTask: (status: TaskStatus) => void
+  onAddTask?: (status: TaskStatus) => void
 }
 
 export function BoardView({

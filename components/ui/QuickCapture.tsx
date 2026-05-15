@@ -1,14 +1,21 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { keyboard } from '@/lib/keyboard'
 import { useTasks } from '@/lib/context/TasksContext'
+import { useProjects } from '@/lib/context/ProjectsContext'
 
 export function QuickCapture() {
   const [open, setOpen] = useState(false)
   const [title, setTitle] = useState('')
+  const [selectedProjectId, setSelectedProjectId] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
   const { addTask } = useTasks()
+  const { activeProject, projects } = useProjects()
+  const pathname = usePathname()
+
+  const onProjectsPage = pathname === '/projects'
 
   useEffect(() => {
     keyboard.mount()
@@ -25,15 +32,18 @@ export function QuickCapture() {
 
   useEffect(() => {
     if (open) {
+      setSelectedProjectId(onProjectsPage ? '' : (activeProject?.id ?? ''))
       inputRef.current?.focus()
     } else {
       setTitle('')
+      setSelectedProjectId('')
     }
-  }, [open])
+  }, [open, onProjectsPage, activeProject])
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Enter' && title.trim()) {
-      addTask({ title: title.trim(), project_id: null })
+      if (onProjectsPage && !selectedProjectId) return
+      addTask({ title: title.trim(), project_id: selectedProjectId || null })
       setOpen(false)
     } else if (e.key === 'Escape') {
       setOpen(false)
@@ -71,6 +81,29 @@ export function QuickCapture() {
           style={{ color: 'var(--tx-1)' }}
           aria-label="Task title"
         />
+        {onProjectsPage && (
+          <div
+            className="px-4 pb-3"
+            style={{ borderTop: '0.5px solid var(--border)' }}
+          >
+            <select
+              value={selectedProjectId}
+              onChange={e => setSelectedProjectId(e.target.value)}
+              aria-label="Project (required)"
+              className="w-full mt-2 h-9 rounded-md px-3 text-sm focus:outline-none"
+              style={{
+                background: 'var(--surface-2)',
+                color: selectedProjectId ? 'var(--tx-1)' : 'var(--tx-3)',
+                border: '0.5px solid var(--border-2)',
+              }}
+            >
+              <option value="">Select a project… *</option>
+              {projects.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -7,6 +7,7 @@ import {
   IconPlus,
   IconCheck,
   IconLayoutKanban,
+  IconFolders,
 } from '@tabler/icons-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
@@ -126,9 +127,7 @@ export function ProjectSwitcher({ collapsed }: Props) {
             </button>
           ))}
 
-          {projects.length > 0 && (
-            <div className="my-1" style={{ borderTop: '0.5px solid #2C5060' }} />
-          )}
+          <div className="my-1" style={{ borderTop: '0.5px solid #2C5060' }} />
 
           <button
             onClick={() => { setOpen(false); setDialogOpen(true) }}
@@ -137,6 +136,15 @@ export function ProjectSwitcher({ collapsed }: Props) {
           >
             <IconPlus size={14} aria-hidden />
             New project
+          </button>
+
+          <button
+            onClick={() => { router.push('/projects'); setOpen(false) }}
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm transition-colors hover:bg-white/[0.06] text-left"
+            style={{ color: '#7D99AA' }}
+          >
+            <IconFolders size={14} aria-hidden />
+            View all projects
           </button>
         </PopoverContent>
       </Popover>

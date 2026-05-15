@@ -95,6 +95,18 @@ Phase 2 — Views + Organization (**in progress**)
 
 - **Due date quick pick & snooze** — `components/tasks/DueDatePicker.tsx` (Popover with Today/Tomorrow/This Friday/Next Monday/In 2 weeks + custom date input + conditional Clear; all dates computed dynamically at render; display shows "Today"/"Tomorrow"/weekday name/formatted month+day); `components/tasks/SnoozeMenu.tsx` (IconAlarmSnooze Popover with +3 hours UTC/tomorrow morning/this weekend/next week/pick datetime; relative snooze uses UTC ISO string, fixed times use local ISO string without Z); both integrated into TaskDetail.tsx (DueDatePicker replaces plain date input, SnoozeMenu in header); 10 new tests (7 DueDatePicker + 3 SnoozeMenu), all using vi.useFakeTimers() at noon UTC to avoid timezone off-by-one; 309 tests total, type-check clean
 
+- **UX redesign (naming + task-project enforcement)** — end-to-end restructuring of how tasks relate to projects and how navigation surfaces them:
+  - `Inbox` → `Tasks` rename: Sidebar nav (label + icon `IconChecklist` + href `/tasks`), BottomNav (same), old `inbox/page.tsx` now server-redirects to `/tasks`
+  - Created `app/(app)/tasks/page.tsx` — shows ALL non-archived workspace tasks (no project filter), BoardView default, view toggle, "New task" button disabled when no active project, new tasks auto-assigned to `activeProject.id`
+  - No task can be created outside a project — TaskForm gains `showProjectSelector?: boolean` prop; project field is always visible in edit mode; in create mode the field is hidden (caller passes active project implicitly) unless `showProjectSelector={true}` (projects list page only), where it becomes a required field with asterisk and inline validation
+  - `/projects/page.tsx` — each card is now a full-width `<Link>` (chevron icon replaces "Open" button); clicking anywhere enters the board directly
+  - `ProjectSwitcher` — added "View all projects" link (with `IconFolders`)
+  - `Sidebar` — ProjectSwitcher container gets cerulean left-border + background highlight when `pathname.startsWith('/projects/')`
+  - `my-day/page.tsx` — new tasks created with `project_id: activeProject?.id ?? null`
+  - `QuickCapture` — uses `activeProject?.id` for `project_id`; when on `/projects` route shows inline required project `<select>` dropdown
+  - `BoardView` — `onAddTask` now optional (`onAddTask?: ...`) so Tasks page (no specific project context) can hide the column-level "Add task" button
+  - 11 test files updated; 1 new test file (`TasksPage.test.tsx`); total 310 tests, type-check clean, build clean
+
 ## Next task
 Keyboard reference sheet
 
@@ -138,6 +150,9 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - `MouseSensor` (distance constraint) must be used for desktop drag; `TouchSensor` (delay constraint) for mobile — `PointerSensor` with `delay: 250` makes mouse drag require a 250ms dead-hold which nearly never activates in practice
 - `dragHandleProps` on TaskRow should carry only dnd-kit `listeners` (event handlers), not `attributes` — `attributes` includes `role="button"` which, if placed on the handle span, can interfere with drag activation; `attributes` belongs on the sortable container div
 - `getAllTasks` (workspace-wide, no project filter) is the right fetch for TasksContext — project filtering happens in-memory in each page; fetching all tasks once avoids stale-context issues when navigating between pages
+- Every task must belong to a project — `showProjectSelector` prop on TaskForm is only passed when viewing `/projects` (required + asterisk); elsewhere the form uses `activeProject.id` silently; "New task" button is disabled when no active project
+- `onAddTask` on `BoardView` is optional — Tasks page passes `undefined` (no project-specific context) to hide column-level "Add task" buttons; project board always passes it
+- Fake timer `useEffect` deps: QuickCapture's open-effect now depends on `[open, onProjectsPage, activeProject]` — tests need `useProjects` mocked before rendering QuickCapture
 
 ## Known issues / one-time setup required
 
@@ -198,14 +213,14 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 - Build warning: `useEffect` missing dependency `handleClose` in TaskDetail.tsx — intentional; including it would cause infinite re-renders
 
-## Test status (end of session — 2026-05-15, session 3)
+## Test status (end of session — 2026-05-15, session 4)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (41 files, 309 tests)
+- `npm test`: PASS (42 files, 310 tests)
 - `npm run test:coverage`: PASS (above configured 70/70/65 thresholds)
 - `npm run build`: PASS (warnings only — `_status` unused, `<img>` in profile, missing dep in useEffect — all pre-existing non-blocking)
 - Coverage (Phase 2 targets: Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%):
-  - Statements: 81.57% (1076/1319) ✓
-  - Branches:   73.42% (572/779) ✓
-  - Functions:  75.29% (323/429) ✓
-  - Lines:      84.65% (927/1095) ✓
+  - Statements: 81.40% (1081/1328) ✓
+  - Branches:   73.59% (588/799) ✓
+  - Functions:  75.11% (323/430) ✓
+  - Lines:      84.48% (931/1102) ✓
   - All Phase 2 targets met. Configured vitest threshold remains at 70/70/65 (Phase 1 values) — all pass comfortably.

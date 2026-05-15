@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useProjects } from '@/lib/context/ProjectsContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { IconChevronRight } from '@tabler/icons-react'
 import {
   Dialog,
   DialogContent,
@@ -65,9 +66,10 @@ export default function ProjectsPage() {
       ) : (
         <div className="space-y-2">
           {projects.map(project => (
-            <div
+            <Link
               key={project.id}
-              className="flex items-center gap-4 px-4 py-3 rounded-xl"
+              href={`/projects/${project.id}`}
+              className="flex items-center gap-4 px-4 py-3 rounded-xl transition-colors hover:brightness-110"
               style={{
                 background: 'var(--surface)',
                 border: '0.5px solid var(--border)',
@@ -77,10 +79,8 @@ export default function ProjectsPage() {
               <span className="flex-1 text-sm font-medium" style={{ color: 'var(--tx-1)' }}>
                 {project.name}
               </span>
-              <Button asChild variant="outline" size="sm">
-                <Link href={`/projects/${project.id}`}>Open</Link>
-              </Button>
-            </div>
+              <IconChevronRight size={16} style={{ color: 'var(--tx-3)' }} aria-hidden />
+            </Link>
           ))}
         </div>
       )}

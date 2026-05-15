@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   IconLayoutDashboard,
-  IconInbox,
+  IconChecklist,
   IconSun,
   IconLayoutGrid,
   IconChevronLeft,
@@ -16,7 +16,7 @@ import { ProjectSwitcher } from './ProjectSwitcher'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: IconLayoutDashboard },
-  { href: '/inbox',     label: 'Inbox',     icon: IconInbox },
+  { href: '/tasks',     label: 'Tasks',     icon: IconChecklist },
   { href: '/my-day',   label: 'My Day',    icon: IconSun },
   { href: '/matrix',   label: 'Matrix',    icon: IconLayoutGrid },
 ]
@@ -52,8 +52,19 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Project switcher */}
-      <div className="px-2 pb-2" style={{ borderBottom: '0.5px solid #1F3D4A' }}>
+      {/* Project switcher — highlighted when viewing a project board */}
+      <div
+        className="px-2 pb-2"
+        style={{
+          borderBottom: '0.5px solid #1F3D4A',
+          ...(pathname.startsWith('/projects/') ? {
+            borderLeft: '2px solid #00B6EC',
+            paddingLeft: 6,
+            background: 'rgba(0,182,236,0.06)',
+            borderRadius: 6,
+          } : {}),
+        }}
+      >
         <ProjectSwitcher collapsed={sidebarCollapsed} />
       </div>
 

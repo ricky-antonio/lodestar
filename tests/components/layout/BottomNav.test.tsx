@@ -10,7 +10,7 @@ describe('BottomNav', () => {
   it('renders four nav items without Projects', () => {
     renderBottomNav()
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
-    expect(screen.getByText('Inbox')).toBeInTheDocument()
+    expect(screen.getByText('Tasks')).toBeInTheDocument()
     expect(screen.getByText('My Day')).toBeInTheDocument()
     expect(screen.getByText('Settings')).toBeInTheDocument()
     expect(screen.queryByText('Projects')).not.toBeInTheDocument()
@@ -26,7 +26,7 @@ describe('BottomNav', () => {
     const links = screen.getAllByRole('link')
     const hrefs = links.map(l => l.getAttribute('href'))
     expect(hrefs).toContain('/dashboard')
-    expect(hrefs).toContain('/inbox')
+    expect(hrefs).toContain('/tasks')
     expect(hrefs).toContain('/settings')
   })
 

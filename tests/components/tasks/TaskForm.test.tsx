@@ -55,7 +55,7 @@ beforeEach(() => {
 
 describe('TaskForm', () => {
   it('renders all fields when open', async () => {
-    render(<TaskForm open={true} onClose={vi.fn()} onSubmit={vi.fn()} />)
+    render(<TaskForm open={true} onClose={vi.fn()} onSubmit={vi.fn()} showProjectSelector={true} />)
 
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
 
@@ -67,7 +67,7 @@ describe('TaskForm', () => {
     expect(screen.getByRole('button', { name: 'Low' })).toBeInTheDocument()
     expect(screen.getByLabelText('Due date')).toBeInTheDocument()
     expect(screen.getByLabelText('Est. mins')).toBeInTheDocument()
-    expect(screen.getByLabelText('Project')).toBeInTheDocument()
+    expect(screen.getByLabelText(/Project/)).toBeInTheDocument()
   })
 
   it('shows validation error and does not call onSubmit when title is empty', async () => {
@@ -87,7 +87,7 @@ describe('TaskForm', () => {
     const onClose = vi.fn()
     const user = userEvent.setup()
 
-    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} />)
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} showProjectSelector={true} />)
 
     await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
 
@@ -96,7 +96,7 @@ describe('TaskForm', () => {
     await user.click(screen.getByRole('button', { name: 'High' }))
     fireEvent.change(screen.getByLabelText('Due date'), { target: { value: '2026-06-01' } })
     fireEvent.change(screen.getByLabelText('Est. mins'), { target: { value: '30' } })
-    fireEvent.change(screen.getByLabelText('Project'), { target: { value: 'proj-1' } })
+    fireEvent.change(screen.getByLabelText(/Project/), { target: { value: 'proj-1' } })
 
     await user.click(screen.getByRole('button', { name: 'Create task' }))
 

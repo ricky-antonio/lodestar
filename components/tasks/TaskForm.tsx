@@ -29,6 +29,8 @@ interface Props {
   onClose: () => void
   initialValues?: Partial<Task>
   onSubmit: (values: TaskFormValues) => Promise<void>
+  /** Show a required project dropdown. Always shown when editing. */
+  showProjectSelector?: boolean
 }
 
 const PRIORITIES: {
@@ -48,7 +50,8 @@ function FormBody({
   initialValues,
   onClose,
   onSubmit,
-}: Pick<Props, 'initialValues' | 'onClose' | 'onSubmit'>) {
+  showProjectSelector,
+}: Pick<Props, 'initialValues' | 'onClose' | 'onSubmit' | 'showProjectSelector'>) {
   const { projects } = useProjects()
   const [title, setTitle] = useState(initialValues?.title ?? '')
   const [description, setDescription] = useState(initialValues?.description ?? '')
@@ -59,9 +62,12 @@ function FormBody({
     initialValues?.estimated_mins != null ? String(initialValues.estimated_mins) : ''
   )
   const [titleError, setTitleError] = useState('')
+  const [projectError, setProjectError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   const isEditing = !!initialValues?.id
+  // Project field shown when: editing (always) or when caller requests it (e.g. /projects page)
+  const displayProjectSelector = isEditing || !!showProjectSelector
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -70,6 +76,11 @@ function FormBody({
       return
     }
     setTitleError('')
+    if (showProjectSelector && !isEditing && !projectId) {
+      setProjectError('Project is required')
+      return
+    }
+    setProjectError('')
     setSubmitting(true)
     try {
       await onSubmit({
@@ -186,33 +197,40 @@ function FormBody({
         </div>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label
-          htmlFor="task-project"
-          className="text-sm font-medium"
-          style={{ color: 'var(--tx-2)' }}
-        >
-          Project
-        </label>
-        <select
-          id="task-project"
-          value={projectId}
-          onChange={e => setProjectId(e.target.value)}
-          className="h-9 rounded-md px-3 text-sm transition-colors focus:outline-none"
-          style={{
-            background: 'var(--surface)',
-            color: 'var(--tx-1)',
-            border: '0.5px solid var(--border-2)',
-          }}
-        >
-          <option value="">No project</option>
-          {projects.map(p => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      {displayProjectSelector && (
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="task-project"
+            className="text-sm font-medium"
+            style={{ color: 'var(--tx-2)' }}
+          >
+            Project{showProjectSelector && !isEditing && ' *'}
+          </label>
+          <select
+            id="task-project"
+            value={projectId}
+            onChange={e => { setProjectId(e.target.value); setProjectError('') }}
+            className="h-9 rounded-md px-3 text-sm transition-colors focus:outline-none"
+            style={{
+              background: 'var(--surface)',
+              color: 'var(--tx-1)',
+              border: `0.5px solid ${projectError ? '#EF4444' : 'var(--border-2)'}`,
+            }}
+          >
+            <option value="">{isEditing ? 'No project' : 'Select a project…'}</option>
+            {projects.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          {projectError && (
+            <p className="text-xs" role="alert" style={{ color: '#EF4444' }}>
+              {projectError}
+            </p>
+          )}
+        </div>
+      )}
 
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose} disabled={submitting}>
@@ -229,7 +247,7 @@ function FormBody({
   )
 }
 
-export function TaskForm({ open, onClose, initialValues, onSubmit }: Props) {
+export function TaskForm({ open, onClose, initialValues, onSubmit, showProjectSelector }: Props) {
   return (
     <Dialog open={open} onOpenChange={isOpen => { if (!isOpen) onClose() }}>
       <DialogContent>
@@ -241,6 +259,7 @@ export function TaskForm({ open, onClose, initialValues, onSubmit }: Props) {
           initialValues={initialValues}
           onClose={onClose}
           onSubmit={onSubmit}
+          showProjectSelector={showProjectSelector}
         />
       </DialogContent>
     </Dialog>

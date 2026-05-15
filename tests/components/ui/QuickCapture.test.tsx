@@ -10,6 +10,10 @@ vi.mock('@/lib/context/TasksContext', () => ({
   useTasks: () => ({ addTask: mockAddTask }),
 }))
 
+vi.mock('@/lib/context/ProjectsContext', () => ({
+  useProjects: () => ({ activeProject: null, projects: [] }),
+}))
+
 describe('QuickCapture', () => {
   beforeEach(() => {
     vi.clearAllMocks()

@@ -39,7 +39,7 @@ beforeEach(() => {
 })
 
 describe('ProjectsPage', () => {
-  it('renders project cards with names and Open links', () => {
+  it('renders project cards as links to the project board', () => {
     mockUseProjects.mockReturnValue(defaultContext({
       projects: [
         makeProject({ id: 'p-1', name: 'Alpha', color: '#00B6EC' }),
@@ -51,10 +51,12 @@ describe('ProjectsPage', () => {
 
     expect(screen.getByText('Alpha')).toBeInTheDocument()
     expect(screen.getByText('Beta')).toBeInTheDocument()
-    const openLinks = screen.getAllByRole('link', { name: 'Open' })
-    expect(openLinks).toHaveLength(2)
-    expect(openLinks[0]).toHaveAttribute('href', '/projects/p-1')
-    expect(openLinks[1]).toHaveAttribute('href', '/projects/p-2')
+    const projectLinks = screen.getAllByRole('link').filter(l =>
+      l.getAttribute('href')?.startsWith('/projects/p-')
+    )
+    expect(projectLinks).toHaveLength(2)
+    expect(projectLinks[0]).toHaveAttribute('href', '/projects/p-1')
+    expect(projectLinks[1]).toHaveAttribute('href', '/projects/p-2')
   })
 
   it('shows empty state message when there are no projects', () => {

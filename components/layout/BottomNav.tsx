@@ -4,14 +4,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   IconLayoutDashboard,
-  IconInbox,
+  IconChecklist,
   IconSun,
   IconSettings,
 } from '@tabler/icons-react'
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: IconLayoutDashboard },
-  { href: '/inbox',     label: 'Inbox',     icon: IconInbox },
+  { href: '/tasks',     label: 'Tasks',     icon: IconChecklist },
   { href: '/my-day',   label: 'My Day',    icon: IconSun },
   { href: '/settings',  label: 'Settings',  icon: IconSettings },
 ]

@@ -28,7 +28,7 @@ interface UIContextValue {
 const UIContext = createContext<UIContextValue | null>(null)
 
 export function UIProvider({ children }: { children: React.ReactNode }) {
-  const [activeView, setActiveView] = useState<ProjectDefaultView>('list')
+  const [activeView, setActiveView] = useState<ProjectDefaultView>('board')
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [undoStack, setUndoStack] = useState<UndoItem[]>([])

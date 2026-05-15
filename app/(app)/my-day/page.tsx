@@ -12,6 +12,7 @@ import { filterTasks } from '@/lib/tasks'
 import { useTasks } from '@/lib/context/TasksContext'
 import { useUI } from '@/lib/context/UIContext'
 import { useAuth } from '@/lib/context/AuthContext'
+import { useProjects } from '@/lib/context/ProjectsContext'
 import type { Task } from '@/lib/types'
 
 function getTodayStr(): string {
@@ -34,6 +35,7 @@ export default function MyDayPage() {
   const { tasks, filters, setFilters, addTask, editTask, removeTask, archiveTask } = useTasks()
   const { detailTaskId, closeDetail } = useUI()
   const { workspace } = useAuth()
+  const { activeProject } = useProjects()
 
   const [pinnedTaskIds, setPinnedTaskIds] = useState<Set<string>>(new Set())
   const [formOpen, setFormOpen] = useState(false)
@@ -83,7 +85,7 @@ export default function MyDayPage() {
     if (editingTask) {
       await editTask(editingTask.id, { ...values })
     } else {
-      await addTask({ ...values, due_date: values.due_date ?? todayStr })
+      await addTask({ ...values, due_date: values.due_date ?? todayStr, project_id: activeProject?.id ?? null })
     }
   }
 

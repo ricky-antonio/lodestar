@@ -9,7 +9,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 describe('UIContext', () => {
   it('has sensible initial state', () => {
     const { result } = renderHook(() => useUI(), { wrapper })
-    expect(result.current.activeView).toBe('list')
+    expect(result.current.activeView).toBe('board')
     expect(result.current.detailTaskId).toBeNull()
     expect(result.current.commandPaletteOpen).toBe(false)
     expect(result.current.undoStack).toHaveLength(0)

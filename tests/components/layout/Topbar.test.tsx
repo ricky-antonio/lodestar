@@ -32,7 +32,7 @@ describe('Topbar', () => {
 
   it('renders user avatar with first initial', () => {
     renderTopbar()
-    expect(screen.getByLabelText('Alice')).toHaveTextContent('A')
+    expect(screen.getByLabelText('User menu')).toHaveTextContent('A')
   })
 
   it('has a search button with aria-label', () => {

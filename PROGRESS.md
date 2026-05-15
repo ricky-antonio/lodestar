@@ -1,9 +1,9 @@
 # Lodestar — Progress
 
 ## Current phase
-Phase 1 — Foundation (in progress — remaining items tracked in PHASE1ROADMAP.md)
+Phase 1 — Foundation (**complete**)
 
-**Phase 2 does not begin until all PHASE1ROADMAP prompts are complete.**
+**Phase 2 begins at PHASE2ROADMAP.md PROMPT 0.**
 
 ## Completed
 - Pre-build setup: Supabase (18 tables, RLS, triggers, constraints all verified), Google OAuth, Anthropic API, Upstash Redis
@@ -67,20 +67,17 @@ Phase 1 — Foundation (in progress — remaining items tracked in PHASE1ROADMAP
 - `tests/components/ui/QuickCapture.test.tsx` — 4 tests: hidden initially, q keydown opens modal, Enter calls addTask + closes, Escape closes without addTask
 - `app/(app)/layout.tsx` — added `<QuickCapture />` inside UIProvider
 
-## In progress
-Phase 1 remaining items — see PHASE1ROADMAP.md for full prompts.
-
 ## Next task
-Phase 1 remaining (PHASE1ROADMAP.md):
-1. ~~P1.1–P1.7~~ ✓ Complete
-2. ~~P1.8~~ → moved to PHASE2ROADMAP.md after PROMPT 2 (TaskRow)
-3. ~~P1.9~~ → moved to PHASE2ROADMAP.md after PROMPT 13 (Due date & Snooze)
-4. P1.10 — Manual auth & RLS verification (in progress — email items blocked by rate
-   limit; resume after adding custom SMTP in Supabase Dashboard → Auth → SMTP)
-5. P1.11 — Phase 1 final checklist ← do after P1.10 email items verified
+Phase 2 — PHASE2ROADMAP.md → start with PROMPT 0 (validate & commit foundation work)
 
-Phase 2 — PHASE2ROADMAP.md (can begin now, P1.10 email items complete in parallel):
-→ Start with PROMPT 0 (validate & commit foundation work)
+Remaining P1.10 items (complete in parallel, do not block Phase 2):
+- Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
+  - Google OAuth + same email/password account → merged → single workspace
+  - Forgot password flow
+  - Reset link used twice → expired message
+  - Change email
+  - Change password
+- RLS two-account verification (no email needed — two browser profiles)
 
 ## Decisions made
 - Using legacy Supabase JWT keys (eyJ...) — REST API requires JWT format, not new sb_publishable_ format
@@ -157,13 +154,14 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `<img>` in profile/page.tsx — pre-existing, not a bug
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 
-## Test status
+## Test status (P1.11 final — 2026-05-14)
 - `npm run type-check`: PASS (0 errors)
 - `npm test`: PASS (23 files, 182 tests)
 - `npm run test:coverage`: PASS
-  - Statements : 92.09% (408/443)
-  - Branches   : 83.47% (202/242)
-  - Functions  : 89.32% (92/103)
-  - Lines      : 93.83% (335/357)
+  - Statements : 91.81% (426/464)
+  - Branches   : 83.26% (214/257)
+  - Functions  : 88.28% (98/111)
+  - Lines      : 93.35% (351/376)
 - `npm run build`: PASS (16 pages, 0 errors)
 - Phase 1 threshold (Lines ≥ 70%, Functions ≥ 70%, Branches ≥ 65%): MET (all thresholds exceeded by ≥ 18%)
+- Phase 2 threshold (Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%): MET (all thresholds exceeded by ≥ 13%)

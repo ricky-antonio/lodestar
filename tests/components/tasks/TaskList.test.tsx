@@ -10,10 +10,11 @@ const dndCallbacks = vi.hoisted(() => ({
 }))
 
 vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children, onDragEnd }: any) => {
+  DndContext: ({ children, onDragEnd, onDragStart }: any) => {
     dndCallbacks.onDragEnd = onDragEnd
     return children
   },
+  DragOverlay: ({ children }: any) => children ?? null,
   PointerSensor: vi.fn(),
   useSensor: vi.fn(),
   useSensors: vi.fn(() => []),

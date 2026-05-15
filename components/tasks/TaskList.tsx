@@ -1,14 +1,16 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   DndContext,
+  DragOverlay,
   PointerSensor,
   useSensor,
   useSensors,
   closestCenter,
   type DragEndEvent,
+  type DragStartEvent,
 } from '@dnd-kit/core'
 import {
   SortableContext,
@@ -23,6 +25,7 @@ import type { Task } from '@/lib/types'
 
 interface SortableRowProps {
   task: Task
+  isDragActive: boolean
   onToggleDone: (id: string) => void
   onEdit: (id: string) => void
   onArchive: (id: string) => void
@@ -31,7 +34,16 @@ interface SortableRowProps {
   onRemoveFromMyDay?: (id: string) => void
 }
 
-function SortableRow({ task, onToggleDone, onEdit, onArchive, onDelete, onAddToMyDay, onRemoveFromMyDay }: SortableRowProps) {
+function SortableRow({
+  task,
+  isDragActive,
+  onToggleDone,
+  onEdit,
+  onArchive,
+  onDelete,
+  onAddToMyDay,
+  onRemoveFromMyDay,
+}: SortableRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
   })
@@ -41,8 +53,9 @@ function SortableRow({ task, onToggleDone, onEdit, onArchive, onDelete, onAddToM
       ref={setNodeRef}
       style={{
         transform: CSS.Transform.toString(transform) ?? undefined,
-        transition,
-        opacity: isDragging ? 0.5 : 1,
+        // suppress transition on drop so virtualizer position takes over without competing animation
+        transition: isDragActive ? transition : undefined,
+        opacity: isDragging ? 0 : 1,
       }}
     >
       <TaskRow
@@ -83,9 +96,13 @@ export function TaskList({
   onRemoveFromMyDay,
 }: Props) {
   const parentRef = useRef<HTMLDivElement>(null)
+  const [ordered, setOrdered] = useState(tasks)
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  useEffect(() => { setOrdered(tasks) }, [tasks])
 
   const virtualizer = useVirtualizer({
-    count: tasks.length,
+    count: ordered.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 48,
     overscan: 5,
@@ -97,21 +114,29 @@ export function TaskList({
     }),
   )
 
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as string)
+  }
+
   function handleDragEnd(event: DragEndEvent) {
+    setActiveId(null)
     const { active, over } = event
     if (!over || active.id === over.id) return
 
-    const activeIndex = tasks.findIndex(t => t.id === active.id)
-    const overIndex = tasks.findIndex(t => t.id === over.id)
+    const activeIndex = ordered.findIndex(t => t.id === active.id)
+    const overIndex = ordered.findIndex(t => t.id === over.id)
     if (activeIndex === -1 || overIndex === -1) return
 
-    const reordered = arrayMove(tasks, activeIndex, overIndex)
+    const reordered = arrayMove(ordered, activeIndex, overIndex)
+    setOrdered(reordered)
     const before = reordered[overIndex - 1]?.position ?? null
     const after = reordered[overIndex + 1]?.position ?? null
     onReorder(active.id as string, getFractionalPosition(before, after))
   }
 
-  if (tasks.length === 0) {
+  const activeTask = activeId ? ordered.find(t => t.id === activeId) : null
+
+  if (ordered.length === 0) {
     return (
       <div
         className="flex items-center justify-center py-12 text-sm"
@@ -123,12 +148,17 @@ export function TaskList({
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={ordered.map(t => t.id)} strategy={verticalListSortingStrategy}>
         <div ref={parentRef} className="overflow-auto" style={{ height: '100%' }}>
           <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
             {virtualizer.getVirtualItems().map(virtualItem => {
-              const task = tasks[virtualItem.index]
+              const task = ordered[virtualItem.index]
               return (
                 <div
                   key={virtualItem.key}
@@ -143,6 +173,7 @@ export function TaskList({
                 >
                   <SortableRow
                     task={task}
+                    isDragActive={!!activeId}
                     onToggleDone={onToggleDone}
                     onEdit={onEdit}
                     onArchive={onArchive}
@@ -156,6 +187,20 @@ export function TaskList({
           </div>
         </div>
       </SortableContext>
+
+      <DragOverlay>
+        {activeTask ? (
+          <div style={{ opacity: 0.95, pointerEvents: 'none' }}>
+            <TaskRow
+              task={activeTask}
+              onToggleDone={() => {}}
+              onEdit={() => {}}
+              onArchive={() => {}}
+              onDelete={() => {}}
+            />
+          </div>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   )
 }

@@ -107,7 +107,10 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     updates: Partial<Omit<Task, 'id' | 'workspace_id' | 'created_at' | 'updated_at'>>
   ) => {
     const previous = tasks
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t))
+    setTasks(prev => {
+      const mapped = prev.map(t => t.id === id ? { ...t, ...updates } : t)
+      return 'position' in updates ? [...mapped].sort((a, b) => a.position - b.position) : mapped
+    })
     try {
       await updateTaskInDB(id, updates)
     } catch {

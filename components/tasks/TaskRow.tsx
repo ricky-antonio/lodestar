@@ -62,7 +62,11 @@ export function TaskRow({
 
   return (
     <div
-      className="group flex items-center gap-2 px-3 py-2 rounded-lg transition-colors"
+      role="button"
+      tabIndex={0}
+      onClick={() => openDetail(task.id)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openDetail(task.id) }}
+      className="group flex items-center gap-2 px-3 py-2 rounded-lg transition-colors cursor-pointer"
       style={{
         minHeight: 44,
         background: 'var(--surface)',
@@ -75,6 +79,7 @@ export function TaskRow({
         role="button"
         tabIndex={0}
         aria-label="Drag to reorder"
+        onClick={(e) => e.stopPropagation()}
         className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity cursor-grab touch-none flex-none flex items-center justify-center p-1"
         style={{ color: 'var(--tx-3)' }}
       >
@@ -84,7 +89,7 @@ export function TaskRow({
       {/* Checkbox */}
       <button
         type="button"
-        onClick={() => onToggleDone(task.id)}
+        onClick={(e) => { e.stopPropagation(); onToggleDone(task.id) }}
         aria-label={isDone ? 'Mark as not done' : 'Mark as done'}
         className="flex-none flex items-center justify-center w-5 h-5 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#66C4FF]"
         style={{
@@ -114,17 +119,15 @@ export function TaskRow({
 
       {/* Title */}
       <div className="flex-1 min-w-0">
-        <button
-          type="button"
-          onClick={() => openDetail(task.id)}
-          className="w-full text-left text-sm truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#66C4FF] rounded"
+        <span
+          className="block w-full text-left text-sm truncate"
           style={{
             color: isDone ? 'var(--tx-3)' : 'var(--tx-1)',
             textDecoration: isDone ? 'line-through' : 'none',
           }}
         >
           {task.title}
-        </button>
+        </span>
       </div>
 
       {/* Due date */}
@@ -147,6 +150,7 @@ export function TaskRow({
           <button
             type="button"
             aria-label="Task actions"
+            onClick={(e) => e.stopPropagation()}
             className="flex-none flex items-center justify-center w-7 h-7 rounded transition-colors hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#66C4FF]"
             style={{ color: 'var(--tx-3)' }}
           >

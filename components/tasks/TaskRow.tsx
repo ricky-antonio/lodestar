@@ -62,10 +62,7 @@ export function TaskRow({
 
   return (
     <div
-      role="button"
-      tabIndex={0}
       onClick={() => openDetail(task.id)}
-      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') openDetail(task.id) }}
       className="group flex items-center gap-2 px-3 py-2 rounded-lg transition-colors cursor-pointer"
       style={{
         minHeight: 44,
@@ -80,7 +77,7 @@ export function TaskRow({
         tabIndex={0}
         aria-label="Drag to reorder"
         onClick={(e) => e.stopPropagation()}
-        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity cursor-grab touch-none flex-none flex items-center justify-center p-1"
+        className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity cursor-grab touch-none flex-none flex items-center justify-center pl-1 pr-3 self-stretch"
         style={{ color: 'var(--tx-3)' }}
       >
         <IconGripVertical size={16} aria-hidden />
@@ -119,15 +116,17 @@ export function TaskRow({
 
       {/* Title */}
       <div className="flex-1 min-w-0">
-        <span
-          className="block w-full text-left text-sm truncate"
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); openDetail(task.id) }}
+          className="w-full text-left text-sm truncate focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#66C4FF] rounded"
           style={{
             color: isDone ? 'var(--tx-3)' : 'var(--tx-1)',
             textDecoration: isDone ? 'line-through' : 'none',
           }}
         >
           {task.title}
-        </span>
+        </button>
       </div>
 
       {/* Due date */}

@@ -5,7 +5,8 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import {
   DndContext,
   DragOverlay,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   closestCenter,
@@ -51,6 +52,7 @@ function SortableRow({
   return (
     <div
       ref={setNodeRef}
+      {...attributes}
       style={{
         transform: CSS.Transform.toString(transform) ?? undefined,
         // suppress transition on drop so virtualizer position takes over without competing animation
@@ -64,7 +66,7 @@ function SortableRow({
         onEdit={onEdit}
         onArchive={onArchive}
         onDelete={onDelete}
-        dragHandleProps={{ ...attributes, ...listeners }}
+        dragHandleProps={listeners}
         onAddToMyDay={onAddToMyDay}
         onRemoveFromMyDay={onRemoveFromMyDay}
       />
@@ -109,7 +111,10 @@ export function TaskList({
   })
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(TouchSensor, {
       activationConstraint: { delay: 250, tolerance: 5 },
     }),
   )

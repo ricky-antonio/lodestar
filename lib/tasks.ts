@@ -91,6 +91,20 @@ export function getFractionalPosition(
 
 // ─── Supabase helpers ─────────────────────────────────────────────────────────
 
+export async function getAllTasks(workspaceId: string): Promise<Task[]> {
+  const supabase = createClient()
+  const now = new Date().toISOString()
+  const { data, error } = await supabase
+    .from('tasks')
+    .select(TASK_COLUMNS)
+    .eq('workspace_id', workspaceId)
+    .eq('is_archived', false)
+    .or(`snoozed_until.is.null,snoozed_until.lt.${now}`)
+    .order('position', { ascending: true })
+  if (error) throw error
+  return (data ?? []) as unknown as Task[]
+}
+
 export async function getTasks(
   workspaceId: string,
   projectId: string | null

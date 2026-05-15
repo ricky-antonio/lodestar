@@ -30,16 +30,11 @@ export default function ProjectPage() {
 
   const project = projects.find(p => p.id === projectId)
 
-  // Set active project when found so TasksContext loads the right tasks
+  // Set active project when navigating to this page
   useEffect(() => {
     const proj = projects.find(p => p.id === projectId)
     if (proj) setActiveProject(proj)
   }, [projects, projectId, setActiveProject])
-
-  // Clear active project when navigating away
-  useEffect(() => {
-    return () => { setActiveProject(null) }
-  }, [setActiveProject])
 
   const projectTasks = tasks.filter(t => t.project_id === projectId && !t.is_archived)
   const visibleTasks = filterTasks(projectTasks, filters)

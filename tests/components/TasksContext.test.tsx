@@ -59,7 +59,7 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 )
 
 describe('TasksContext', () => {
-  it('loads inbox tasks when workspace loads and no active project', async () => {
+  it('loads all workspace tasks when workspace loads', async () => {
     setupAuthMocks()
     setupOrderMocks([makeTask()])
 

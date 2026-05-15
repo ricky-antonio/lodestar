@@ -16,6 +16,8 @@ import {
 } from '@/lib/projects'
 import type { Project } from '@/lib/types'
 
+const LAST_PROJECT_KEY = 'lodestar:lastProjectId'
+
 interface ProjectsContextValue {
   projects: Project[]
   activeProject: Project | null
@@ -31,8 +33,15 @@ const ProjectsContext = createContext<ProjectsContextValue | null>(null)
 export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   const { workspace } = useAuth()
   const [projects, setProjects] = useState<Project[]>([])
-  const [activeProject, setActiveProject] = useState<Project | null>(null)
+  const [activeProject, setActiveProjectState] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const setActiveProject = useCallback((project: Project | null) => {
+    setActiveProjectState(project)
+    if (project !== null) {
+      localStorage.setItem(LAST_PROJECT_KEY, project.id)
+    }
+  }, [])
 
   useEffect(() => {
     if (!workspace) {
@@ -46,7 +55,15 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
       setLoading(true)
       try {
         const data = await getProjects(ws.id)
-        if (!cancelled) setProjects(data)
+        if (!cancelled) {
+          setProjects(data)
+          // Restore last selected project across sessions
+          const lastId = localStorage.getItem(LAST_PROJECT_KEY)
+          if (lastId) {
+            const found = data.find(p => p.id === lastId)
+            if (found) setActiveProjectState(found)
+          }
+        }
       } catch {
         // Leave projects as empty array on error
       } finally {
@@ -88,12 +105,12 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   ) => {
     const previous = projects
     setProjects(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p))
-    if (activeProject?.id === id) setActiveProject(prev => prev ? { ...prev, ...updates } : prev)
+    if (activeProject?.id === id) setActiveProjectState(prev => prev ? { ...prev, ...updates } : prev)
     try {
       await updateProjectInDB(id, updates)
     } catch {
       setProjects(previous)
-      if (activeProject?.id === id) setActiveProject(previous.find(p => p.id === id) ?? null)
+      if (activeProject?.id === id) setActiveProjectState(previous.find(p => p.id === id) ?? null)
     }
   }, [projects, activeProject])
 
@@ -101,12 +118,17 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     const previous = projects
     const previousActive = activeProject
     setProjects(prev => prev.filter(p => p.id !== id))
-    if (activeProject?.id === id) setActiveProject(null)
+    if (activeProject?.id === id) {
+      setActiveProjectState(null)
+      if (localStorage.getItem(LAST_PROJECT_KEY) === id) {
+        localStorage.removeItem(LAST_PROJECT_KEY)
+      }
+    }
     try {
       await archiveProjectInDB(id)
     } catch {
       setProjects(previous)
-      setActiveProject(previousActive)
+      setActiveProjectState(previousActive)
     }
   }, [projects, activeProject])
 

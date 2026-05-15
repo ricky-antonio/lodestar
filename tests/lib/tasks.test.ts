@@ -4,6 +4,7 @@ import {
   filterTasks,
   sortTasks,
   getFractionalPosition,
+  getAllTasks,
   getTasks,
   createTask,
   updateTask,
@@ -224,6 +225,27 @@ describe('getFractionalPosition', () => {
 })
 
 // ─── Supabase helpers ─────────────────────────────────────────────────────────
+
+describe('getAllTasks', () => {
+  it('returns all workspace tasks without project filter', async () => {
+    const tasks = [makeTask({ project_id: 'p-1' }), makeTask({ id: 't-2', project_id: null })]
+    mockSupabase.order.mockResolvedValueOnce({ data: tasks, error: null })
+    const result = await getAllTasks('ws-1')
+    expect(result).toEqual(tasks)
+    expect(mockSupabase.eq).toHaveBeenCalledWith('is_archived', false)
+    expect(mockSupabase.is).not.toHaveBeenCalled()
+  })
+
+  it('returns empty array when data is null', async () => {
+    mockSupabase.order.mockResolvedValueOnce({ data: null, error: null })
+    expect(await getAllTasks('ws-1')).toEqual([])
+  })
+
+  it('throws on query error', async () => {
+    mockSupabase.order.mockResolvedValueOnce({ data: null, error: new Error('DB error') })
+    await expect(getAllTasks('ws-1')).rejects.toThrow('DB error')
+  })
+})
 
 describe('getTasks', () => {
   it('returns tasks for a project', async () => {

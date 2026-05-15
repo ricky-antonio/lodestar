@@ -10,7 +10,7 @@ import {
 import { useAuth } from './AuthContext'
 import { useProjects } from './ProjectsContext'
 import {
-  getTasks,
+  getAllTasks,
   createTask as createTaskInDB,
   updateTask as updateTaskInDB,
   deleteTask as deleteTaskInDB,
@@ -51,7 +51,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     async function load() {
       setLoading(true)
       try {
-        const data = await getTasks(ws.id, activeProject?.id ?? null)
+        const data = await getAllTasks(ws.id)
         if (!cancelled) setTasks(data)
       } catch {
         // Leave tasks as empty array on error
@@ -62,7 +62,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
     load()
     return () => { cancelled = true }
-  }, [workspace, activeProject, authLoading])
+  }, [workspace, authLoading])
 
   const addTask = useCallback(async (
     fields: Partial<Omit<Task, 'id' | 'workspace_id' | 'created_at' | 'updated_at'>>

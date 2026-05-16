@@ -21,12 +21,14 @@ import {
 import { SubtaskList } from '@/components/tasks/SubtaskList'
 import { LabelPicker } from '@/components/tasks/LabelPicker'
 import { TaskDependencies } from '@/components/tasks/TaskDependencies'
+import { CommentThread } from '@/components/tasks/CommentThread'
 import { DueDatePicker } from '@/components/tasks/DueDatePicker'
 import { SnoozeMenu } from '@/components/tasks/SnoozeMenu'
 import { keyboard } from '@/lib/keyboard'
 import { useUI } from '@/lib/context/UIContext'
 import { useTasks } from '@/lib/context/TasksContext'
 import { useProjects } from '@/lib/context/ProjectsContext'
+import { useAuth } from '@/lib/context/AuthContext'
 import type { TaskStatus, TaskPriority } from '@/lib/types'
 
 const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
@@ -54,6 +56,7 @@ export function TaskDetail() {
   const { detailTaskId, isCreating, createDefaults, closeDetail } = useUI()
   const { tasks, editTask, archiveTask, removeTask, addTask } = useTasks()
   const { projects } = useProjects()
+  const { user } = useAuth()
 
   const [isClosing, setIsClosing] = useState(false)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
@@ -650,12 +653,18 @@ export function TaskDetail() {
                 <TaskDependencies taskId={task!.id} allTasks={tasks} />
               </div>
 
-              {/* Activity stub */}
-              <div className="pt-2 border-t border-[var(--border)]">
-                <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)] mb-1">
+              {/* Comments */}
+              <div className="flex flex-col gap-2 pt-2 border-t border-[var(--border)]">
+                <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
                   Activity
                 </p>
-                <p className="text-sm text-[var(--tx-3)]">— coming soon</p>
+                {user && (
+                  <CommentThread
+                    taskId={task!.id}
+                    workspaceId={task!.workspace_id}
+                    userId={user.id}
+                  />
+                )}
               </div>
             </>
           )}

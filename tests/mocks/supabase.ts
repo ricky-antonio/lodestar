@@ -15,6 +15,7 @@ export const mockSupabase = {
   lt: vi.fn().mockReturnThis(),
   gte: vi.fn().mockReturnThis(),
   ilike: vi.fn().mockReturnThis(),
+  in: vi.fn().mockReturnThis(),
   single: vi.fn(),
   maybeSingle: vi.fn(),
   auth: {

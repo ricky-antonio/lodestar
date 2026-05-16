@@ -43,6 +43,10 @@ vi.mock('@/lib/context/ProjectsContext', () => ({
   useProjects: () => ({ projects: [] as Project[] }),
 }))
 
+vi.mock('@/lib/context/AuthContext', () => ({
+  useAuth: () => ({ user: { id: 'u-1' } }),
+}))
+
 vi.mock('@/lib/labels', () => ({
   getLabels: vi.fn().mockResolvedValue([]),
   getTaskLabels: vi.fn().mockResolvedValue([]),
@@ -61,6 +65,10 @@ vi.mock('@/lib/links', () => ({
   getLinkedTasks: vi.fn().mockResolvedValue([]),
   addLink: vi.fn().mockResolvedValue(undefined),
   removeLink: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('@/components/tasks/CommentThread', () => ({
+  CommentThread: () => <div data-testid="comment-thread" />,
 }))
 
 vi.mock('@/components/tasks/DueDatePicker', () => ({

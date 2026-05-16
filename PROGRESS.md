@@ -171,8 +171,25 @@ Phase 2 — Views + Organization (**in progress**)
 - coverage: **81.24% statements / 84.48% lines / 74.41% branches / 74.49% functions** (all above Phase 1 config thresholds 70/70/65; lines/statements/branches above Phase 2 targets; functions 74.49% just under Phase 2 target of 75% — not raising config yet)
 - build: **PASS** (warnings only — all pre-existing)
 
+- **Comments + activity feed (relative timestamps)** —
+  - `lib/relative-time.ts` — `relativeTime(date, now?)`: pure function; "just now" (<1min), "X minutes ago", "X hours ago", "yesterday", "X days ago" (≤7), then formatted date (>7 days); `now` param for testability
+  - `lib/comments.ts` — `getComments(taskId)`, `addComment(workspaceId, taskId, userId, body)`, `deleteComment(id)`; two-step approach: fetch comment rows, then batch-fetch profiles via `.in('id', userIds)` and join in app code; `Comment` type with `profile` field; `deleteComment` by id
+  - `components/tasks/CommentThread.tsx` — loads comments on mount, renders avatar (initials fallback) + display_name + relativeTime + body; own comments show delete button (optimistic remove + re-fetch on error); textarea submit via button or Ctrl+Enter; optimistic append with rollback on failure
+  - Wired into `TaskDetail.tsx` replacing "Activity — coming soon" stub; `useAuth()` added to TaskDetail to get `user.id`; CommentThread mocked in TaskDetail test
+  - `tests/mocks/supabase.ts` — added `.in()` method to shared mock
+  - `tests/lib/relative-time.test.ts` — 16 tests covering all time buckets with injected `now` param AND fake timers
+  - `tests/lib/comments.test.ts` — 8 tests: getComments (happy + missing profile fallback + empty + error), addComment (happy + error), deleteComment (happy + error)
+  - `tests/components/tasks/CommentThread.test.tsx` — 5 tests: renders comments with name+body, relativeTime shown, delete only on own, delete calls handler + optimistic remove, submit calls addComment + clears input, reverts on error
+  - 31 new tests; 388 total; type-check clean, build clean
+
+## Session 2026-05-15 end-of-session checklist (session 8)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (388 tests, 48 files)
+- coverage: **81.91% statements / 84.97% lines / 74.55% branches / 75.23% functions** (all above Phase 1 config thresholds 70/70/65; all Phase 2 targets met — lines ≥75% ✓, functions ≥75% ✓, branches ≥70% ✓)
+- build: **PASS** (warnings only — all pre-existing)
+
 ## Next task
-Relative timestamps in activity feed and comments
+RLS verification (two-account test: sign in as User A, confirm User B's data is invisible)
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -234,6 +251,9 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - `saved_filters` RLS is personal (user_id = auth.uid()) not workspace-shared — intentional; saved filters are a personal productivity tool, not shared state
 - `FilterBar` receives optional `userId` prop; when omitted (e.g. tests that don't need saved filters) the Saved button is hidden entirely — backwards-compatible
 - `deleteSavedFilter` in FilterBar does an optimistic removal and re-fetches on failure (rather than rollback) — re-fetch is simpler since the list is short and the failure path is rare
+- `profiles` join in `task_comments` queries does not work via PostgREST embedded resource syntax — `task_comments.user_id → auth.users.id ← profiles.id` is an indirect relationship PostgREST cannot traverse; use two-step app-code join: fetch comment rows, then `.in('id', userIds)` on profiles, merge in application code
+- `screen.queryByText('Failing comment')` in RTL also matches textarea value when React sets it as controlled value in jsdom — use `{ selector: 'p' }` to restrict text search to paragraph elements, or check for empty-state sentinel text ("No comments yet.") to verify optimistic rollback instead
+- `relativeTime` uses `Math.floor(diffMs / DAY)` for day comparison — 25 hours → diffDays=1 → "yesterday" (not "1 day ago"); this is the intended behavior matching the UX spec
 
 ## Known issues / one-time setup required
 

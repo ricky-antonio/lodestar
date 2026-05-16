@@ -210,6 +210,20 @@ Phase 2 — Views + Organization (**in progress**)
 - coverage: **80.81% statements / 83.78% lines / 73.67% branches / 73.92% functions** (all above Phase 1 config thresholds 70/70/65; lines/statements/branches above Phase 2 targets; functions 73.92% just under Phase 2 target of 75% — not raising config yet)
 - build: **PASS** (warnings only — all pre-existing)
 
+- **Mobile input zoom fix** — `app/globals.css`: added `@media (max-width: 767px) { input, textarea, select { font-size: 16px !important } }` — prevents iOS Safari auto-zoom on focus for all form elements app-wide (browser zooms when font-size < 16px); also bumped `.auth-input` from 14px → 16px for consistency on desktop
+
+- **Project dropdown enforced in create task** — `components/tasks/TaskDetail.tsx`: removed "No project" fallback option; create mode now auto-selects `createDefaults?.project_id ?? projects[0]?.id ?? null`; `handleCreate` guards on `!draftProjectId`; submit button also disabled when no project; `onChange` no longer passes `|| null` since the select always has a valid value
+
+- **Topbar view title complete** — `components/layout/Topbar.tsx`: added `/tasks`, `/settings`, `/projects` to `VIEW_LABELS`; added `useProjects` hook to resolve project name on `/projects/[id]` routes (shows actual project name instead of "Projects"); `Topbar.test.tsx` updated with `useProjects` mock; topbar now never shows "lodestar" as a fallback in any real app route
+
+- **Create task → full edit panel** — `TasksContext.addTask` now returns `Promise<string | null>` (the real DB task ID); `handleCreate` in `TaskDetail` calls `openDetail(newId)` instead of `handleClose()` — panel transitions seamlessly from create form to full edit mode with Subtasks, Labels, Dependencies, and Activity sections live immediately after save
+
+## Session 2026-05-16 end-of-session checklist (session 10)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (388 tests, 48 files)
+- coverage: **80.79% statements / 83.73% lines / 73.73% branches / 73.78% functions** (all above Phase 1 config thresholds 70/70/65; lines/statements/branches above Phase 2 targets; functions 73.78% just under Phase 2 target of 75% — not raising config yet)
+- build: **PASS** (warnings only — all pre-existing)
+
 ## Next task
 RLS verification (two-account test: sign in as User A, confirm User B's data is invisible)
 
@@ -284,6 +298,10 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - `CreateProjectDialog` is a global component mounted in `AppShell`, controlled via `UIContext.projectCreateOpen` — any component can open it via `openProjectCreate()` without prop drilling
 - Sidebar nav restriction: `projects.length === 0` hides Tasks/My Day/Matrix (not `!activeProject`) — `!activeProject` alone would lock out users who have projects but whose localStorage was cleared
 - Q shortcut checks `projects.length === 0` (via ref) to decide whether to open the project dialog or the task create panel — same ref pattern as `activeProject` to avoid stale closures
+- iOS Safari auto-zoom is triggered when any input/textarea/select has font-size < 16px — fixed globally via `@media (max-width: 767px)` rule with `!important` to override Tailwind utility classes; `!important` is justified here because this is a platform constraint override, not a design decision
+- `addTask` in TasksContext returns `Promise<string | null>` (the real DB task ID) so callers can transition to edit mode for the newly created task; the optimistic temp ID (`temp-${Date.now()}`) is intentionally not returned — callers always need the real persisted ID
+- Create task panel transitions to edit mode (not close) on successful save — user gets immediate access to subtasks/labels/dependencies/comments without reopening; if DB call fails, falls back to `handleClose()`
+- `Topbar` uses `useProjects` to resolve the active project name for `/projects/[id]` routes — avoids prop drilling from the page; `Topbar.test.tsx` mocks `useProjects` returning an empty projects array
 
 ## Known issues / one-time setup required
 

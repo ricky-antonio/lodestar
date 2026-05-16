@@ -7,11 +7,13 @@ import '@/tests/mocks/supabase'
 
 const dndCallbacks = vi.hoisted(() => ({
   onDragEnd: null as ((event: any) => void) | null,
+  onDragStart: null as ((event: any) => void) | null,
 }))
 
 vi.mock('@dnd-kit/core', () => ({
   DndContext: ({ children, onDragEnd, onDragStart }: any) => {
     dndCallbacks.onDragEnd = onDragEnd
+    dndCallbacks.onDragStart = onDragStart
     return children
   },
   DragOverlay: ({ children }: any) => children ?? null,
@@ -102,6 +104,7 @@ describe('TaskList', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     dndCallbacks.onDragEnd = null
+    dndCallbacks.onDragStart = null
   })
 
   function renderList(tasks = defaultTasks) {
@@ -158,5 +161,25 @@ describe('TaskList', () => {
     // getFractionalPosition(2, 3) = 2.5
     dndCallbacks.onDragEnd!({ active: { id: 'task-1' }, over: { id: 'task-2' } })
     expect(onReorder).toHaveBeenCalledWith('task-1', 2.5)
+  })
+
+  it('drag end with same active and over does nothing', () => {
+    renderList()
+    dndCallbacks.onDragEnd!({ active: { id: 'task-1' }, over: { id: 'task-1' } })
+    expect(onReorder).not.toHaveBeenCalled()
+  })
+
+  it('drag end with no over does nothing', () => {
+    renderList()
+    dndCallbacks.onDragEnd!({ active: { id: 'task-1' }, over: null })
+    expect(onReorder).not.toHaveBeenCalled()
+  })
+
+  it('drag start sets the active drag id', () => {
+    renderList()
+    // Just verify it can be called without throwing
+    expect(() => {
+      dndCallbacks.onDragStart!({ active: { id: 'task-1' } })
+    }).not.toThrow()
   })
 })

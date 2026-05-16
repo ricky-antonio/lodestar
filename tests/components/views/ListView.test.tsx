@@ -176,4 +176,44 @@ describe('ListView', () => {
 
     expect(onBulkArchive).toHaveBeenCalledWith(['t1', 't2'])
   })
+
+  it('clicking title cell opens inline edit and blur commits change', async () => {
+    const user = userEvent.setup()
+    renderList([makeTask({ id: 't1', title: 'Task 1' })])
+
+    // Click the title button to enter edit mode
+    await user.click(screen.getByRole('button', { name: 'Task 1' }))
+
+    const input = screen.getByRole('textbox', { name: /task title/i })
+    await user.clear(input)
+    await user.type(input, 'Updated')
+    fireEvent.blur(input)
+
+    expect(mockEditTask).toHaveBeenCalledWith('t1', { title: 'Updated' })
+  })
+
+  it('pressing Enter in title input commits change', async () => {
+    const user = userEvent.setup()
+    renderList([makeTask({ id: 't1', title: 'Task 1' })])
+
+    await user.click(screen.getByRole('button', { name: 'Task 1' }))
+
+    const input = screen.getByRole('textbox', { name: /task title/i })
+    await user.clear(input)
+    await user.type(input, 'Via Enter{Enter}')
+
+    expect(mockEditTask).toHaveBeenCalledWith('t1', { title: 'Via Enter' })
+  })
+
+  it('clicking priority cell opens inline priority select', async () => {
+    const user = userEvent.setup()
+    renderList([makeTask({ id: 't1', priority: 'medium' })])
+
+    await user.click(screen.getByRole('button', { name: 'Medium' }))
+
+    const select = screen.getByRole('combobox', { name: /priority/i })
+    fireEvent.change(select, { target: { value: 'high' } })
+
+    expect(mockEditTask).toHaveBeenCalledWith('t1', { priority: 'high' })
+  })
 })

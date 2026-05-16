@@ -1,7 +1,7 @@
 # Lodestar — Progress
 
 ## Current phase
-Phase 2 — Views + Organization (**in progress**)
+Phase 2 — Views (complete)
 
 ## Completed
 - Pre-build setup: Supabase (18 tables, RLS, triggers, constraints all verified), Google OAuth, Anthropic API, Upstash Redis
@@ -232,17 +232,16 @@ Phase 2 — Views + Organization (**in progress**)
 - coverage: **79.66% statements / 82.78% lines / 71.86% branches / 72.00% functions** (all above Phase 1 config thresholds 70/70/65; lines/statements/branches above Phase 2 targets; functions 72.00% just under Phase 2 target of 75% — not raising config yet)
 - build: **PASS** (warnings only — all pre-existing)
 
-## Next task
-RLS verification (two-account test: sign in as User A, confirm User B's data is invisible)
+## In progress
+None — Phase 2 complete. Ready to begin Phase 3.
 
-Remaining P1.10 items (complete in parallel, do not block Phase 2):
-- Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
-  - Google OAuth + same email/password account → merged → single workspace
-  - Forgot password flow
-  - Reset link used twice → expired message
-  - Change email
-  - Change password
-- RLS two-account verification (no email needed — two browser profiles)
+## Next task
+Phase 3 opening items (read `.claude/phases/3-ai.md` first):
+- `lib/ai/tasks.ts` — AI function implementations: `createTaskFromPrompt`, `breakdownTask`, `suggestPriorities`, `extractDueDate`
+- `/api/ai/create-task` route — natural language task creation with preview card + confirm
+- `/api/ai/breakdown` route — task breakdown into 3–6 subtasks
+- `components/ai/AICommandBar.tsx` — AI command bar UI
+- `components/ai/AITaskBreakdown.tsx` — subtask suggestion UI
 
 ## Decisions made
 - Using legacy Supabase JWT keys (eyJ...) — REST API requires JWT format, not new sb_publishable_ format
@@ -371,14 +370,14 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 - Build warning: `useEffect` missing dependency `handleClose` in TaskDetail.tsx — intentional; including it would cause infinite re-renders
 
-## Test status (end of session — 2026-05-15, session 4)
+## Test status (Phase 2 close-out — 2026-05-16)
 - `npm run type-check`: PASS (0 errors)
-- `npm test`: PASS (42 files, 310 tests)
-- `npm run test:coverage`: PASS (above configured 70/70/65 thresholds)
-- `npm run build`: PASS (warnings only — `_status` unused, `<img>` in profile, missing dep in useEffect — all pre-existing non-blocking)
+- `npm test`: PASS (51 files, 415 tests)
+- `npm run test:coverage`: PASS — all Phase 2 thresholds exceeded
+- `npm run build`: PASS (warnings only — all pre-existing, non-breaking)
 - Coverage (Phase 2 targets: Lines ≥ 75%, Functions ≥ 75%, Branches ≥ 70%):
-  - Statements: 81.40% (1081/1328) ✓
-  - Branches:   73.59% (588/799) ✓
-  - Functions:  75.11% (323/430) ✓
-  - Lines:      84.48% (931/1102) ✓
+  - Statements: 84.10% (1471/1749) ✓
+  - Branches:   74.51% (804/1079) ✓
+  - Functions:  77.20% (420/544) ✓
+  - Lines:      87.73% (1287/1467) ✓
   - All Phase 2 targets met. Configured vitest threshold remains at 70/70/65 (Phase 1 values) — all pass comfortably.

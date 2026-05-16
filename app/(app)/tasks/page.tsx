@@ -17,7 +17,7 @@ import { useUI } from '@/lib/context/UIContext'
 export default function TasksPage() {
   const { workspace, user } = useAuth()
   const { activeProject } = useProjects()
-  const { tasks, taskLabelIds, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
+  const { tasks, taskLabelIds, labels, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
   const { activeView, setActiveView, openCreate } = useUI()
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
   const handleSelectionChange = useCallback((ids: string[]) => setSelectedTaskIds(ids), [])
@@ -124,6 +124,8 @@ export default function TasksPage() {
             onDelete={id => removeTask(id)}
             onAddTask={activeProject ? () => openCreate({ project_id: activeProject.id }) : undefined}
             onSelectionChange={handleSelectionChange}
+            taskLabelIds={taskLabelIds}
+            labels={labels}
           />
         ) : (
           <ListView

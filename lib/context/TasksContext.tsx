@@ -18,12 +18,13 @@ import {
   archiveTask as archiveTaskInDB,
   getFractionalPosition,
 } from '@/lib/tasks'
-import { getWorkspaceTaskLabelIds } from '@/lib/labels'
-import type { Task, FilterState } from '@/lib/types'
+import { getWorkspaceTaskLabelIds, getLabels } from '@/lib/labels'
+import type { Task, FilterState, Label } from '@/lib/types'
 
 interface TasksContextValue {
   tasks: Task[]
   taskLabelIds: Record<string, string[]>
+  labels: Label[]
   setTaskLabel: (taskId: string, labelId: string, assigned: boolean) => void
   filters: FilterState
   setFilters: (filters: FilterState) => void
@@ -42,6 +43,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   const [allTasks, setAllTasks] = useState<Task[]>([])
   const [searchOverride, setSearchOverride] = useState<Task[] | null>(null)
   const [taskLabelIds, setTaskLabelIds] = useState<Record<string, string[]>>({})
+  const [labels, setLabels] = useState<Label[]>([])
   const [filters, setFilters] = useState<FilterState>({})
   const [loading, setLoading] = useState(true)
 
@@ -63,13 +65,15 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     async function load() {
       setLoading(true)
       try {
-        const [data, labelMap] = await Promise.all([
+        const [data, labelMap, labelList] = await Promise.all([
           getAllTasks(ws.id),
           getWorkspaceTaskLabelIds(ws.id),
+          getLabels(ws.id),
         ])
         if (!cancelled) {
           setAllTasks(data)
           setTaskLabelIds(labelMap)
+          setLabels(labelList)
         }
       } catch {
         // Leave tasks as empty array on error
@@ -203,7 +207,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <TasksContext.Provider
-      value={{ tasks, taskLabelIds, setTaskLabel, filters, setFilters, addTask, editTask, removeTask, archiveTask, loading }}
+      value={{ tasks, taskLabelIds, labels, setTaskLabel, filters, setFilters, addTask, editTask, removeTask, archiveTask, loading }}
     >
       {children}
     </TasksContext.Provider>

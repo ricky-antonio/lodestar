@@ -370,6 +370,34 @@ Without this, the service role client gets "permission denied for table workspac
 - Build warning: `_userId` unused in lib/auth.ts — pre-existing, not a bug
 - Build warning: `useEffect` missing dependency `handleClose` in TaskDetail.tsx — intentional; including it would cause infinite re-renders
 
+- **Board card label dots** — replaced the redundant priority dot (mirroring the left-border color) on board cards with label dots:
+  - `TasksContext` now fetches `labels: Label[]` alongside tasks and `taskLabelIds` on workspace load, exposing them from context
+  - `BoardView` (`CardUI`, `SortableCard`, `BoardColumn`) extended with optional `taskLabelIds` and `labels` props
+  - Board cards now render one 8px dot per assigned label (using that label's stored color); if a task has no labels the dot row is absent entirely
+  - `tasks/page.tsx` and `projects/[id]/page.tsx` pass `taskLabelIds` and `labels` from `useTasks()` to `BoardView`
+  - Priority is already communicated by the left-border color — removing the dot eliminates the redundancy
+
+## Session 2026-05-16 end-of-session checklist (session 12)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (51 files, 439 tests)
+- coverage: **86.76% statements (1527/1760) / 89.56% lines (1322/1476) / 77.83% branches (843/1083) / 79.41% functions (436/549)** — all Phase 2 thresholds exceeded
+- build: **PASS** (warnings only — all pre-existing, non-breaking)
+
+## In progress
+None.
+
+## Next task
+Phase 3 opening items (read `.claude/phases/3-ai.md` first):
+- `lib/ai/tasks.ts` — AI function implementations: `createTaskFromPrompt`, `breakdownTask`, `suggestPriorities`, `extractDueDate`
+- `/api/ai/create-task` route — natural language task creation with preview card + confirm
+- `/api/ai/breakdown` route — task breakdown into 3–6 subtasks
+- `components/ai/AICommandBar.tsx` — AI command bar UI
+- `components/ai/AITaskBreakdown.tsx` — subtask suggestion UI
+
+## Decisions made (continued)
+- Board card priority dot removed — priority is already communicated by the left-border color; the dot was redundant; replaced by label dots (one per assigned label, using the label's own color)
+- `labels: Label[]` lifted into `TasksContext` alongside `taskLabelIds` — both are needed at the same level (board cards) and fetching once in context avoids duplicate `getLabels()` calls per component
+
 ## Test status (Phase 2 close-out — 2026-05-16)
 - `npm run type-check`: PASS (0 errors)
 - `npm test`: PASS (51 files, 415 tests)

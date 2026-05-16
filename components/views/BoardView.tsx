@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { getFractionalPosition } from '@/lib/tasks'
 import { useUI } from '@/lib/context/UIContext'
-import type { Task, TaskStatus, TaskPriority } from '@/lib/types'
+import type { Task, TaskStatus, TaskPriority, Label } from '@/lib/types'
 
 const COLUMNS: TaskStatus[] = ['todo', 'in_progress', 'done']
 
@@ -85,9 +85,11 @@ interface CardUIProps {
   isSelected?: boolean
   onSingleClick?: (id: string, shiftKey: boolean) => void
   onDoubleClick?: (id: string) => void
+  taskLabelIds?: Record<string, string[]>
+  labels?: Label[]
 }
 
-function CardUI({ task, onArchive, onDelete, isSelected = false, onSingleClick, onDoubleClick }: CardUIProps) {
+function CardUI({ task, onArchive, onDelete, isSelected = false, onSingleClick, onDoubleClick, taskLabelIds, labels }: CardUIProps) {
   const { openDetail } = useUI()
   const isDone = task.status === 'done'
   const overdue = !isDone && task.due_date != null && isOverdue(task.due_date)
@@ -150,11 +152,26 @@ function CardUI({ task, onArchive, onDelete, isSelected = false, onSingleClick, 
       </div>
 
       <div className="flex items-center gap-2 mt-2">
-        <span
-          aria-hidden
-          className="rounded-full flex-none"
-          style={{ width: 8, height: 8, background: PRIORITY_COLORS[task.priority] }}
-        />
+        {(() => {
+          const labelIds = taskLabelIds?.[task.id] ?? []
+          const taskLabels = labelIds
+            .map(id => labels?.find(l => l.id === id))
+            .filter((l): l is Label => l != null)
+          if (taskLabels.length === 0) return null
+          return (
+            <div className="flex items-center gap-1" aria-label="Labels">
+              {taskLabels.map(label => (
+                <span
+                  key={label.id}
+                  aria-hidden
+                  className="rounded-full flex-none"
+                  title={label.name}
+                  style={{ width: 8, height: 8, background: label.color }}
+                />
+              ))}
+            </div>
+          )
+        })()}
         {task.due_date && (
           <span
             className="text-[11px] px-1.5 py-0.5 rounded whitespace-nowrap"
@@ -181,9 +198,11 @@ interface SortableCardProps {
   isSelected: boolean
   onSingleClick: (id: string, shiftKey: boolean) => void
   onDoubleClick: (id: string) => void
+  taskLabelIds?: Record<string, string[]>
+  labels?: Label[]
 }
 
-function SortableCard({ task, isDragActive, onArchive, onDelete, isSelected, onSingleClick, onDoubleClick }: SortableCardProps) {
+function SortableCard({ task, isDragActive, onArchive, onDelete, isSelected, onSingleClick, onDoubleClick, taskLabelIds, labels }: SortableCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
   })
@@ -207,6 +226,8 @@ function SortableCard({ task, isDragActive, onArchive, onDelete, isSelected, onS
         isSelected={isSelected}
         onSingleClick={onSingleClick}
         onDoubleClick={onDoubleClick}
+        taskLabelIds={taskLabelIds}
+        labels={labels}
       />
     </div>
   )
@@ -224,6 +245,8 @@ interface ColumnProps {
   selectedIds: Set<string>
   onCardClick: (id: string, shiftKey: boolean) => void
   onCardDoubleClick: (id: string) => void
+  taskLabelIds?: Record<string, string[]>
+  labels?: Label[]
 }
 
 function BoardColumn({
@@ -236,6 +259,8 @@ function BoardColumn({
   selectedIds,
   onCardClick,
   onCardDoubleClick,
+  taskLabelIds,
+  labels,
 }: ColumnProps) {
   const { setNodeRef } = useDroppable({ id: status })
 
@@ -277,6 +302,8 @@ function BoardColumn({
               isSelected={selectedIds.has(task.id)}
               onSingleClick={onCardClick}
               onDoubleClick={onCardDoubleClick}
+              taskLabelIds={taskLabelIds}
+              labels={labels}
             />
           ))}
         </SortableContext>
@@ -310,6 +337,8 @@ interface Props {
   onBulkSetPriority?: (ids: string[], priority: TaskPriority) => void
   onBulkArchive?: (ids: string[]) => void
   onSelectionChange?: (ids: string[]) => void
+  taskLabelIds?: Record<string, string[]>
+  labels?: Label[]
 }
 
 export function BoardView({
@@ -322,6 +351,8 @@ export function BoardView({
   onBulkSetPriority,
   onBulkArchive,
   onSelectionChange,
+  taskLabelIds,
+  labels,
 }: Props) {
   const { openDetail } = useUI()
 
@@ -538,6 +569,8 @@ export function BoardView({
               selectedIds={selectedIds}
               onCardClick={handleCardClick}
               onCardDoubleClick={openDetail}
+              taskLabelIds={taskLabelIds}
+              labels={labels}
             />
           ))}
         </div>
@@ -549,6 +582,8 @@ export function BoardView({
                 task={activeTask}
                 onArchive={() => {}}
                 onDelete={() => {}}
+                taskLabelIds={taskLabelIds}
+                labels={labels}
               />
             </div>
           ) : null}

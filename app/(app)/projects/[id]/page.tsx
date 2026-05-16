@@ -21,7 +21,7 @@ export default function ProjectPage() {
 
   const { workspace, user } = useAuth()
   const { projects, setActiveProject } = useProjects()
-  const { tasks, taskLabelIds, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
+  const { tasks, taskLabelIds, labels, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
   const { activeView, setActiveView, openCreate } = useUI()
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
   const handleSelectionChange = useCallback((ids: string[]) => setSelectedTaskIds(ids), [])
@@ -141,6 +141,8 @@ export default function ProjectPage() {
               for (const id of ids) await archiveTask(id)
             }}
             onSelectionChange={handleSelectionChange}
+            taskLabelIds={taskLabelIds}
+            labels={labels}
           />
         ) : (
           <ListView

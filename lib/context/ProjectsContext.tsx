@@ -22,7 +22,7 @@ interface ProjectsContextValue {
   projects: Project[]
   activeProject: Project | null
   setActiveProject: (project: Project | null) => void
-  addProject: (name: string, color: string) => Promise<void>
+  addProject: (name: string, color: string) => Promise<string | null>
   editProject: (id: string, updates: Partial<Pick<Project, 'name' | 'color' | 'description' | 'default_view'>>) => Promise<void>
   removeProject: (id: string) => Promise<void>
   loading: boolean
@@ -76,7 +76,7 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
   }, [workspace])
 
   const addProject = useCallback(async (name: string, color: string) => {
-    if (!workspace) return
+    if (!workspace) return null
     const wsId = workspace.id
     const optimistic: Project = {
       id: `temp-${Date.now()}`,
@@ -94,8 +94,11 @@ export function ProjectsProvider({ children }: { children: React.ReactNode }) {
     try {
       const created = await createProjectInDB(wsId, name, color)
       setProjects(prev => prev.map(p => p.id === optimistic.id ? created : p))
+      setActiveProjectState(created)
+      return created.id
     } catch {
       setProjects(previous)
+      return null
     }
   }, [workspace, projects])
 

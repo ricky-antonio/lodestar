@@ -38,12 +38,11 @@ export function CreateProjectDialog() {
     if (!name.trim()) return
     setSubmitting(true)
     try {
-      await addProject(name.trim(), color)
+      const newId = await addProject(name.trim(), color)
       closeProjectCreate()
       setName('')
       setColor(PRESET_COLORS[0])
-      // addProject sets the optimistic project; navigate to projects list
-      router.push('/projects')
+      router.push(newId ? `/projects/${newId}` : '/projects')
     } finally {
       setSubmitting(false)
     }

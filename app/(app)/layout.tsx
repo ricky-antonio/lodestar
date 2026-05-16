@@ -4,16 +4,7 @@ import { AuthProvider } from '@/lib/context/AuthContext'
 import { ProjectsProvider } from '@/lib/context/ProjectsContext'
 import { TasksProvider } from '@/lib/context/TasksContext'
 import { UIProvider } from '@/lib/context/UIContext'
-import { Sidebar } from '@/components/layout/Sidebar'
-import { BottomNav } from '@/components/layout/BottomNav'
-import { MobileProjectBar } from '@/components/layout/MobileProjectBar'
-import { Topbar } from '@/components/layout/Topbar'
-import { Toast } from '@/components/ui/Toast'
-import { QuickCapture } from '@/components/ui/QuickCapture'
-import { KeyboardReferenceSheet } from '@/components/ui/KeyboardReferenceSheet'
-import { AppShortcuts } from '@/components/ui/AppShortcuts'
-import { TaskDetail } from '@/components/tasks/TaskDetail'
-import { NavigationProgress } from '@/components/ui/NavigationProgress'
+import { AppShell } from '@/components/layout/AppShell'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -25,26 +16,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <ProjectsProvider>
         <TasksProvider>
           <UIProvider>
-            <div className="flex h-screen overflow-hidden">
-              <Sidebar />
-              <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-                <Topbar />
-                <main
-                  className="flex-1 overflow-auto pb-[100px] md:pb-0"
-                  style={{ background: 'var(--bg)' }}
-                >
-                  {children}
-                </main>
-              </div>
-            </div>
-            <MobileProjectBar />
-            <BottomNav />
-            <Toast />
-            <QuickCapture />
-            <AppShortcuts />
-            <KeyboardReferenceSheet />
-            <TaskDetail />
-            <NavigationProgress />
+            <AppShell>
+              {children}
+            </AppShell>
           </UIProvider>
         </TasksProvider>
       </ProjectsProvider>

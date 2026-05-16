@@ -320,7 +320,7 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - ✗ Change password — needs email sending
 - ✓ Delete account → data removed → cannot log in → login page shows deleted-account banner (FK cascades fixed — see Known Issues)
 - ✗ Session expiry redirect — not yet tested
-- ✗ RLS two-account verification — not yet tested
+- ✓ RLS two-account verification — PASS (2026-05-16): workspaces, projects, tasks, labels, subtasks, comments — no crossover observed between User A and User B in two simultaneous browser profiles
 
 ### workspace_members RLS fix (already run — 2026-05-14)
 The original self-referential policy caused PostgreSQL to return zero rows for all workspace_members queries, making workspace permanently null. Fixed by running in Supabase SQL Editor:

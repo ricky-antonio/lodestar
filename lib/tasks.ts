@@ -45,7 +45,7 @@ export function filterTasks(
       const assignedIds: string[] = taskLabelIds
         ? (taskLabelIds[task.id] ?? [])
         : hasLabels(task) ? task.labels.map(l => l.id) : []
-      if (!filters.label_ids.some(id => assignedIds.includes(id))) return false
+      if (!filters.label_ids.every(id => assignedIds.includes(id))) return false
     }
     return true
   })

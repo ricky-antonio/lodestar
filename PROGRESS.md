@@ -224,6 +224,14 @@ Phase 2 — Views + Organization (**in progress**)
 - coverage: **80.79% statements / 83.73% lines / 73.73% branches / 73.78% functions** (all above Phase 1 config thresholds 70/70/65; lines/statements/branches above Phase 2 targets; functions 73.78% just under Phase 2 target of 75% — not raising config yet)
 - build: **PASS** (warnings only — all pre-existing)
 
+- **Label filter AND logic** — `filterTasks` label check changed from `.some()` (OR — show task if it has any selected label) to `.every()` (AND — show task only if it has all selected labels); added a new test covering multi-label AND behavior using the `taskLabelIds` map
+
+## Session 2026-05-16 end-of-session checklist (session 11)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (390 tests, 48 files)
+- coverage: **79.66% statements / 82.78% lines / 71.86% branches / 72.00% functions** (all above Phase 1 config thresholds 70/70/65; lines/statements/branches above Phase 2 targets; functions 72.00% just under Phase 2 target of 75% — not raising config yet)
+- build: **PASS** (warnings only — all pre-existing)
+
 ## Next task
 RLS verification (two-account test: sign in as User A, confirm User B's data is invisible)
 
@@ -302,6 +310,7 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - `addTask` in TasksContext returns `Promise<string | null>` (the real DB task ID) so callers can transition to edit mode for the newly created task; the optimistic temp ID (`temp-${Date.now()}`) is intentionally not returned — callers always need the real persisted ID
 - Create task panel transitions to edit mode (not close) on successful save — user gets immediate access to subtasks/labels/dependencies/comments without reopening; if DB call fails, falls back to `handleClose()`
 - `Topbar` uses `useProjects` to resolve the active project name for `/projects/[id]` routes — avoids prop drilling from the page; `Topbar.test.tsx` mocks `useProjects` returning an empty projects array
+- Label filter uses AND logic (`.every()`) not OR (`.some()`) — when multiple labels are selected, a task must have all of them to appear in results; this matches the expected "narrowing" UX where each added label further refines the list
 
 ## Known issues / one-time setup required
 

@@ -146,6 +146,18 @@ describe('filterTasks', () => {
     expect(result).toHaveLength(1)
     expect(result[0].id).toBe('t-with-label')
   })
+
+  it('requires ALL selected labels to match (AND, not OR) using taskLabelIds map', () => {
+    const taskBoth = makeTask({ id: 't-both' })
+    const taskOne = makeTask({ id: 't-one' })
+    const labelMap: Record<string, string[]> = {
+      't-both': ['lbl-1', 'lbl-2'],
+      't-one': ['lbl-1'],
+    }
+    const result = filterTasks([taskBoth, taskOne], { label_ids: ['lbl-1', 'lbl-2'] }, labelMap)
+    expect(result).toHaveLength(1)
+    expect(result[0].id).toBe('t-both')
+  })
 })
 
 // ─── sortTasks ────────────────────────────────────────────────────────────────

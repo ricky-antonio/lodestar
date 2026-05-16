@@ -45,6 +45,12 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   const [filters, setFilters] = useState<FilterState>({})
   const [loading, setLoading] = useState(true)
 
+  // Clear filters whenever the active project changes
+  const activeProjectId = activeProject?.id ?? null
+  useEffect(() => {
+    setFilters({})
+  }, [activeProjectId])
+
   useEffect(() => {
     if (authLoading) return
     if (!workspace) {

@@ -9,6 +9,7 @@ import {
   IconLayoutGrid,
   IconChevronLeft,
   IconChevronRight,
+  IconSettings,
 } from '@tabler/icons-react'
 import { useAuth } from '@/lib/context/AuthContext'
 import { useUI } from '@/lib/context/UIContext'
@@ -94,6 +95,23 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      {/* Settings — pinned to bottom */}
+      <div className="px-2 pb-3 shrink-0" style={{ borderTop: '0.5px solid #1F3D4A' }}>
+        <Link
+          href="/settings/profile"
+          aria-label={sidebarCollapsed ? 'Settings' : undefined}
+          className={[
+            'flex items-center gap-2.5 px-2 py-2 rounded text-sm transition-colors mt-1',
+            pathname.startsWith('/settings')
+              ? 'bg-[rgba(0,182,236,0.12)] text-cerulean-400'
+              : 'text-steel-400 hover:bg-white/[0.04] hover:text-steel-100',
+          ].join(' ')}
+        >
+          <IconSettings size={18} className="shrink-0" />
+          {!sidebarCollapsed && <span className="truncate">Settings</span>}
+        </Link>
+      </div>
     </aside>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { IconSearch } from '@tabler/icons-react'
 import {
@@ -80,8 +81,8 @@ export function Topbar() {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-44">
-            <DropdownMenuItem onSelect={() => router.push('/settings/profile')}>
-              Settings
+            <DropdownMenuItem asChild>
+              <Link href="/settings/profile">Settings</Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={handleSignOut} className="text-red-500 focus:text-red-500">

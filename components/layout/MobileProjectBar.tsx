@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   IconChevronUp,
   IconPlus,
   IconCheck,
   IconLayoutKanban,
+  IconFolders,
 } from '@tabler/icons-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import {
@@ -118,9 +120,19 @@ export function MobileProjectBar() {
               </button>
             ))}
 
-            {projects.length > 0 && (
-              <div className="my-1" style={{ borderTop: '0.5px solid #2C5060' }} />
-            )}
+            <div className="my-1" style={{ borderTop: '0.5px solid #2C5060' }} />
+
+            <Link
+              href="/projects"
+              onClick={() => setOpen(false)}
+              className="w-full flex items-center gap-2 px-3 py-2.5 rounded text-sm transition-colors hover:bg-white/[0.06] text-left"
+              style={{ color: '#7D99AA' }}
+            >
+              <IconFolders size={14} aria-hidden />
+              View all projects
+            </Link>
+
+            <div className="my-1" style={{ borderTop: '0.5px solid #2C5060' }} />
 
             <button
               onClick={() => { setOpen(false); setDialogOpen(true) }}

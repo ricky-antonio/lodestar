@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { TaskList } from '@/components/tasks/TaskList'
 import { ListView } from '@/components/views/ListView'
 import { FilterBar } from '@/components/filters/FilterBar'
+import { ViewSkeleton } from '@/components/ui/ViewSkeleton'
 import { filterTasks } from '@/lib/tasks'
 import { useTasks } from '@/lib/context/TasksContext'
 import { useAuth } from '@/lib/context/AuthContext'
@@ -30,7 +31,7 @@ function formatHeaderDate(): string {
 }
 
 export default function MyDayPage() {
-  const { tasks, filters, setFilters, editTask, removeTask, archiveTask } = useTasks()
+  const { tasks, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
   const { workspace, user } = useAuth()
   const { activeProject } = useProjects()
   const { openCreate } = useUI()
@@ -144,7 +145,9 @@ export default function MyDayPage() {
           <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} userId={user?.id} />
         )}
 
-        {tableView ? (
+        {loading ? (
+          <ViewSkeleton rows={8} />
+        ) : tableView ? (
           /* Table view: combine all tasks into one ListView */
           <ListView
             tasks={[...dueTodayTasks, ...pinnedTasks]}
@@ -199,7 +202,7 @@ export default function MyDayPage() {
         )}
 
         {/* Empty state */}
-        {dueTodayTasks.length === 0 && pinnedTasks.length === 0 && (
+        {!loading && dueTodayTasks.length === 0 && pinnedTasks.length === 0 && (
           <div
             className="flex items-center justify-center py-16 text-sm"
             style={{ color: 'var(--tx-3)' }}

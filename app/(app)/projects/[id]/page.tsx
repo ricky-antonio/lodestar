@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { BoardView } from '@/components/views/BoardView'
 import { ListView } from '@/components/views/ListView'
 import { FilterBar } from '@/components/filters/FilterBar'
+import { ViewSkeleton } from '@/components/ui/ViewSkeleton'
 import { filterTasks } from '@/lib/tasks'
 import { useTasks } from '@/lib/context/TasksContext'
 import { useAuth } from '@/lib/context/AuthContext'
@@ -20,7 +21,7 @@ export default function ProjectPage() {
 
   const { workspace, user } = useAuth()
   const { projects, setActiveProject } = useProjects()
-  const { tasks, filters, setFilters, editTask, removeTask, archiveTask } = useTasks()
+  const { tasks, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
   const { activeView, setActiveView, openCreate } = useUI()
 
   const project = projects.find(p => p.id === projectId)
@@ -117,7 +118,9 @@ export default function ProjectPage() {
 
       {/* View */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        {activeView === 'board' ? (
+        {loading ? (
+          <ViewSkeleton rows={8} />
+        ) : activeView === 'board' ? (
           <BoardView
             tasks={visibleTasks}
             onMoveTask={(taskId, newStatus, newPosition) => {

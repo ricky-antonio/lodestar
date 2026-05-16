@@ -13,6 +13,7 @@ import { QuickCapture } from '@/components/ui/QuickCapture'
 import { KeyboardReferenceSheet } from '@/components/ui/KeyboardReferenceSheet'
 import { AppShortcuts } from '@/components/ui/AppShortcuts'
 import { TaskDetail } from '@/components/tasks/TaskDetail'
+import { NavigationProgress } from '@/components/ui/NavigationProgress'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -43,6 +44,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <AppShortcuts />
             <KeyboardReferenceSheet />
             <TaskDetail />
+            <NavigationProgress />
           </UIProvider>
         </TasksProvider>
       </ProjectsProvider>

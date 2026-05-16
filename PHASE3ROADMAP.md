@@ -59,7 +59,7 @@ P3.11  Phase 3 close-out checklist                            ← do last
 ## PROMPT P3.0 — AI infrastructure
 
 ```
-Read CLAUDE.md, .claude/rules/testing.md, .claude/phases/3-ai.md, and PROGRESS.md
+Read CLAUDE.md, .claude/rules/testing.md, .claude/phases/3-ai.md, PROGRESS.md, and PHASE3ROADMAP.MD
 in that order. Confirm: current phase, last completed task, next task.
 
 Before any AI feature is built, establish the shared infrastructure all AI routes

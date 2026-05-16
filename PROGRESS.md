@@ -1,7 +1,7 @@
 # Lodestar — Progress
 
 ## Current phase
-Phase 2 — Views (complete)
+Phase 3 — AI Features (in progress)
 
 ## Completed
 - Pre-build setup: Supabase (18 tables, RLS, triggers, constraints all verified), Google OAuth, Anthropic API, Upstash Redis
@@ -383,20 +383,25 @@ Without this, the service role client gets "permission denied for table workspac
 - coverage: **86.76% statements (1527/1760) / 89.56% lines (1322/1476) / 77.83% branches (843/1083) / 79.41% functions (436/549)** — all Phase 2 thresholds exceeded
 - build: **PASS** (warnings only — all pre-existing, non-breaking)
 
+- **P3.0 — AI infrastructure** — `lib/ai/client.ts` (Anthropic singleton + AI_MODEL constant), `lib/ai/parse.ts` (extractJSON strips fences + JSON.parse + throws on failure), `lib/rate-limit.ts` (aiRatelimit sliding window 10/min + checkRateLimit helper returning 429 Response); 6 new tests (4 parse + 2 rate-limit); 53 files, 445 tests total, type-check clean
+
 ## In progress
 None.
 
 ## Next task
-Phase 3 opening items (read `.claude/phases/3-ai.md` first):
-- `lib/ai/tasks.ts` — AI function implementations: `createTaskFromPrompt`, `breakdownTask`, `suggestPriorities`, `extractDueDate`
-- `/api/ai/create-task` route — natural language task creation with preview card + confirm
-- `/api/ai/breakdown` route — task breakdown into 3–6 subtasks
-- `components/ai/AICommandBar.tsx` — AI command bar UI
-- `components/ai/AITaskBreakdown.tsx` — subtask suggestion UI
+P3.1 — Natural language task creation:
+- `lib/ai/tasks.ts` — `createTaskFromPrompt(prompt): Promise<AITaskPreview>` (with retry on JSON parse failure)
+- `app/api/ai/create-task/route.ts` — POST: auth → rate limit → validate → createTaskFromPrompt → 200
+- `components/ai/AICommandBar.tsx` — floating input + AIPreviewCard + confirm flow
+- Wire into Tasks page header ("AI" button)
+- Tests: tasks.test.ts (4 cases), ai-create-task.test.ts (6 cases), AICommandBar.test.tsx (6 cases)
 
 ## Decisions made (continued)
 - Board card priority dot removed — priority is already communicated by the left-border color; the dot was redundant; replaced by label dots (one per assigned label, using the label's own color)
 - `labels: Label[]` lifted into `TasksContext` alongside `taskLabelIds` — both are needed at the same level (board cards) and fetching once in context avoids duplicate `getLabels()` calls per component
+- `Ratelimit.slidingWindow` is a static method — `vi.mock('@upstash/ratelimit')` must include it via `Object.assign` on the mock constructor, or use a regular `function MockRatelimit()` with `MockRatelimit.slidingWindow = vi.fn()` — arrow function mocks cannot be used as constructors (`new`) so `vi.fn().mockImplementation(() => ({...}))` fails; a regular function returning an object works
+- `mockLimit` (mock for `aiRatelimit.limit`) must be defined at module scope with the `mock` prefix so Vitest's hoisting allows it to be referenced inside the `vi.mock` factory
+- `lib/ai/client.ts` is excluded from meaningful coverage (0% statements) because the module only exports an Anthropic singleton and a constant — there is no callable logic to test; the singleton is always mocked in tests that use it
 
 ## Test status (Phase 2 close-out — 2026-05-16)
 - `npm run type-check`: PASS (0 errors)
@@ -409,3 +414,9 @@ Phase 3 opening items (read `.claude/phases/3-ai.md` first):
   - Functions:  77.20% (420/544) ✓
   - Lines:      87.73% (1287/1467) ✓
   - All Phase 2 targets met. Configured vitest threshold remains at 70/70/65 (Phase 1 values) — all pass comfortably.
+
+## Session 2026-05-16 end-of-session checklist (session 13 — Phase 3 start)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (53 files, 445 tests)
+- coverage: **86.73% statements (1536/1771) / 89.50% lines (1331/1487) / 77.88% branches (845/1085) / 79.49% functions (438/551)** — all above Phase 2 thresholds; Phase 3 targets (Lines ≥ 80%, Functions ≥ 80%, Branches ≥ 75%) not yet required
+- build: **PASS** (warnings only — all pre-existing, non-breaking)

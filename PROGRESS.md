@@ -123,6 +123,23 @@ Phase 2 — Views + Organization (**in progress**)
   - `my-day/page.tsx`, `tasks/page.tsx`, `projects/[id]/page.tsx` all cleaned up: TaskForm removed, `openCreate` wired to "New task" buttons and board column buttons
   - 6 test files updated (UIContext, TaskDetail, QuickCapture, TasksPage, MyDayPage, two settings pages); 314 tests total, type-check clean, build clean
 
+- **TaskDetail header redesign (session 2026-05-15)** — made destructive actions harder to accidentally trigger:
+  - Snooze icon moved to far left of header in edit mode
+  - Archive + Delete removed as individual header buttons; nested inside a gear (⚙ `IconSettings`) dropdown to the right of snooze
+  - Delete from the gear dropdown sets `confirmDelete=true` and closes the dropdown; a red confirmation strip renders below the header ("Delete this task permanently? | Cancel | Delete") requiring an explicit second click — prevents one-click accidental delete
+  - Header layout: `[⏰ Snooze] [⚙ Gear] ──── flex-1 ──── [×]` (edit mode) / `[New task label] ──── flex-1 ──── [×]` (create mode)
+  - Tests updated: archive/delete now interact with the dropdown and confirmation strip; 314 tests, type-check clean, build clean
+
+- **Subtasks excluded from top-level task lists** — added `&& t.parent_id === null` filter in Tasks page, My Day (both due-today and pinned), and Projects board/list; subtasks now only appear inside their parent's TaskDetail panel
+
+- **Dashboard overdue/due-today timezone fix** — `new Date().toISOString().split('T')[0]` returns UTC date, which is tomorrow's date in timezones ahead of UTC, making tasks due today appear overdue; switched to local-date string built from `getFullYear()`/`getMonth()`/`getDate()`, matching the approach already used in `TaskRow.isOverdue` and `BoardView.isOverdue`
+
+## Session 2026-05-15 end-of-session checklist
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (314 tests, 42 files)
+- coverage: **81.26% statements / 84.44% lines / 73.82% branches / 74.43% functions** (all above Phase 1 config thresholds 70/70/65; functions 74.43% is just under Phase 2 target of 75% — not raising config yet)
+- build: **PASS**
+
 ## Next task
 Keyboard reference sheet
 
@@ -169,6 +186,12 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Every task must belong to a project — `showProjectSelector` prop on TaskForm is only passed when viewing `/projects` (required + asterisk); elsewhere the form uses `activeProject.id` silently; "New task" button is disabled when no active project
 - `onAddTask` on `BoardView` is optional — Tasks page passes `undefined` (no project-specific context) to hide column-level "Add task" buttons; project board always passes it
 - Fake timer `useEffect` deps: QuickCapture's open-effect now depends on `[open, onProjectsPage, activeProject]` — tests need `useProjects` mocked before rendering QuickCapture
+- `openCreate` / `isCreating` / `createDefaults` added to `UIContext` — sentinel value `'__create__'` stored in `detailTaskId` triggers create mode; `isCreating` is computed (not stored) from the sentinel; `createDefaults` holds project_id + due_date pre-fills
+- `TaskDetail` create mode uses separate draft state (not the live task fields) — initialized from `createDefaults` whenever `detailTaskId` changes; auto-close guard skips when `isCreating` since there is no real task to watch
+- `useRef` in `QuickCapture` for `activeProject` — keyboard handler is registered once (stable `openCreate` dep), but must always read the latest project; ref avoids re-registering the shortcut on every project change
+- Subtasks must be excluded at the filter layer (`parent_id === null`), not at the DB fetch layer — TasksContext fetches all tasks workspace-wide; each page is responsible for scoping its own list
+- Date-only comparisons against `due_date` (YYYY-MM-DD strings) must use local date components, not `toISOString()` (UTC) — `toISOString()` can return tomorrow's date in timezones ahead of UTC, making today's tasks appear overdue
+- Gear dropdown for Archive/Delete: delete confirmation uses a panel strip (not a second button state) because shadcn DropdownMenu closes on item click — the strip renders below the header and persists until Cancel or Confirm is clicked
 
 ## Known issues / one-time setup required
 

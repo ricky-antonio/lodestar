@@ -42,12 +42,12 @@ export default function MyDayPage() {
 
   // Due today excludes explicitly pinned tasks (pinning moves them to "Added to My Day")
   const dueTodayTasks = filterTasks(
-    tasks.filter(t => t.due_date === todayStr && !t.is_archived && !pinnedTaskIds.has(t.id)),
+    tasks.filter(t => t.due_date === todayStr && !t.is_archived && t.parent_id === null && !pinnedTaskIds.has(t.id)),
     filters,
   )
 
   const pinnedTasks = tasks.filter(
-    t => pinnedTaskIds.has(t.id) && !t.is_archived,
+    t => pinnedTaskIds.has(t.id) && !t.is_archived && t.parent_id === null,
   )
 
   const totalCount = dueTodayTasks.length + pinnedTasks.length

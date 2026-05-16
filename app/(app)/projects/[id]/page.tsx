@@ -31,7 +31,7 @@ export default function ProjectPage() {
     if (proj) setActiveProject(proj)
   }, [projects, projectId, setActiveProject])
 
-  const projectTasks = tasks.filter(t => t.project_id === projectId && !t.is_archived)
+  const projectTasks = tasks.filter(t => t.project_id === projectId && !t.is_archived && t.parent_id === null)
   const visibleTasks = filterTasks(projectTasks, filters)
 
   function handleToggleDone(id: string) {

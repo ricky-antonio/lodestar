@@ -18,7 +18,7 @@ export default function TasksPage() {
   const { tasks, filters, setFilters, editTask, removeTask, archiveTask } = useTasks()
   const { activeView, setActiveView, openCreate } = useUI()
 
-  const allTasks = tasks.filter(t => !t.is_archived)
+  const allTasks = tasks.filter(t => !t.is_archived && t.parent_id === null)
   const visibleTasks = filterTasks(allTasks, filters)
 
   function handleToggleDone(id: string) {

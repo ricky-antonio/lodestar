@@ -27,11 +27,11 @@ const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: 'done', label: 'Done' },
 ]
 
-const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string }[] = [
-  { value: 'urgent', label: 'Urgent', color: '#EF4444' },
-  { value: 'high', label: 'High', color: '#EA6400' },
-  { value: 'medium', label: 'Medium', color: '#00B6EC' },
-  { value: 'low', label: 'Low', color: '#9DBFCF' },
+const PRIORITY_OPTIONS: { value: TaskPriority; label: string; color: string; bg: string; border: string }[] = [
+  { value: 'urgent', label: 'Urgent', color: '#B91C1C', bg: '#FEF2F2', border: '#FECACA' },
+  { value: 'high',   label: 'High',   color: '#C25200', bg: '#FFF8EC', border: '#FFD98A' },
+  { value: 'medium', label: 'Medium', color: '#007DA4', bg: '#E8F8FD', border: '#B8ECFA' },
+  { value: 'low',    label: 'Low',    color: '#5E7F91', bg: '#E2EDF2', border: '#9DBFCF' },
 ]
 
 function StatusIcon({ status }: { status: TaskStatus }) {
@@ -240,23 +240,27 @@ export function TaskDetail() {
               Priority
             </label>
             <div className="flex gap-1.5">
-              {PRIORITY_OPTIONS.map(p => (
-                <button
-                  key={p.value}
-                  onClick={() => editTask(task.id, { priority: p.value })}
-                  className={[
-                    'flex-1 h-8 text-xs font-medium rounded-[var(--radius)] border transition-colors',
-                    task.priority === p.value
-                      ? 'border-transparent text-white'
-                      : 'border-[var(--border-2)] text-[var(--tx-2)] bg-[var(--surface)] hover:bg-[var(--surface-2)]',
-                  ].join(' ')}
-                  style={task.priority === p.value ? { backgroundColor: p.color } : undefined}
-                  aria-label={`Set priority ${p.label}`}
-                  aria-pressed={task.priority === p.value}
-                >
-                  {p.label}
-                </button>
-              ))}
+              {PRIORITY_OPTIONS.map(p => {
+                const active = task.priority === p.value
+                return (
+                  <button
+                    key={p.value}
+                    onClick={() => editTask(task.id, { priority: p.value })}
+                    className="flex-1 h-8 text-xs font-medium rounded-[var(--radius)] transition-all"
+                    style={{
+                      background: p.bg,
+                      color: p.color,
+                      border: `1px solid ${active ? p.color : p.border}`,
+                      fontWeight: active ? 600 : 400,
+                      boxShadow: active ? `0 0 0 2px ${p.border}` : 'none',
+                    }}
+                    aria-label={`Set priority ${p.label}`}
+                    aria-pressed={active}
+                  >
+                    {p.label}
+                  </button>
+                )
+              })}
             </div>
           </div>
 

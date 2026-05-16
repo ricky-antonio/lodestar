@@ -28,7 +28,6 @@ interface SortableRowProps {
   task: Task
   isDragActive: boolean
   onToggleDone: (id: string) => void
-  onEdit: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
   onAddToMyDay?: (id: string) => void
@@ -39,7 +38,6 @@ function SortableRow({
   task,
   isDragActive,
   onToggleDone,
-  onEdit,
   onArchive,
   onDelete,
   onAddToMyDay,
@@ -63,7 +61,6 @@ function SortableRow({
       <TaskRow
         task={task}
         onToggleDone={onToggleDone}
-        onEdit={onEdit}
         onArchive={onArchive}
         onDelete={onDelete}
         dragHandleProps={listeners}
@@ -77,7 +74,6 @@ function SortableRow({
 interface Props {
   tasks: Task[]
   onToggleDone: (id: string) => void
-  onEdit: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
   onReorder: (taskId: string, newPosition: number) => void
@@ -89,7 +85,6 @@ interface Props {
 export function TaskList({
   tasks,
   onToggleDone,
-  onEdit,
   onArchive,
   onDelete,
   onReorder,
@@ -180,7 +175,6 @@ export function TaskList({
                     task={task}
                     isDragActive={!!activeId}
                     onToggleDone={onToggleDone}
-                    onEdit={onEdit}
                     onArchive={onArchive}
                     onDelete={onDelete}
                     onAddToMyDay={onAddToMyDay}
@@ -199,7 +193,6 @@ export function TaskList({
             <TaskRow
               task={activeTask}
               onToggleDone={() => {}}
-              onEdit={() => {}}
               onArchive={() => {}}
               onDelete={() => {}}
             />

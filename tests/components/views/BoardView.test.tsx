@@ -5,6 +5,11 @@ import { BoardView } from '@/components/views/BoardView'
 import type { Task, TaskStatus } from '@/lib/types'
 import '@/tests/mocks/supabase'
 
+const mockOpenDetail = vi.fn()
+vi.mock('@/lib/context/UIContext', () => ({
+  useUI: () => ({ openDetail: mockOpenDetail }),
+}))
+
 // ─── dnd-kit mocks ────────────────────────────────────────────────────────────
 
 const dndCallbacks = vi.hoisted(() => ({
@@ -87,7 +92,6 @@ function makeTask(id: string, status: TaskStatus, position: number, overrides?: 
 
 describe('BoardView', () => {
   const onMoveTask = vi.fn()
-  const onEdit = vi.fn()
   const onArchive = vi.fn()
   const onDelete = vi.fn()
   const onAddTask = vi.fn()
@@ -112,7 +116,6 @@ describe('BoardView', () => {
       <BoardView
         tasks={customTasks}
         onMoveTask={onMoveTask}
-        onEdit={onEdit}
         onArchive={onArchive}
         onDelete={onDelete}
         onAddTask={onAddTask}

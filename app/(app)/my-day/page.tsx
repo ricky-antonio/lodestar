@@ -10,10 +10,8 @@ import { TaskForm, type TaskFormValues } from '@/components/tasks/TaskForm'
 import { FilterBar } from '@/components/filters/FilterBar'
 import { filterTasks } from '@/lib/tasks'
 import { useTasks } from '@/lib/context/TasksContext'
-import { useUI } from '@/lib/context/UIContext'
 import { useAuth } from '@/lib/context/AuthContext'
 import { useProjects } from '@/lib/context/ProjectsContext'
-import type { Task } from '@/lib/types'
 
 function getTodayStr(): string {
   const d = new Date()
@@ -33,13 +31,11 @@ function formatHeaderDate(): string {
 
 export default function MyDayPage() {
   const { tasks, filters, setFilters, addTask, editTask, removeTask, archiveTask } = useTasks()
-  const { detailTaskId, closeDetail } = useUI()
   const { workspace } = useAuth()
   const { activeProject } = useProjects()
 
   const [pinnedTaskIds, setPinnedTaskIds] = useState<Set<string>>(new Set())
   const [formOpen, setFormOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
   const [tableView, setTableView] = useState(false)
 
   const todayStr = getTodayStr()
@@ -55,8 +51,6 @@ export default function MyDayPage() {
   )
 
   const totalCount = dueTodayTasks.length + pinnedTasks.length
-  const detailTask = detailTaskId ? tasks.find(t => t.id === detailTaskId) : undefined
-
   function addToMyDay(id: string) {
     setPinnedTaskIds(prev => new Set([...prev, id]))
   }
@@ -75,28 +69,12 @@ export default function MyDayPage() {
     editTask(id, { status: task.status === 'done' ? 'todo' : 'done' })
   }
 
-  function handleEdit(id: string) {
-    const task = tasks.find(t => t.id === id)
-    setEditingTask(task)
-    setFormOpen(true)
-  }
-
   async function handleFormSubmit(values: TaskFormValues) {
-    if (editingTask) {
-      await editTask(editingTask.id, { ...values })
-    } else {
-      await addTask({ ...values, due_date: values.due_date ?? todayStr, project_id: activeProject?.id ?? null })
-    }
-  }
-
-  function handleOpenNew() {
-    setEditingTask(undefined)
-    setFormOpen(true)
+    await addTask({ ...values, due_date: values.due_date ?? todayStr, project_id: activeProject?.id ?? null })
   }
 
   function handleCloseForm() {
     setFormOpen(false)
-    setEditingTask(undefined)
   }
 
   return (
@@ -158,7 +136,7 @@ export default function MyDayPage() {
                 <IconTable size={16} aria-hidden />
               </button>
             </div>
-            <Button onClick={handleOpenNew} className="flex items-center gap-1.5">
+            <Button onClick={() => setFormOpen(true)} className="flex items-center gap-1.5">
               <IconPlus size={16} aria-hidden />
               New task
             </Button>
@@ -175,7 +153,6 @@ export default function MyDayPage() {
           <ListView
             tasks={[...dueTodayTasks, ...pinnedTasks]}
             onToggleDone={handleToggleDone}
-            onEdit={handleEdit}
             onArchive={id => archiveTask(id)}
             onDelete={id => removeTask(id)}
             onReorder={(id, position) => editTask(id, { position })}
@@ -195,7 +172,6 @@ export default function MyDayPage() {
                 <TaskList
                   tasks={dueTodayTasks}
                   onToggleDone={handleToggleDone}
-                  onEdit={handleEdit}
                   onArchive={id => archiveTask(id)}
                   onDelete={id => removeTask(id)}
                   onReorder={(id, position) => editTask(id, { position })}
@@ -216,7 +192,6 @@ export default function MyDayPage() {
                 <TaskList
                   tasks={pinnedTasks}
                   onToggleDone={handleToggleDone}
-                  onEdit={handleEdit}
                   onArchive={id => archiveTask(id)}
                   onDelete={id => removeTask(id)}
                   onReorder={(id, position) => editTask(id, { position })}
@@ -238,44 +213,10 @@ export default function MyDayPage() {
         )}
       </div>
 
-      {/* Task detail panel */}
-      {detailTask && (
-        <div
-          className="w-[400px] flex-none border-l flex flex-col"
-          style={{
-            background: 'var(--surface)',
-            borderColor: 'var(--border)',
-            transition: 'transform 200ms ease',
-          }}
-        >
-          <div
-            className="flex items-center justify-between p-4 border-b"
-            style={{ borderColor: 'var(--border)' }}
-          >
-            <h2 className="font-medium text-sm truncate" style={{ color: 'var(--tx-1)' }}>
-              {detailTask.title}
-            </h2>
-            <button
-              type="button"
-              onClick={closeDetail}
-              aria-label="Close detail"
-              className="w-7 h-7 flex items-center justify-center rounded text-lg leading-none hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#66C4FF]"
-              style={{ color: 'var(--tx-3)' }}
-            >
-              ×
-            </button>
-          </div>
-          <div className="p-4 text-sm" style={{ color: 'var(--tx-2)' }}>
-            {detailTask.description ?? 'No description'}
-          </div>
-        </div>
-      )}
-
-      {/* Task form dialog */}
       <TaskForm
         open={formOpen}
         onClose={handleCloseForm}
-        initialValues={editingTask ?? { due_date: todayStr }}
+        initialValues={{ due_date: todayStr }}
         onSubmit={handleFormSubmit}
       />
     </div>

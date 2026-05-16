@@ -36,7 +36,6 @@ function isOverdue(dateStr: string): boolean {
 interface Props {
   task: Task
   onToggleDone: (id: string) => void
-  onEdit: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
   dragHandleProps?: React.HTMLAttributes<HTMLElement>
@@ -47,7 +46,6 @@ interface Props {
 export function TaskRow({
   task,
   onToggleDone,
-  onEdit,
   onArchive,
   onDelete,
   dragHandleProps,
@@ -157,7 +155,7 @@ export function TaskRow({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={() => onEdit(task.id)}>Edit</DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => openDetail(task.id)}>Edit</DropdownMenuItem>
           {onAddToMyDay && (
             <DropdownMenuItem onSelect={() => onAddToMyDay(task.id)}>
               Add to My Day

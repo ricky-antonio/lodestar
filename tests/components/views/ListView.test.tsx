@@ -6,6 +6,7 @@ import type { Task } from '@/lib/types'
 import '@/tests/mocks/supabase'
 
 const mockEditTask = vi.hoisted(() => vi.fn())
+const mockOpenDetail = vi.fn()
 
 vi.mock('@/lib/context/TasksContext', () => ({
   useTasks: () => ({ editTask: mockEditTask }),
@@ -13,6 +14,10 @@ vi.mock('@/lib/context/TasksContext', () => ({
 
 vi.mock('@/lib/context/ProjectsContext', () => ({
   useProjects: () => ({ projects: [] }),
+}))
+
+vi.mock('@/lib/context/UIContext', () => ({
+  useUI: () => ({ openDetail: mockOpenDetail }),
 }))
 
 vi.mock('@/components/ui/dropdown-menu', () => ({
@@ -52,7 +57,6 @@ function makeTask(overrides: Partial<Task> = {}): Task {
   }
 }
 
-const onEdit = vi.fn()
 const onArchive = vi.fn()
 const onDelete = vi.fn()
 const onToggleDone = vi.fn()
@@ -63,7 +67,6 @@ function renderList(tasks: Task[]) {
   render(
     <ListView
       tasks={tasks}
-      onEdit={onEdit}
       onArchive={onArchive}
       onDelete={onDelete}
       onToggleDone={onToggleDone}

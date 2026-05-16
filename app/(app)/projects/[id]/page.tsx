@@ -14,7 +14,6 @@ import { useTasks } from '@/lib/context/TasksContext'
 import { useAuth } from '@/lib/context/AuthContext'
 import { useProjects } from '@/lib/context/ProjectsContext'
 import { useUI } from '@/lib/context/UIContext'
-import type { Task, TaskStatus } from '@/lib/types'
 
 export default function ProjectPage() {
   const params = useParams()
@@ -26,7 +25,6 @@ export default function ProjectPage() {
   const { activeView, setActiveView } = useUI()
 
   const [formOpen, setFormOpen] = useState(false)
-  const [editingTask, setEditingTask] = useState<Task | undefined>(undefined)
 
   const project = projects.find(p => p.id === projectId)
 
@@ -39,12 +37,6 @@ export default function ProjectPage() {
   const projectTasks = tasks.filter(t => t.project_id === projectId && !t.is_archived)
   const visibleTasks = filterTasks(projectTasks, filters)
 
-  function handleEdit(id: string) {
-    const task = tasks.find(t => t.id === id)
-    setEditingTask(task)
-    setFormOpen(true)
-  }
-
   function handleToggleDone(id: string) {
     const task = tasks.find(t => t.id === id)
     if (!task) return
@@ -52,21 +44,11 @@ export default function ProjectPage() {
   }
 
   async function handleFormSubmit(values: TaskFormValues) {
-    if (editingTask) {
-      await editTask(editingTask.id, { ...values })
-    } else {
-      await addTask({ ...values, project_id: projectId })
-    }
-  }
-
-  function handleOpenNew(_status?: TaskStatus) {
-    setEditingTask(undefined)
-    setFormOpen(true)
+    await addTask({ ...values, project_id: projectId })
   }
 
   function handleCloseForm() {
     setFormOpen(false)
-    setEditingTask(undefined)
   }
 
   return (
@@ -132,7 +114,7 @@ export default function ProjectPage() {
             </button>
           </div>
 
-          <Button onClick={() => handleOpenNew()} className="flex items-center gap-1.5">
+          <Button onClick={() => setFormOpen(true)} className="flex items-center gap-1.5">
             <IconPlus size={16} aria-hidden />
             New task
           </Button>
@@ -152,16 +134,14 @@ export default function ProjectPage() {
             onMoveTask={(taskId, newStatus, newPosition) => {
               editTask(taskId, { status: newStatus, position: newPosition })
             }}
-            onEdit={handleEdit}
             onArchive={id => archiveTask(id)}
             onDelete={id => removeTask(id)}
-            onAddTask={status => handleOpenNew(status)}
+            onAddTask={() => setFormOpen(true)}
           />
         ) : (
           <ListView
             tasks={visibleTasks}
             onToggleDone={handleToggleDone}
-            onEdit={handleEdit}
             onArchive={id => archiveTask(id)}
             onDelete={id => removeTask(id)}
             onReorder={(id, position) => editTask(id, { position })}
@@ -173,7 +153,6 @@ export default function ProjectPage() {
       <TaskForm
         open={formOpen}
         onClose={handleCloseForm}
-        initialValues={editingTask}
         onSubmit={handleFormSubmit}
       />
     </div>

@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { getFractionalPosition } from '@/lib/tasks'
+import { useUI } from '@/lib/context/UIContext'
 import type { Task, TaskStatus } from '@/lib/types'
 
 const COLUMNS: TaskStatus[] = ['todo', 'in_progress', 'done']
@@ -68,26 +69,29 @@ function findTaskStatus(
   return COLUMNS.find(s => cols[s]?.some((t: Task) => t.id === taskId))
 }
 
-// ─── Card UI (pure, no hooks) ─────────────────────────────────────────────────
+// ─── Card UI ──────────────────────────────────────────────────────────────────
 
 interface CardUIProps {
   task: Task
-  onEdit: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
+  clickable?: boolean
 }
 
-function CardUI({ task, onEdit, onArchive, onDelete }: CardUIProps) {
+function CardUI({ task, onArchive, onDelete, clickable = true }: CardUIProps) {
+  const { openDetail } = useUI()
   const isDone = task.status === 'done'
   const overdue = !isDone && task.due_date != null && isOverdue(task.due_date)
 
   return (
     <div
+      onClick={clickable ? () => openDetail(task.id) : undefined}
       style={{
         background: 'var(--surface)',
         border: '0.5px solid var(--border)',
         borderLeft: `3px solid ${PRIORITY_COLORS[task.priority]}`,
         borderRadius: 12,
+        cursor: clickable ? 'pointer' : 'grab',
       }}
       className="p-3"
     >
@@ -109,6 +113,7 @@ function CardUI({ task, onEdit, onArchive, onDelete }: CardUIProps) {
             <button
               type="button"
               aria-label="Task actions"
+              onClick={e => e.stopPropagation()}
               className="flex-none flex items-center justify-center w-6 h-6 rounded hover:bg-[var(--surface-2)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#66C4FF]"
               style={{ color: 'var(--tx-3)' }}
             >
@@ -116,7 +121,7 @@ function CardUI({ task, onEdit, onArchive, onDelete }: CardUIProps) {
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onSelect={() => onEdit(task.id)}>Edit</DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => openDetail(task.id)}>Edit</DropdownMenuItem>
             <DropdownMenuItem onSelect={() => onArchive(task.id)}>Archive</DropdownMenuItem>
             <DropdownMenuItem
               onSelect={() => onDelete(task.id)}
@@ -156,7 +161,7 @@ interface SortableCardProps extends CardUIProps {
   isDragActive: boolean
 }
 
-function SortableCard({ task, isDragActive, onEdit, onArchive, onDelete }: SortableCardProps) {
+function SortableCard({ task, isDragActive, onArchive, onDelete }: SortableCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
   })
@@ -173,7 +178,7 @@ function SortableCard({ task, isDragActive, onEdit, onArchive, onDelete }: Sorta
         cursor: 'grab',
       }}
     >
-      <CardUI task={task} onEdit={onEdit} onArchive={onArchive} onDelete={onDelete} />
+      <CardUI task={task} onArchive={onArchive} onDelete={onDelete} />
     </div>
   )
 }
@@ -184,7 +189,6 @@ interface ColumnProps {
   status: TaskStatus
   tasks: Task[]
   isDragActive: boolean
-  onEdit: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
   onAddTask?: (status: TaskStatus) => void
@@ -194,7 +198,6 @@ function BoardColumn({
   status,
   tasks,
   isDragActive,
-  onEdit,
   onArchive,
   onDelete,
   onAddTask,
@@ -234,7 +237,6 @@ function BoardColumn({
               key={task.id}
               task={task}
               isDragActive={isDragActive}
-              onEdit={onEdit}
               onArchive={onArchive}
               onDelete={onDelete}
             />
@@ -263,7 +265,6 @@ function BoardColumn({
 interface Props {
   tasks: Task[]
   onMoveTask: (taskId: string, newStatus: TaskStatus, newPosition: number) => void
-  onEdit: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
   onAddTask?: (status: TaskStatus) => void
@@ -272,7 +273,6 @@ interface Props {
 export function BoardView({
   tasks,
   onMoveTask,
-  onEdit,
   onArchive,
   onDelete,
   onAddTask,
@@ -416,7 +416,6 @@ export function BoardView({
             status={status}
             tasks={columnTasks[status] ?? []}
             isDragActive={!!activeId}
-            onEdit={onEdit}
             onArchive={onArchive}
             onDelete={onDelete}
             onAddTask={onAddTask}
@@ -429,9 +428,9 @@ export function BoardView({
           <div style={{ opacity: 0.95, pointerEvents: 'none' }}>
             <CardUI
               task={activeTask}
-              onEdit={() => {}}
               onArchive={() => {}}
               onDelete={() => {}}
+              clickable={false}
             />
           </div>
         ) : null}

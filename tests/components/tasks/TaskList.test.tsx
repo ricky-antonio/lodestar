@@ -61,7 +61,7 @@ vi.mock('@tanstack/react-virtual', () => ({
 }))
 
 vi.mock('@/lib/context/UIContext', () => ({
-  useUI: () => ({ pushUndo: vi.fn() }),
+  useUI: () => ({ pushUndo: vi.fn(), openDetail: vi.fn() }),
 }))
 
 vi.mock('@/lib/context/TasksContext', () => ({
@@ -93,7 +93,6 @@ function makeTask(n: number): Task {
 
 describe('TaskList', () => {
   const onToggleDone = vi.fn()
-  const onEdit = vi.fn()
   const onArchive = vi.fn()
   const onDelete = vi.fn()
   const onReorder = vi.fn()
@@ -110,7 +109,6 @@ describe('TaskList', () => {
       <TaskList
         tasks={tasks}
         onToggleDone={onToggleDone}
-        onEdit={onEdit}
         onArchive={onArchive}
         onDelete={onDelete}
         onReorder={onReorder}
@@ -130,7 +128,6 @@ describe('TaskList', () => {
       <TaskList
         tasks={[]}
         onToggleDone={onToggleDone}
-        onEdit={onEdit}
         onArchive={onArchive}
         onDelete={onDelete}
         onReorder={onReorder}

@@ -41,7 +41,6 @@ const baseTask: Task = {
 
 describe('TaskRow', () => {
   const onToggleDone = vi.fn()
-  const onEdit = vi.fn()
   const onArchive = vi.fn()
   const onDelete = vi.fn()
 
@@ -54,7 +53,6 @@ describe('TaskRow', () => {
       <TaskRow
         task={{ ...baseTask, ...overrides }}
         onToggleDone={onToggleDone}
-        onEdit={onEdit}
         onArchive={onArchive}
         onDelete={onDelete}
       />,
@@ -79,13 +77,13 @@ describe('TaskRow', () => {
     expect(titleEl.style.textDecoration).toBe('line-through')
   })
 
-  it('Edit option in dropdown calls onEdit with task id', async () => {
+  it('Edit option in dropdown calls openDetail with task id', async () => {
     const user = userEvent.setup()
     renderRow()
     await user.click(screen.getByRole('button', { name: 'Task actions' }))
     const editItem = await screen.findByRole('menuitem', { name: 'Edit' })
     await user.click(editItem)
-    expect(onEdit).toHaveBeenCalledWith('task-1')
+    expect(mockOpenDetail).toHaveBeenCalledWith('task-1')
   })
 
   it('Archive option calls onArchive with task id', async () => {

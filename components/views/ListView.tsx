@@ -11,11 +11,11 @@ import {
 import { sortTasks, type SortField } from '@/lib/tasks'
 import { useTasks } from '@/lib/context/TasksContext'
 import { useProjects } from '@/lib/context/ProjectsContext'
+import { useUI } from '@/lib/context/UIContext'
 import type { Task, TaskStatus, TaskPriority } from '@/lib/types'
 
 interface Props {
   tasks: Task[]
-  onEdit: (id: string) => void
   onArchive: (id: string) => void
   onDelete: (id: string) => void
   onToggleDone: (id: string) => void
@@ -47,10 +47,11 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
 }
 
 export function ListView({
-  tasks, onEdit, onArchive, onDelete, onToggleDone, onBulkArchive,
+  tasks, onArchive, onDelete, onToggleDone, onBulkArchive,
 }: Props) {
   const { editTask } = useTasks()
   const { projects } = useProjects()
+  const { openDetail } = useUI()
 
   const [sortField, setSortField] = useState<ListSortField>('priority')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
@@ -283,7 +284,7 @@ export function ListView({
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onEdit(task.id)}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openDetail(task.id)}>Edit</DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onToggleDone(task.id)}>
                           {task.status === 'done' ? 'Mark as to do' : 'Mark as done'}
                         </DropdownMenuItem>

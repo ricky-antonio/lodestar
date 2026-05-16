@@ -107,6 +107,15 @@ Phase 2 — Views + Organization (**in progress**)
   - `BoardView` — `onAddTask` now optional (`onAddTask?: ...`) so Tasks page (no specific project context) can hide the column-level "Add task" button
   - 11 test files updated; 1 new test file (`TasksPage.test.tsx`); total 310 tests, type-check clean, build clean
 
+- **Edit menus → TaskDetail + priority color coding** — unified all task editing surfaces through TaskDetail (the full slide-in panel):
+  - `TaskRow`, `ListView` (CardUI in BoardView), all three-dot "Edit" dropdown items now call `openDetail(task.id)` instead of opening TaskForm
+  - `onEdit` prop removed from `TaskRow`, `TaskList`, `ListView`, `BoardView` entirely — pages no longer manage editing state
+  - `BoardView` cards are now clickable (whole card calls `openDetail`); three-dot trigger uses `e.stopPropagation()`; DragOverlay ghost card has `clickable={false}` to prevent phantom opens during drag
+  - All page handlers simplified: `editingTask` state, `handleEdit` function, and TaskForm `initialValues` editing logic removed from My Day, Tasks, and Projects pages
+  - My Day inline detail panel removed (TaskDetail is global in layout)
+  - `TaskDetail` priority buttons redesigned — all four options always show tinted background + colored text + tinted border (urgent/red, high/amber, medium/cerulean, low/steel); selected button gets stronger border color + `fontWeight: 600` + outer ring shadow
+  - 7 test files updated (TaskRow, TaskList, BoardView, ListView all drop `onEdit`; BoardView/ListView get `useUI` mock for `openDetail`); 310 tests, type-check clean, build clean
+
 ## Next task
 Keyboard reference sheet
 

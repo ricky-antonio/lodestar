@@ -41,13 +41,17 @@ export default function MyDayPage() {
 
   const todayStr = getTodayStr()
 
+  const scopedTasks = activeProject
+    ? tasks.filter(t => t.project_id === activeProject.id)
+    : []
+
   // Due today excludes explicitly pinned tasks (pinning moves them to "Added to My Day")
   const dueTodayTasks = filterTasks(
-    tasks.filter(t => t.due_date === todayStr && !t.is_archived && t.parent_id === null && !pinnedTaskIds.has(t.id)),
+    scopedTasks.filter(t => t.due_date === todayStr && !t.is_archived && t.parent_id === null && !pinnedTaskIds.has(t.id)),
     filters,
   )
 
-  const pinnedTasks = tasks.filter(
+  const pinnedTasks = scopedTasks.filter(
     t => pinnedTaskIds.has(t.id) && !t.is_archived && t.parent_id === null,
   )
 
@@ -204,7 +208,12 @@ export default function MyDayPage() {
         )}
 
         {/* Empty state */}
-        {!loading && dueTodayTasks.length === 0 && pinnedTasks.length === 0 && (
+        {!loading && !activeProject && (
+          <div className="flex items-center justify-center py-16 text-sm" style={{ color: 'var(--tx-3)' }}>
+            Select a project to see today&apos;s tasks.
+          </div>
+        )}
+        {!loading && activeProject && dueTodayTasks.length === 0 && pinnedTasks.length === 0 && (
           <div
             className="flex items-center justify-center py-16 text-sm"
             style={{ color: 'var(--tx-3)' }}

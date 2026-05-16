@@ -20,7 +20,7 @@ const PRESET_COLORS = ['#00B6EC', '#FA9836', '#22C55E', '#8B5CF6', '#EF4444', '#
 export default function DashboardPage() {
   const router = useRouter()
   const { tasks } = useTasks()
-  const { projects, loading, addProject } = useProjects()
+  const { projects, activeProject, loading, addProject } = useProjects()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [newName, setNewName] = useState('')
@@ -129,30 +129,38 @@ export default function DashboardPage() {
   const today = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}-${String(_d.getDate()).padStart(2, '0')}`
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
+  const scopedTasks = activeProject ? tasks.filter(t => t.project_id === activeProject.id) : []
+
   const stats: { label: string; value: number }[] = [
     {
       label: 'Tasks due today',
-      value: tasks.filter(t => t.due_date === today && !t.is_archived).length,
+      value: scopedTasks.filter(t => t.due_date === today && !t.is_archived).length,
     },
     {
       label: 'Overdue',
-      value: tasks.filter(
+      value: scopedTasks.filter(
         t => t.due_date != null && t.due_date < today && t.status !== 'done' && !t.is_archived,
       ).length,
     },
     {
       label: 'Completed this week',
-      value: tasks.filter(t => t.status === 'done' && t.updated_at >= weekAgo).length,
+      value: scopedTasks.filter(t => t.status === 'done' && t.updated_at >= weekAgo).length,
     },
     {
       label: 'In progress',
-      value: tasks.filter(t => t.status === 'in_progress' && !t.is_archived).length,
+      value: scopedTasks.filter(t => t.status === 'in_progress' && !t.is_archived).length,
     },
   ]
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold text-[var(--tx-1)] mb-6">Dashboard</h1>
+      <h1 className="text-2xl font-semibold text-[var(--tx-1)] mb-1">Dashboard</h1>
+      {activeProject && (
+        <p className="text-sm mb-6" style={{ color: 'var(--tx-3)' }}>
+          Showing stats for <span style={{ color: activeProject.color }}>{activeProject.name}</span>
+        </p>
+      )}
+      {!activeProject && <div className="mb-6" />}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map(({ label, value }) => (
           <div

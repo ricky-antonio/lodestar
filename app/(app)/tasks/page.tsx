@@ -19,8 +19,10 @@ export default function TasksPage() {
   const { tasks, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
   const { activeView, setActiveView, openCreate } = useUI()
 
-  const allTasks = tasks.filter(t => !t.is_archived && t.parent_id === null)
-  const visibleTasks = filterTasks(allTasks, filters)
+  const projectTasks = tasks.filter(t =>
+    t.project_id === (activeProject?.id ?? '__none__') && !t.is_archived && t.parent_id === null
+  )
+  const visibleTasks = filterTasks(projectTasks, filters)
 
   function handleToggleDone(id: string) {
     const task = tasks.find(t => t.id === id)
@@ -103,7 +105,11 @@ export default function TasksPage() {
 
       {/* View */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        {loading ? (
+        {!loading && !activeProject ? (
+          <div className="flex items-center justify-center py-16 text-sm" style={{ color: 'var(--tx-3)' }}>
+            Select a project to see its tasks.
+          </div>
+        ) : loading ? (
           <ViewSkeleton rows={8} />
         ) : activeView === 'board' ? (
           <BoardView

@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import {
   IconChevronUp,
   IconPlus,
@@ -25,8 +24,7 @@ import { useProjects } from '@/lib/context/ProjectsContext'
 const PRESET_COLORS = ['#00B6EC', '#FA9836', '#22C55E', '#8B5CF6', '#EF4444', '#66F4FF']
 
 export function MobileProjectBar() {
-  const router = useRouter()
-  const { projects, activeProject, addProject } = useProjects()
+  const { projects, activeProject, setActiveProject, addProject } = useProjects()
   const [open, setOpen] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [newName, setNewName] = useState('')
@@ -102,7 +100,7 @@ export function MobileProjectBar() {
               <button
                 key={project.id}
                 onClick={() => {
-                  router.push(`/projects/${project.id}`)
+                  setActiveProject(project)
                   setOpen(false)
                 }}
                 className="w-full flex items-center gap-2 px-3 py-2.5 rounded text-sm transition-colors hover:bg-white/[0.06] text-left"

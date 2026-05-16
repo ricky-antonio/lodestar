@@ -143,8 +143,22 @@ Phase 2 — Views + Organization (**in progress**)
 - coverage: **81.74% statements / 84.86% lines / 74.42% branches / 74.94% functions** (all above Phase 1 config thresholds 70/70/65; functions 74.94% just under Phase 2 target of 75% — not raising config yet)
 - build: **PASS**
 
+- **Bulk board actions & search correctness** —
+  - `getTasksBySearch` added to `lib/tasks.ts`: `.ilike('title', '%term%')` workspace-wide, returns `[]` on error
+  - `ilike` added to `tests/mocks/supabase.ts`
+  - `TasksContext` refactored: internal `allTasks` + `searchOverride: Task[] | null` state; debounced (300ms) effect on `filters.search` calls `getTasksBySearch` and replaces displayed list; clears override when search is empty; mutations keep both states in sync with rollback support
+  - `BoardView` extended: `selectedIds: Set<string>` + `lastClickedId` state; single click selects/deselects; double-click opens TaskDetail; shift-click in same column selects range, across columns selects both endpoints only; bulk action bar (fixed bottom, `data-testid="bulk-action-bar"`) shows when any cards selected — Move to / Set priority / Archive / Clear; new props `onBulkMove`, `onBulkSetPriority`, `onBulkArchive` (all optional); `CardUI` gains `data-testid="card-{id}"` and `aria-selected`
+  - Project page wired: `onBulkMove` / `onBulkSetPriority` / `onBulkArchive` call `editTask` / `archiveTask` sequentially
+  - 9 new tests (2 `getTasksBySearch` lib tests + 7 BoardView bulk-selection tests); 343 total; type-check clean
+
+## Session 2026-05-15 end-of-session checklist (session 6)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (343 tests, 44 files)
+- coverage: **80.93% statements / 84.13% lines / 73.89% branches / 74.06% functions** (all above Phase 1 config thresholds 70/70/65; lines/statements/branches above Phase 2 targets; functions 74.06% just under Phase 2 target of 75% — not raising config yet)
+- build: **PASS** (warnings only — all pre-existing: `<img>` in profile/page.tsx, `_userId` unused in auth.ts, `_taskId` unused in SnoozeMenu.tsx, useEffect missing deps in TaskDetail.tsx, unused expression in ListView.tsx)
+
 ## Next task
-Bulk board actions & search correctness
+Saved filters
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -198,6 +212,9 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - `TaskDetail` create mode uses separate draft state (not the live task fields) — initialized from `createDefaults` whenever `detailTaskId` changes; auto-close guard skips when `isCreating` since there is no real task to watch
 - `useRef` in `QuickCapture` for `activeProject` — keyboard handler is registered once (stable `openCreate` dep), but must always read the latest project; ref avoids re-registering the shortcut on every project change
 - Subtasks must be excluded at the filter layer (`parent_id === null`), not at the DB fetch layer — TasksContext fetches all tasks workspace-wide; each page is responsible for scoping its own list
+- BoardView bulk selection uses `fireEvent` (not `userEvent`) in tests — synchronous, no async timer issues; `within(screen.getByTestId('bulk-action-bar'))` needed to disambiguate "Archive"/"Done" from column headers/dropdown items
+- `searchOverride` in TasksContext is `Task[] | null` (null = not searching, array = search results); mutations update both `allTasks` and `searchOverride` when the latter is non-null; rollback restores both; `tasks` exposed from context is `searchOverride ?? allTasks`
+- BoardView card click model: single click selects (adds to `selectedIds`); double click opens TaskDetail via `openDetail`; three-dot "Edit" also opens TaskDetail; drag still works (MouseSensor distance:5px means static clicks never activate drag)
 - Date-only comparisons against `due_date` (YYYY-MM-DD strings) must use local date components, not `toISOString()` (UTC) — `toISOString()` can return tomorrow's date in timezones ahead of UTC, making today's tasks appear overdue
 - Gear dropdown for Archive/Delete: delete confirmation uses a panel strip (not a second button state) because shadcn DropdownMenu closes on item click — the strip renders below the header and persists until Cancel or Confirm is clicked
 

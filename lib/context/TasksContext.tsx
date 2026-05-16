@@ -11,6 +11,7 @@ import { useAuth } from './AuthContext'
 import { useProjects } from './ProjectsContext'
 import {
   getAllTasks,
+  getTasksBySearch,
   createTask as createTaskInDB,
   updateTask as updateTaskInDB,
   deleteTask as deleteTaskInDB,
@@ -35,7 +36,8 @@ const TasksContext = createContext<TasksContextValue | null>(null)
 export function TasksProvider({ children }: { children: React.ReactNode }) {
   const { workspace, loading: authLoading } = useAuth()
   const { activeProject } = useProjects()
-  const [tasks, setTasks] = useState<Task[]>([])
+  const [allTasks, setAllTasks] = useState<Task[]>([])
+  const [searchOverride, setSearchOverride] = useState<Task[] | null>(null)
   const [filters, setFilters] = useState<FilterState>({})
   const [loading, setLoading] = useState(true)
 
@@ -52,7 +54,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       setLoading(true)
       try {
         const data = await getAllTasks(ws.id)
-        if (!cancelled) setTasks(data)
+        if (!cancelled) setAllTasks(data)
       } catch {
         // Leave tasks as empty array on error
       } finally {
@@ -64,12 +66,30 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     return () => { cancelled = true }
   }, [workspace, authLoading])
 
+  // Debounced server-side search — replaces displayed list while active
+  useEffect(() => {
+    if (!workspace) return
+    const term = filters.search
+    if (!term) {
+      setSearchOverride(null)
+      return
+    }
+    const wsId = workspace.id
+    const timer = setTimeout(async () => {
+      const results = await getTasksBySearch(wsId, null, term)
+      setSearchOverride(results)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [filters.search, workspace])
+
+  const tasks = searchOverride ?? allTasks
+
   const addTask = useCallback(async (
     fields: Partial<Omit<Task, 'id' | 'workspace_id' | 'created_at' | 'updated_at'>>
   ) => {
     if (!workspace) return
     const wsId = workspace.id
-    const maxPosition = tasks.reduce((m, t) => Math.max(m, t.position), 0)
+    const maxPosition = allTasks.reduce((m, t) => Math.max(m, t.position), 0)
     const position = getFractionalPosition(maxPosition || null, null)
     const optimistic: Task = {
       id: `temp-${Date.now()}`,
@@ -92,51 +112,66 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
       updated_at: new Date().toISOString(),
       ...fields,
     }
-    const previous = tasks
-    setTasks(prev => [...prev, optimistic])
+    const previousAll = allTasks
+    setAllTasks(prev => [...prev, optimistic])
     try {
       const created = await createTaskInDB(wsId, { ...fields, position })
-      setTasks(prev => prev.map(t => t.id === optimistic.id ? created : t))
+      setAllTasks(prev => prev.map(t => t.id === optimistic.id ? created : t))
     } catch {
-      setTasks(previous)
+      setAllTasks(previousAll)
     }
-  }, [workspace, activeProject, tasks])
+  }, [workspace, activeProject, allTasks])
 
   const editTask = useCallback(async (
     id: string,
     updates: Partial<Omit<Task, 'id' | 'workspace_id' | 'created_at' | 'updated_at'>>
   ) => {
-    const previous = tasks
-    setTasks(prev => {
+    const previousAll = allTasks
+    const previousSearch = searchOverride
+    setAllTasks(prev => {
       const mapped = prev.map(t => t.id === id ? { ...t, ...updates } : t)
       return 'position' in updates ? [...mapped].sort((a, b) => a.position - b.position) : mapped
     })
+    if (searchOverride !== null) {
+      setSearchOverride(prev => prev?.map(t => t.id === id ? { ...t, ...updates } : t) ?? null)
+    }
     try {
       await updateTaskInDB(id, updates)
     } catch {
-      setTasks(previous)
+      setAllTasks(previousAll)
+      setSearchOverride(previousSearch)
     }
-  }, [tasks])
+  }, [allTasks, searchOverride])
 
   const removeTask = useCallback(async (id: string) => {
-    const previous = tasks
-    setTasks(prev => prev.filter(t => t.id !== id))
+    const previousAll = allTasks
+    const previousSearch = searchOverride
+    setAllTasks(prev => prev.filter(t => t.id !== id))
+    if (searchOverride !== null) {
+      setSearchOverride(prev => prev?.filter(t => t.id !== id) ?? null)
+    }
     try {
       await deleteTaskInDB(id)
     } catch {
-      setTasks(previous)
+      setAllTasks(previousAll)
+      setSearchOverride(previousSearch)
     }
-  }, [tasks])
+  }, [allTasks, searchOverride])
 
   const archiveTask = useCallback(async (id: string) => {
-    const previous = tasks
-    setTasks(prev => prev.filter(t => t.id !== id))
+    const previousAll = allTasks
+    const previousSearch = searchOverride
+    setAllTasks(prev => prev.filter(t => t.id !== id))
+    if (searchOverride !== null) {
+      setSearchOverride(prev => prev?.filter(t => t.id !== id) ?? null)
+    }
     try {
       await archiveTaskInDB(id)
     } catch {
-      setTasks(previous)
+      setAllTasks(previousAll)
+      setSearchOverride(previousSearch)
     }
-  }, [tasks])
+  }, [allTasks, searchOverride])
 
   return (
     <TasksContext.Provider

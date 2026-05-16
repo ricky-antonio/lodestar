@@ -176,3 +176,29 @@ export async function archiveTask(id: string): Promise<void> {
     .eq('id', id)
   if (error) throw error
 }
+
+export async function getTasksBySearch(
+  workspaceId: string,
+  projectId: string | null,
+  term: string,
+): Promise<Task[]> {
+  const supabase = createClient()
+  try {
+    let query = supabase
+      .from('tasks')
+      .select(TASK_COLUMNS)
+      .eq('workspace_id', workspaceId)
+      .eq('is_archived', false)
+      .ilike('title', `%${term}%`)
+
+    if (projectId !== null) {
+      query = query.eq('project_id', projectId)
+    }
+
+    const { data, error } = await query.order('position', { ascending: true })
+    if (error) return []
+    return (data ?? []) as unknown as Task[]
+  } catch {
+    return []
+  }
+}

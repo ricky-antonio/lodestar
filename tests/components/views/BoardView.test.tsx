@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, act } from '@testing-library/react'
+import { render, screen, act, fireEvent, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BoardView } from '@/components/views/BoardView'
 import type { Task, TaskStatus } from '@/lib/types'
@@ -95,6 +95,9 @@ describe('BoardView', () => {
   const onArchive = vi.fn()
   const onDelete = vi.fn()
   const onAddTask = vi.fn()
+  const onBulkMove = vi.fn()
+  const onBulkSetPriority = vi.fn()
+  const onBulkArchive = vi.fn()
 
   // Two todo tasks, one in_progress, one done
   const tasks = [
@@ -119,6 +122,9 @@ describe('BoardView', () => {
         onArchive={onArchive}
         onDelete={onDelete}
         onAddTask={onAddTask}
+        onBulkMove={onBulkMove}
+        onBulkSetPriority={onBulkSetPriority}
+        onBulkArchive={onBulkArchive}
       />,
     )
   }
@@ -238,5 +244,55 @@ describe('BoardView', () => {
     })
 
     expect(onMoveTask).not.toHaveBeenCalled()
+  })
+
+  // ─── Bulk selection ──────────────────────────────────────────────────────────
+
+  it('clicking a card selects it', () => {
+    renderBoard()
+    fireEvent.click(screen.getByTestId('card-t1'))
+    expect(screen.getByTestId('card-t1')).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('shift-clicking a second card in the same column selects both', () => {
+    renderBoard()
+    fireEvent.click(screen.getByTestId('card-t1'))
+    fireEvent.click(screen.getByTestId('card-t2'), { shiftKey: true })
+    expect(screen.getByTestId('card-t1')).toHaveAttribute('aria-selected', 'true')
+    expect(screen.getByTestId('card-t2')).toHaveAttribute('aria-selected', 'true')
+  })
+
+  it('bulk action bar is hidden when no cards are selected', () => {
+    renderBoard()
+    expect(screen.queryByTestId('bulk-action-bar')).not.toBeInTheDocument()
+  })
+
+  it('bulk action bar is visible when a card is selected', () => {
+    renderBoard()
+    fireEvent.click(screen.getByTestId('card-t1'))
+    expect(screen.getByTestId('bulk-action-bar')).toBeInTheDocument()
+    expect(screen.getByText('1 selected')).toBeInTheDocument()
+  })
+
+  it('Archive in bulk bar calls onBulkArchive with selected ids', () => {
+    renderBoard()
+    fireEvent.click(screen.getByTestId('card-t1'))
+    fireEvent.click(within(screen.getByTestId('bulk-action-bar')).getByText('Archive'))
+    expect(onBulkArchive).toHaveBeenCalledWith(['t1'])
+  })
+
+  it('Move to Done calls onBulkMove with done status', () => {
+    renderBoard()
+    fireEvent.click(screen.getByTestId('card-t1'))
+    fireEvent.click(within(screen.getByTestId('bulk-action-bar')).getByText('Done'))
+    expect(onBulkMove).toHaveBeenCalledWith(['t1'], 'done')
+  })
+
+  it('selection is cleared after a bulk action', () => {
+    renderBoard()
+    fireEvent.click(screen.getByTestId('card-t1'))
+    expect(screen.getByTestId('bulk-action-bar')).toBeInTheDocument()
+    fireEvent.click(within(screen.getByTestId('bulk-action-bar')).getByText('Archive'))
+    expect(screen.queryByTestId('bulk-action-bar')).not.toBeInTheDocument()
   })
 })

@@ -21,7 +21,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { IconDotsVertical, IconPlus } from '@tabler/icons-react'
+import { IconDotsVertical, IconPlus, IconX } from '@tabler/icons-react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { getFractionalPosition } from '@/lib/tasks'
 import { useUI } from '@/lib/context/UIContext'
-import type { Task, TaskStatus } from '@/lib/types'
+import type { Task, TaskStatus, TaskPriority } from '@/lib/types'
 
 const COLUMNS: TaskStatus[] = ['todo', 'in_progress', 'done']
 
@@ -38,6 +38,13 @@ const STATUS_LABEL: Record<string, string> = {
   todo: 'To do',
   in_progress: 'In progress',
   done: 'Done',
+}
+
+const PRIORITY_LABEL: Record<TaskPriority, string> = {
+  urgent: 'Urgent',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
 }
 
 const PRIORITY_COLORS: Record<string, string> = {
@@ -75,23 +82,32 @@ interface CardUIProps {
   task: Task
   onArchive: (id: string) => void
   onDelete: (id: string) => void
-  clickable?: boolean
+  isSelected?: boolean
+  onSingleClick?: (id: string, shiftKey: boolean) => void
+  onDoubleClick?: (id: string) => void
 }
 
-function CardUI({ task, onArchive, onDelete, clickable = true }: CardUIProps) {
+function CardUI({ task, onArchive, onDelete, isSelected = false, onSingleClick, onDoubleClick }: CardUIProps) {
   const { openDetail } = useUI()
   const isDone = task.status === 'done'
   const overdue = !isDone && task.due_date != null && isOverdue(task.due_date)
 
   return (
     <div
-      onClick={clickable ? () => openDetail(task.id) : undefined}
+      data-testid={`card-${task.id}`}
+      aria-selected={isSelected}
+      onClick={e => onSingleClick?.(task.id, e.shiftKey)}
+      onDoubleClick={() => onDoubleClick?.(task.id)}
       style={{
         background: 'var(--surface)',
-        border: '0.5px solid var(--border)',
+        border: isSelected
+          ? '0.5px solid var(--accent)'
+          : '0.5px solid var(--border)',
         borderLeft: `3px solid ${PRIORITY_COLORS[task.priority]}`,
         borderRadius: 12,
-        cursor: clickable ? 'pointer' : 'grab',
+        cursor: onSingleClick ? 'pointer' : 'grab',
+        outline: isSelected ? '2px solid var(--accent)' : undefined,
+        outlineOffset: isSelected ? '-1px' : undefined,
       }}
       className="p-3"
     >
@@ -157,11 +173,17 @@ function CardUI({ task, onArchive, onDelete, clickable = true }: CardUIProps) {
 
 // ─── Sortable card wrapper ────────────────────────────────────────────────────
 
-interface SortableCardProps extends CardUIProps {
+interface SortableCardProps {
+  task: Task
   isDragActive: boolean
+  onArchive: (id: string) => void
+  onDelete: (id: string) => void
+  isSelected: boolean
+  onSingleClick: (id: string, shiftKey: boolean) => void
+  onDoubleClick: (id: string) => void
 }
 
-function SortableCard({ task, isDragActive, onArchive, onDelete }: SortableCardProps) {
+function SortableCard({ task, isDragActive, onArchive, onDelete, isSelected, onSingleClick, onDoubleClick }: SortableCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task.id,
   })
@@ -178,7 +200,14 @@ function SortableCard({ task, isDragActive, onArchive, onDelete }: SortableCardP
         cursor: 'grab',
       }}
     >
-      <CardUI task={task} onArchive={onArchive} onDelete={onDelete} />
+      <CardUI
+        task={task}
+        onArchive={onArchive}
+        onDelete={onDelete}
+        isSelected={isSelected}
+        onSingleClick={onSingleClick}
+        onDoubleClick={onDoubleClick}
+      />
     </div>
   )
 }
@@ -192,6 +221,9 @@ interface ColumnProps {
   onArchive: (id: string) => void
   onDelete: (id: string) => void
   onAddTask?: (status: TaskStatus) => void
+  selectedIds: Set<string>
+  onCardClick: (id: string, shiftKey: boolean) => void
+  onCardDoubleClick: (id: string) => void
 }
 
 function BoardColumn({
@@ -201,6 +233,9 @@ function BoardColumn({
   onArchive,
   onDelete,
   onAddTask,
+  selectedIds,
+  onCardClick,
+  onCardDoubleClick,
 }: ColumnProps) {
   const { setNodeRef } = useDroppable({ id: status })
 
@@ -239,6 +274,9 @@ function BoardColumn({
               isDragActive={isDragActive}
               onArchive={onArchive}
               onDelete={onDelete}
+              isSelected={selectedIds.has(task.id)}
+              onSingleClick={onCardClick}
+              onDoubleClick={onCardDoubleClick}
             />
           ))}
         </SortableContext>
@@ -268,6 +306,9 @@ interface Props {
   onArchive: (id: string) => void
   onDelete: (id: string) => void
   onAddTask?: (status: TaskStatus) => void
+  onBulkMove?: (ids: string[], newStatus: TaskStatus) => void
+  onBulkSetPriority?: (ids: string[], priority: TaskPriority) => void
+  onBulkArchive?: (ids: string[]) => void
 }
 
 export function BoardView({
@@ -276,7 +317,12 @@ export function BoardView({
   onArchive,
   onDelete,
   onAddTask,
+  onBulkMove,
+  onBulkSetPriority,
+  onBulkArchive,
 }: Props) {
+  const { openDetail } = useUI()
+
   const [columnTasks, setColumnTasks] = useState<Record<TaskStatus, Task[]>>({
     todo: [],
     in_progress: [],
@@ -284,6 +330,8 @@ export function BoardView({
     done: [],
   })
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [lastClickedId, setLastClickedId] = useState<string | null>(null)
   const dragStartState = useRef<Record<TaskStatus, Task[]> | null>(null)
 
   useEffect(() => {
@@ -304,6 +352,67 @@ export function BoardView({
       activationConstraint: { delay: 250, tolerance: 5 },
     }),
   )
+
+  function handleCardClick(taskId: string, shiftKey: boolean) {
+    if (shiftKey && lastClickedId) {
+      const lastStatus = findTaskStatus(lastClickedId, columnTasks)
+      const thisStatus = findTaskStatus(taskId, columnTasks)
+      if (!lastStatus || !thisStatus) return
+
+      if (lastStatus === thisStatus) {
+        const col = columnTasks[lastStatus]
+        const lastIdx = col.findIndex(t => t.id === lastClickedId)
+        const thisIdx = col.findIndex(t => t.id === taskId)
+        const from = Math.min(lastIdx, thisIdx)
+        const to = Math.max(lastIdx, thisIdx)
+        const rangeIds = col.slice(from, to + 1).map(t => t.id)
+        setSelectedIds(prev => {
+          const next = new Set(prev)
+          rangeIds.forEach(id => next.add(id))
+          return next
+        })
+      } else {
+        // Cross-column: select both endpoints only
+        setSelectedIds(prev => {
+          const next = new Set(prev)
+          next.add(taskId)
+          next.add(lastClickedId)
+          return next
+        })
+      }
+    } else {
+      setSelectedIds(prev => {
+        const next = new Set(prev)
+        if (next.has(taskId)) {
+          next.delete(taskId)
+        } else {
+          next.add(taskId)
+        }
+        return next
+      })
+      setLastClickedId(taskId)
+    }
+  }
+
+  function clearSelection() {
+    setSelectedIds(new Set())
+    setLastClickedId(null)
+  }
+
+  function handleBulkMove(newStatus: TaskStatus) {
+    onBulkMove?.(Array.from(selectedIds), newStatus)
+    clearSelection()
+  }
+
+  function handleBulkSetPriority(priority: TaskPriority) {
+    onBulkSetPriority?.(Array.from(selectedIds), priority)
+    clearSelection()
+  }
+
+  function handleBulkArchive() {
+    onBulkArchive?.(Array.from(selectedIds))
+    clearSelection()
+  }
 
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string)
@@ -368,7 +477,6 @@ export function BoardView({
     const overId = over.id as string
     const overIsColumn = (COLUMNS as string[]).includes(overId)
 
-    // After handleDragOver, the task is in its target column in columnTasks
     const currentStatus = findTaskStatus(activeTaskId, columnTasks)
     if (!currentStatus) return
 
@@ -376,7 +484,6 @@ export function BoardView({
     const activeIdx = finalColumn.findIndex(t => t.id === activeTaskId)
     if (activeIdx === -1) return
 
-    // Within-column: sort by the card it was dropped on
     if (!overIsColumn) {
       const overIdx = finalColumn.findIndex(t => t.id === overId)
       if (overIdx !== -1 && overIdx !== activeIdx) {
@@ -402,39 +509,106 @@ export function BoardView({
     : null
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="flex gap-4 overflow-x-auto pb-4 h-full">
-        {COLUMNS.map(status => (
-          <BoardColumn
-            key={status}
-            status={status}
-            tasks={columnTasks[status] ?? []}
-            isDragActive={!!activeId}
-            onArchive={onArchive}
-            onDelete={onDelete}
-            onAddTask={onAddTask}
-          />
-        ))}
-      </div>
-
-      <DragOverlay>
-        {activeTask ? (
-          <div style={{ opacity: 0.95, pointerEvents: 'none' }}>
-            <CardUI
-              task={activeTask}
-              onArchive={() => {}}
-              onDelete={() => {}}
-              clickable={false}
+    <>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex gap-4 overflow-x-auto pb-4 h-full">
+          {COLUMNS.map(status => (
+            <BoardColumn
+              key={status}
+              status={status}
+              tasks={columnTasks[status] ?? []}
+              isDragActive={!!activeId}
+              onArchive={onArchive}
+              onDelete={onDelete}
+              onAddTask={onAddTask}
+              selectedIds={selectedIds}
+              onCardClick={handleCardClick}
+              onCardDoubleClick={openDetail}
             />
-          </div>
-        ) : null}
-      </DragOverlay>
-    </DndContext>
+          ))}
+        </div>
+
+        <DragOverlay>
+          {activeTask ? (
+            <div style={{ opacity: 0.95, pointerEvents: 'none' }}>
+              <CardUI
+                task={activeTask}
+                onArchive={() => {}}
+                onDelete={() => {}}
+              />
+            </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div
+          data-testid="bulk-action-bar"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-wrap items-center gap-1.5 px-4 py-2 rounded-xl shadow-lg"
+          style={{ background: 'var(--surface)', border: '0.5px solid var(--border)' }}
+        >
+          <span className="text-sm font-medium mr-1" style={{ color: 'var(--tx-2)' }}>
+            {selectedIds.size} selected
+          </span>
+          <div className="w-px h-5 self-center" style={{ background: 'var(--border)' }} />
+
+          <span className="text-xs ml-1" style={{ color: 'var(--tx-3)' }}>Move to:</span>
+          {COLUMNS.map(status => (
+            <button
+              key={status}
+              type="button"
+              onClick={() => handleBulkMove(status)}
+              className="text-xs px-2 py-1 rounded-md hover:bg-[var(--surface-2)] transition-colors"
+              style={{ color: 'var(--tx-1)' }}
+            >
+              {STATUS_LABEL[status]}
+            </button>
+          ))}
+
+          <div className="w-px h-5 self-center" style={{ background: 'var(--border)' }} />
+
+          <span className="text-xs ml-1" style={{ color: 'var(--tx-3)' }}>Set priority:</span>
+          {(['urgent', 'high', 'medium', 'low'] as TaskPriority[]).map(p => (
+            <button
+              key={p}
+              type="button"
+              onClick={() => handleBulkSetPriority(p)}
+              className="text-xs px-2 py-1 rounded-md hover:bg-[var(--surface-2)] transition-colors"
+              style={{ color: 'var(--tx-1)' }}
+            >
+              {PRIORITY_LABEL[p]}
+            </button>
+          ))}
+
+          <div className="w-px h-5 self-center" style={{ background: 'var(--border)' }} />
+
+          <button
+            type="button"
+            onClick={handleBulkArchive}
+            className="text-xs px-2 py-1 rounded-md hover:bg-[var(--surface-2)] transition-colors ml-1"
+            style={{ color: 'var(--tx-1)' }}
+          >
+            Archive
+          </button>
+
+          <button
+            type="button"
+            onClick={clearSelection}
+            className="flex items-center gap-1 text-xs px-2 py-1 rounded-md hover:bg-[var(--surface-2)] transition-colors"
+            style={{ color: 'var(--tx-3)' }}
+          >
+            <IconX size={10} aria-hidden />
+            Clear selection
+          </button>
+        </div>
+      )}
+    </>
   )
 }

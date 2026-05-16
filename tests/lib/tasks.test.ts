@@ -10,6 +10,7 @@ import {
   updateTask,
   deleteTask,
   archiveTask,
+  getTasksBySearch,
 } from '@/lib/tasks'
 import type { Task, TaskWithRelations, Label } from '@/lib/types'
 
@@ -326,5 +327,21 @@ describe('archiveTask', () => {
   it('throws on update error', async () => {
     mockSupabase.eq.mockResolvedValueOnce({ data: null, error: new Error('Archive failed') })
     await expect(archiveTask('t-1')).rejects.toThrow('Archive failed')
+  })
+})
+
+describe('getTasksBySearch', () => {
+  it('calls ilike with correct pattern', async () => {
+    const tasks = [makeTask({ title: 'Fix bug' })]
+    mockSupabase.order.mockResolvedValueOnce({ data: tasks, error: null })
+    const result = await getTasksBySearch('ws-1', null, 'fix')
+    expect(mockSupabase.ilike).toHaveBeenCalledWith('title', '%fix%')
+    expect(result).toEqual(tasks)
+  })
+
+  it('returns empty array on Supabase error', async () => {
+    mockSupabase.order.mockResolvedValueOnce({ data: null, error: new Error('DB error') })
+    const result = await getTasksBySearch('ws-1', null, 'anything')
+    expect(result).toEqual([])
   })
 })

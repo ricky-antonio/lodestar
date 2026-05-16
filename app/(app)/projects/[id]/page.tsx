@@ -126,6 +126,15 @@ export default function ProjectPage() {
             onArchive={id => archiveTask(id)}
             onDelete={id => removeTask(id)}
             onAddTask={() => openCreate({ project_id: projectId })}
+            onBulkMove={async (ids, newStatus) => {
+              for (const id of ids) await editTask(id, { status: newStatus })
+            }}
+            onBulkSetPriority={async (ids, priority) => {
+              for (const id of ids) await editTask(id, { priority })
+            }}
+            onBulkArchive={async (ids) => {
+              for (const id of ids) await archiveTask(id)
+            }}
           />
         ) : (
           <ListView

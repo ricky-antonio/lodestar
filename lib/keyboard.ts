@@ -52,6 +52,7 @@ export class KeyboardManager {
     // Try direct shortcut
     const direct = this.shortcuts.get(rawKey)
     if (direct) {
+      e.preventDefault()
       direct.handler(e)
       return
     }

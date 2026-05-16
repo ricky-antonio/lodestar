@@ -5,11 +5,19 @@ import {
   IconX,
   IconArchive,
   IconTrash,
+  IconSettings,
   IconCircle,
   IconCircleDashed,
   IconCircleCheck,
   IconProgress,
 } from '@tabler/icons-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { SubtaskList } from '@/components/tasks/SubtaskList'
 import { LabelPicker } from '@/components/tasks/LabelPicker'
 import { TaskDependencies } from '@/components/tasks/TaskDependencies'
@@ -143,15 +151,6 @@ export function TaskDetail() {
     }
   }
 
-  function handleDelete() {
-    if (!confirmDelete) {
-      setConfirmDelete(true)
-      return
-    }
-    removeTask(task!.id)
-    handleClose()
-  }
-
   async function handleCreate() {
     const trimmed = draftTitle.trim()
     if (!trimmed || submitting) return
@@ -204,7 +203,7 @@ export function TaskDetail() {
         style={{ boxShadow: '-4px 0 24px rgba(0,0,0,0.08)' }}
       >
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-[var(--border)] shrink-0">
+        <div className="flex items-center gap-1.5 px-4 py-3 border-b border-[var(--border)] shrink-0">
           {isCreating ? (
             <>
               <span className="text-sm font-medium text-[var(--tx-2)]">New task</span>
@@ -212,31 +211,39 @@ export function TaskDetail() {
             </>
           ) : (
             <>
-              {/* Destructive actions on the left — away from close */}
-              <button
-                onClick={() => { archiveTask(task!.id); handleClose() }}
-                className="p-1.5 rounded hover:bg-[var(--surface-2)] text-[var(--tx-3)] hover:text-[var(--tx-2)] transition-colors"
-                aria-label="Archive task"
-              >
-                <IconArchive size={16} />
-              </button>
-              <button
-                onClick={handleDelete}
-                className={[
-                  'p-1.5 rounded transition-colors',
-                  confirmDelete
-                    ? 'bg-[var(--action-bg)] text-[var(--action)] border border-[var(--action-border)]'
-                    : 'hover:bg-[var(--surface-2)] text-[var(--tx-3)] hover:text-[var(--action)]',
-                ].join(' ')}
-                aria-label={confirmDelete ? 'Confirm delete' : 'Delete task'}
-              >
-                <IconTrash size={16} />
-              </button>
-              <div className="flex-1" />
+              {/* Left: Snooze + Gear (archive/delete) — away from close */}
               <SnoozeMenu
                 taskId={task!.id}
                 onSnooze={until => editTask(task!.id, { snoozed_until: until })}
               />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="p-1.5 rounded hover:bg-[var(--surface-2)] text-[var(--tx-3)] hover:text-[var(--tx-2)] transition-colors"
+                    aria-label="Task options"
+                  >
+                    <IconSettings size={16} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-40">
+                  <DropdownMenuItem
+                    onClick={() => { archiveTask(task!.id); handleClose() }}
+                    className="gap-2 cursor-pointer"
+                  >
+                    <IconArchive size={14} />
+                    Archive
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setConfirmDelete(true)}
+                    className="gap-2 cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                  >
+                    <IconTrash size={14} />
+                    Delete
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <div className="flex-1" />
             </>
           )}
           <button
@@ -247,6 +254,35 @@ export function TaskDetail() {
             <IconX size={16} />
           </button>
         </div>
+
+        {/* Delete confirmation strip */}
+        {confirmDelete && !isCreating && (
+          <div
+            className="px-4 py-2.5 flex items-center justify-between gap-3 shrink-0"
+            style={{
+              background: '#FEF2F2',
+              borderBottom: '1px solid #FECACA',
+            }}
+          >
+            <span className="text-sm text-red-700">Delete this task permanently?</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="h-7 px-2.5 rounded text-xs font-medium transition-colors hover:bg-red-100 text-red-700"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { removeTask(task!.id); handleClose() }}
+                className="h-7 px-2.5 rounded text-xs font-medium text-white transition-colors"
+                style={{ background: '#B91C1C' }}
+                aria-label="Confirm delete"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Body */}
         <div className="flex-1 px-5 py-4 flex flex-col gap-5">

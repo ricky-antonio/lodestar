@@ -156,24 +156,26 @@ describe('TaskDetail', () => {
     expect(mockEditTask).toHaveBeenCalledWith('task-1', { title: 'Updated title' })
   })
 
-  it('archive button calls archiveTask', async () => {
+  it('archive option in gear menu calls archiveTask', async () => {
     mockDetailTaskId = 'task-1'
     mockTasks = [baseTask]
     render(<TaskDetail />)
-    await userEvent.click(screen.getByRole('button', { name: 'Archive task' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Task options' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: /archive/i }))
     expect(mockArchiveTask).toHaveBeenCalledWith('task-1')
   })
 
-  it('delete button calls removeTask after confirmation', async () => {
+  it('delete option in gear menu shows confirmation strip, then calls removeTask', async () => {
     mockDetailTaskId = 'task-1'
     mockTasks = [baseTask]
     render(<TaskDetail />)
 
-    // First click arms confirmation
-    await userEvent.click(screen.getByRole('button', { name: 'Delete task' }))
+    // Open gear dropdown and click Delete — confirmation strip should appear
+    await userEvent.click(screen.getByRole('button', { name: 'Task options' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: /delete/i }))
     expect(mockRemoveTask).not.toHaveBeenCalled()
 
-    // Second click (now labelled "Confirm delete") executes
+    // Confirm in the strip
     await userEvent.click(screen.getByRole('button', { name: 'Confirm delete' }))
     expect(mockRemoveTask).toHaveBeenCalledWith('task-1')
   })

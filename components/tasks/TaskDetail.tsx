@@ -99,7 +99,7 @@ export function TaskDetail() {
     setDraftStatus('todo')
     setDraftPriority('medium')
     setDraftDueDate(createDefaults?.due_date ?? null)
-    setDraftProjectId(createDefaults?.project_id ?? null)
+    setDraftProjectId(createDefaults?.project_id ?? projects[0]?.id ?? null)
     setDraftDescription('')
     setDraftEstimatedMins(null)
     setSubmitting(false)
@@ -174,7 +174,7 @@ export function TaskDetail() {
 
   async function handleCreate() {
     const trimmed = draftTitle.trim()
-    if (!trimmed || submitting) return
+    if (!trimmed || !draftProjectId || submitting) return
     setSubmitting(true)
     try {
       await addTask({
@@ -396,11 +396,11 @@ export function TaskDetail() {
                 </label>
                 <select
                   value={draftProjectId ?? ''}
-                  onChange={e => setDraftProjectId(e.target.value || null)}
+                  onChange={e => setDraftProjectId(e.target.value)}
                   className={fieldClass + ' w-full'}
                   aria-label="Project"
+                  required
                 >
-                  <option value="">No project</option>
                   {projects.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
@@ -448,7 +448,7 @@ export function TaskDetail() {
               <button
                 type="button"
                 onClick={handleCreate}
-                disabled={!draftTitle.trim() || submitting}
+                disabled={!draftTitle.trim() || !draftProjectId || submitting}
                 className="h-9 px-4 rounded-[var(--radius)] text-sm font-medium transition-colors disabled:opacity-40"
                 style={{ background: 'var(--accent)', color: '#fff' }}
               >

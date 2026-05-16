@@ -10,6 +10,8 @@ import { MobileProjectBar } from '@/components/layout/MobileProjectBar'
 import { Topbar } from '@/components/layout/Topbar'
 import { Toast } from '@/components/ui/Toast'
 import { QuickCapture } from '@/components/ui/QuickCapture'
+import { KeyboardReferenceSheet } from '@/components/ui/KeyboardReferenceSheet'
+import { AppShortcuts } from '@/components/ui/AppShortcuts'
 import { TaskDetail } from '@/components/tasks/TaskDetail'
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -38,6 +40,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <BottomNav />
             <Toast />
             <QuickCapture />
+            <AppShortcuts />
+            <KeyboardReferenceSheet />
             <TaskDetail />
           </UIProvider>
         </TasksProvider>

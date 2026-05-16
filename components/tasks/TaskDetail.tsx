@@ -23,6 +23,7 @@ import { LabelPicker } from '@/components/tasks/LabelPicker'
 import { TaskDependencies } from '@/components/tasks/TaskDependencies'
 import { DueDatePicker } from '@/components/tasks/DueDatePicker'
 import { SnoozeMenu } from '@/components/tasks/SnoozeMenu'
+import { keyboard } from '@/lib/keyboard'
 import { useUI } from '@/lib/context/UIContext'
 import { useTasks } from '@/lib/context/TasksContext'
 import { useProjects } from '@/lib/context/ProjectsContext'
@@ -110,6 +111,23 @@ export function TaskDetail() {
   useEffect(() => {
     if (!isCreating && detailTaskId && !task) closeDetail()
   }, [detailTaskId, isCreating, task, closeDetail])
+
+  // Priority shortcuts 1–4 (only in edit mode, not create mode)
+  useEffect(() => {
+    if (!task) return
+    const taskId = task.id
+    const priorities: [string, TaskPriority][] = [
+      ['1', 'urgent'], ['2', 'high'], ['3', 'medium'], ['4', 'low'],
+    ]
+    const unregisters = priorities.map(([key, priority]) =>
+      keyboard.register({
+        key,
+        description: `Set ${priority} priority`,
+        handler: () => editTask(taskId, { priority }),
+      })
+    )
+    return () => unregisters.forEach(u => u())
+  }, [task?.id, editTask])
 
   // Escape key closes panel
   useEffect(() => {

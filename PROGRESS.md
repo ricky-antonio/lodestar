@@ -134,14 +134,17 @@ Phase 2 — Views + Organization (**in progress**)
 
 - **Dashboard overdue/due-today timezone fix** — `new Date().toISOString().split('T')[0]` returns UTC date, which is tomorrow's date in timezones ahead of UTC, making tasks due today appear overdue; switched to local-date string built from `getFullYear()`/`getMonth()`/`getDate()`, matching the approach already used in `TaskRow.isOverdue` and `BoardView.isOverdue`
 
-## Session 2026-05-15 end-of-session checklist
+- **Keyboard reference sheet** — `components/ui/KeyboardReferenceSheet.tsx`; Dialog opens on `?` keypress, two-column list of all `keyboard.getAll()` entries (key badge + description), closes on Escape or ×; mounted in `app/(app)/layout.tsx` alongside QuickCapture; 4 tests all passing
+- **Keyboard shortcuts expanded** — `lib/keyboard.ts` extended with chord support (`chord?` field, 1500ms timeout, clears on unmount); `components/ui/AppShortcuts.tsx` registers G→D/M/T (navigation), B/L (view toggle), / (focus search); `components/tasks/TaskDetail.tsx` registers 1–4 (priority) when a task is open; `components/filters/FilterBar.tsx` gets `data-search-input` attribute; `KeyboardReferenceSheet` renders chord keys as separate badges; 16 new tests (8 keyboard, 7 AppShortcuts, 5 TaskDetail priority); 334 total
+
+## Session 2026-05-15 end-of-session checklist (session 5)
 - type-check: **PASS** (0 errors)
-- tests: **PASS** (314 tests, 42 files)
-- coverage: **81.26% statements / 84.44% lines / 73.82% branches / 74.43% functions** (all above Phase 1 config thresholds 70/70/65; functions 74.43% is just under Phase 2 target of 75% — not raising config yet)
+- tests: **PASS** (334 tests, 44 files)
+- coverage: **81.74% statements / 84.86% lines / 74.42% branches / 74.94% functions** (all above Phase 1 config thresholds 70/70/65; functions 74.94% just under Phase 2 target of 75% — not raising config yet)
 - build: **PASS**
 
 ## Next task
-Keyboard reference sheet
+Bulk board actions & search correctness
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -159,6 +162,11 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - No co-author tags on commits
 - `components/ui/**` excluded from coverage — shadcn library code, not application code
 - Coverage thresholds set to Phase 1 values (70/70/65), will ratchet up after each phase
+- `KeyboardManager` chord support uses a `chord?` field on `Shortcut`; the listener buffers the first key for 1500ms then clears — G-then-D fires "Go to Dashboard"; wrong second key clears pending chord without firing
+- `AppShortcuts` component registers all global shortcuts (navigation chords, view toggle, search focus); priority shortcuts 1–4 live in `TaskDetail` since they only make sense when a task is open
+- `data-search-input=""` HTML attribute on FilterBar's search input is the contract for the `/` focus-search shortcut — DOM query avoids prop drilling
+- module-level `beforeEach`/`afterEach` outside a `describe` block causes "Vitest failed to find the runner" on Windows — all lifecycle hooks must be nested inside a `describe`
+- Chord shortcuts display as two separate `<kbd>` badges in `KeyboardReferenceSheet` (e.g. `[G]` `[D]` not `[GD]`)
 - Callback uses `next=` query param for routing after OAuth — clean separation between signup and password-reset flows
 - `/reset-password` excluded from middleware's authenticated-user redirect — recovery session must reach the page
 - `createRouteHandlerClient` pattern: build the redirect response FIRST, pass it to the client so `exchangeCodeForSession` writes session cookies directly onto the redirect response

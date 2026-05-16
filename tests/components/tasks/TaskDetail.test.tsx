@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { TaskDetail } from '@/components/tasks/TaskDetail'
+import { keyboard } from '@/lib/keyboard'
 import type { Task, Project } from '@/lib/types'
 import '@/tests/mocks/supabase'
 
@@ -214,6 +215,60 @@ describe('TaskDetail', () => {
         project_id: 'proj-1',
         due_date: '2026-05-15',
       }))
+    })
+  })
+
+  describe('priority keyboard shortcuts', () => {
+    beforeEach(() => {
+      keyboard.mount()
+      mockDetailTaskId = 'task-1'
+      mockTasks = [baseTask]
+    })
+
+    afterEach(() => {
+      keyboard.unmount()
+    })
+
+    it('pressing 1 sets priority to urgent', () => {
+      render(<TaskDetail />)
+      act(() => {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true }))
+      })
+      expect(mockEditTask).toHaveBeenCalledWith('task-1', { priority: 'urgent' })
+    })
+
+    it('pressing 2 sets priority to high', () => {
+      render(<TaskDetail />)
+      act(() => {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: '2', bubbles: true }))
+      })
+      expect(mockEditTask).toHaveBeenCalledWith('task-1', { priority: 'high' })
+    })
+
+    it('pressing 3 sets priority to medium', () => {
+      render(<TaskDetail />)
+      act(() => {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: '3', bubbles: true }))
+      })
+      expect(mockEditTask).toHaveBeenCalledWith('task-1', { priority: 'medium' })
+    })
+
+    it('pressing 4 sets priority to low', () => {
+      render(<TaskDetail />)
+      act(() => {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: '4', bubbles: true }))
+      })
+      expect(mockEditTask).toHaveBeenCalledWith('task-1', { priority: 'low' })
+    })
+
+    it('priority shortcuts not active when no task is open', () => {
+      mockDetailTaskId = null
+      mockTasks = []
+      render(<TaskDetail />)
+      act(() => {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true }))
+      })
+      expect(mockEditTask).not.toHaveBeenCalled()
     })
   })
 })

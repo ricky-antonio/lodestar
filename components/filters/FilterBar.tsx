@@ -107,6 +107,7 @@ export function FilterBar({ filters, onChange, workspaceId }: Props) {
           value={filters.search ?? ''}
           onChange={e => onChange({ ...filters, search: e.target.value || undefined })}
           aria-label="Search tasks"
+          data-search-input=""
           className="h-full pl-8 pr-8 w-44 text-sm bg-transparent focus:outline-none placeholder:text-[var(--tx-3)]"
           style={{ color: 'var(--tx-1)' }}
         />

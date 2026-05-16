@@ -66,4 +66,46 @@ describe('KeyboardManager', () => {
     expect(all.map(s => s.key)).toContain('a')
     expect(all.map(s => s.key)).toContain('b')
   })
+
+  describe('chord shortcuts', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('fires handler when chord sequence completes in time', () => {
+      const handler = vi.fn()
+      manager.register({ key: 'd', chord: 'g', description: 'Go to Dashboard', handler })
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', bubbles: true }))
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', bubbles: true }))
+
+      expect(handler).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not fire when chord times out before second key', () => {
+      const handler = vi.fn()
+      manager.register({ key: 'd', chord: 'g', description: 'Go to Dashboard', handler })
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', bubbles: true }))
+      vi.advanceTimersByTime(2000)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', bubbles: true }))
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+
+    it('does not fire when wrong second key is pressed', () => {
+      const handler = vi.fn()
+      manager.register({ key: 'd', chord: 'g', description: 'Go to Dashboard', handler })
+
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g', bubbles: true }))
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x', bubbles: true }))
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', bubbles: true }))
+
+      expect(handler).not.toHaveBeenCalled()
+    })
+  })
 })

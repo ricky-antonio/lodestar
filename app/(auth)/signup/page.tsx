@@ -44,9 +44,11 @@ export default function SignupPage() {
   }
 
   async function handleGoogle() {
+    setLoading(true)
     try {
       await signInWithGoogle()
     } catch {
+      setLoading(false)
       setError('Google sign-in failed. Please try again.')
     }
   }
@@ -130,9 +132,9 @@ export default function SignupPage() {
           </div>
         </div>
 
-        <button type="button" onClick={handleGoogle} className="btn-secondary">
+        <button type="button" onClick={handleGoogle} disabled={loading} className="btn-secondary">
           <IconBrandGoogle size={16} />
-          Continue with Google
+          {loading ? 'Redirecting…' : 'Continue with Google'}
         </button>
 
         <p className="mt-6 text-center text-sm text-[#5E7F91]">

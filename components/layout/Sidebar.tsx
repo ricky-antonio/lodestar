@@ -12,6 +12,7 @@ import {
 } from '@tabler/icons-react'
 import { useAuth } from '@/lib/context/AuthContext'
 import { useUI } from '@/lib/context/UIContext'
+import { useProjects } from '@/lib/context/ProjectsContext'
 import { ProjectSwitcher } from './ProjectSwitcher'
 
 const NAV_ITEMS = [
@@ -25,6 +26,9 @@ export function Sidebar() {
   const pathname = usePathname()
   const { workspace } = useAuth()
   const { sidebarCollapsed, setSidebarCollapsed } = useUI()
+  const { projects } = useProjects()
+  const hasProjects = projects.length > 0
+  const visibleNav = hasProjects ? NAV_ITEMS : NAV_ITEMS.filter(i => i.href === '/dashboard')
 
   return (
     <aside
@@ -70,7 +74,7 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-2 pt-2 space-y-0.5">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {visibleNav.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + '/')
           return (
             <Link

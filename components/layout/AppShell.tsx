@@ -10,7 +10,7 @@ import { QuickCapture } from '@/components/ui/QuickCapture'
 import { KeyboardReferenceSheet } from '@/components/ui/KeyboardReferenceSheet'
 import { AppShortcuts } from '@/components/ui/AppShortcuts'
 import { TaskDetail } from '@/components/tasks/TaskDetail'
-import { NavigationProgress } from '@/components/ui/NavigationProgress'
+import { CreateProjectDialog } from './CreateProjectDialog'
 
 function ShellSkeleton() {
   return (
@@ -106,7 +106,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <AppShortcuts />
       <KeyboardReferenceSheet />
       <TaskDetail />
-      <NavigationProgress />
+      <CreateProjectDialog />
     </>
   )
 }

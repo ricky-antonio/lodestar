@@ -132,6 +132,8 @@ export default function MyDayPage() {
             </div>
             <Button
               onClick={() => openCreate({ project_id: activeProject?.id ?? null, due_date: todayStr })}
+              disabled={!activeProject}
+              title={!activeProject ? 'Select a project first' : undefined}
               className="flex items-center gap-1.5"
             >
               <IconPlus size={16} aria-hidden />

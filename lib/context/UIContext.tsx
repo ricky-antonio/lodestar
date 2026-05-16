@@ -31,6 +31,9 @@ interface UIContextValue {
   dismissUndo: (label: string) => void
   sidebarCollapsed: boolean
   setSidebarCollapsed: (collapsed: boolean) => void
+  projectCreateOpen: boolean
+  openProjectCreate: () => void
+  closeProjectCreate: () => void
 }
 
 const CREATE_SENTINEL = '__create__'
@@ -44,6 +47,10 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [undoStack, setUndoStack] = useState<UndoItem[]>([])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [projectCreateOpen, setProjectCreateOpen] = useState(false)
+
+  const openProjectCreate = useCallback(() => setProjectCreateOpen(true), [])
+  const closeProjectCreate = useCallback(() => setProjectCreateOpen(false), [])
 
   const isCreating = detailTaskId === CREATE_SENTINEL
 
@@ -88,6 +95,9 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
         dismissUndo,
         sidebarCollapsed,
         setSidebarCollapsed,
+        projectCreateOpen,
+        openProjectCreate,
+        closeProjectCreate,
       }}
     >
       {children}

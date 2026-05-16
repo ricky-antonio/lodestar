@@ -85,6 +85,9 @@ beforeEach(() => {
     isCreating: false,
     createDefaults: null,
     openCreate: vi.fn(),
+    projectCreateOpen: false,
+    openProjectCreate: vi.fn(),
+    closeProjectCreate: vi.fn(),
   })
 })
 

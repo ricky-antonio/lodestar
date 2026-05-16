@@ -11,29 +11,37 @@ function getTodayStr(): string {
 }
 
 export function QuickCapture() {
-  const { openCreate } = useUI()
-  const { activeProject } = useProjects()
+  const { openCreate, openProjectCreate } = useUI()
+  const { activeProject, projects } = useProjects()
   const activeProjectRef = useRef(activeProject)
+  const projectsRef = useRef(projects)
 
   useEffect(() => {
     activeProjectRef.current = activeProject
-  }, [activeProject])
+    projectsRef.current = projects
+  }, [activeProject, projects])
 
   useEffect(() => {
     keyboard.mount()
     const unregister = keyboard.register({
       key: 'q',
       description: 'Quick capture',
-      handler: () => openCreate({
-        project_id: activeProjectRef.current?.id ?? null,
-        due_date: getTodayStr(),
-      }),
+      handler: () => {
+        if (projectsRef.current.length === 0) {
+          openProjectCreate()
+        } else {
+          openCreate({
+            project_id: activeProjectRef.current?.id ?? null,
+            due_date: getTodayStr(),
+          })
+        }
+      },
     })
     return () => {
       unregister()
       keyboard.unmount()
     }
-  }, [openCreate])
+  }, [openCreate, openProjectCreate])
 
   return null
 }

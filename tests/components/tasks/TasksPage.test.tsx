@@ -93,6 +93,8 @@ function defaultTasksContext() {
       makeTask(3, 'proj-2'),
       makeTask(4, null, true), // archived — should not appear
     ],
+    taskLabelIds: {},
+    setTaskLabel: vi.fn(),
     addTask: vi.fn(),
     editTask: vi.fn(),
     removeTask: vi.fn(),
@@ -136,14 +138,20 @@ describe('TasksPage', () => {
     expect(screen.getByRole('heading', { name: 'Tasks' })).toBeInTheDocument()
   })
 
-  it('shows all non-archived tasks in board view', () => {
+  it('shows only active project tasks in board view', () => {
+    mockUseProjects.mockReturnValue({ activeProject, projects: [activeProject] })
     render(<TasksPage />)
+    // Only Task 1 belongs to proj-1
     const cards = screen.getAllByTestId('task-card')
-    expect(cards).toHaveLength(3)
+    expect(cards).toHaveLength(1)
     expect(screen.getByText('Task 1')).toBeInTheDocument()
-    expect(screen.getByText('Task 2')).toBeInTheDocument()
-    expect(screen.getByText('Task 3')).toBeInTheDocument()
-    expect(screen.queryByText('Task 4')).not.toBeInTheDocument()
+    expect(screen.queryByText('Task 2')).not.toBeInTheDocument()
+    expect(screen.queryByText('Task 3')).not.toBeInTheDocument()
+  })
+
+  it('shows "select a project" prompt when no active project', () => {
+    render(<TasksPage />)
+    expect(screen.getByText(/select a project/i)).toBeInTheDocument()
   })
 
   it('"New task" button is disabled when no active project', () => {

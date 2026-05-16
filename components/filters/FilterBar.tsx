@@ -50,6 +50,7 @@ const btnCls =
 
 export function FilterBar({ filters, onChange, workspaceId, userId }: Props) {
   const [labels, setLabels] = useState<Label[]>([])
+  const [labelPopoverOpen, setLabelPopoverOpen] = useState(false)
   const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([])
   const [savedOpen, setSavedOpen] = useState(false)
   const [saveName, setSaveName] = useState('')
@@ -58,6 +59,11 @@ export function FilterBar({ filters, onChange, workspaceId, userId }: Props) {
   useEffect(() => {
     getLabels(workspaceId).then(setLabels).catch(() => {})
   }, [workspaceId])
+
+  function handleLabelPopoverOpen(open: boolean) {
+    setLabelPopoverOpen(open)
+    if (open) getLabels(workspaceId).then(setLabels).catch(() => {})
+  }
 
   useEffect(() => {
     if (!userId) return
@@ -216,7 +222,7 @@ export function FilterBar({ filters, onChange, workspaceId, userId }: Props) {
       </Popover>
 
       {/* Label */}
-      <Popover>
+      <Popover open={labelPopoverOpen} onOpenChange={handleLabelPopoverOpen}>
         <PopoverTrigger asChild>
           <button type="button" className={btnCls} style={{ color: 'var(--tx-1)' }}>
             Label <IconChevronDown size={12} aria-hidden />

@@ -54,7 +54,7 @@ function StatusIcon({ status }: { status: TaskStatus }) {
 
 export function TaskDetail() {
   const { detailTaskId, isCreating, createDefaults, closeDetail, openDetail } = useUI()
-  const { tasks, editTask, archiveTask, removeTask, addTask } = useTasks()
+  const { tasks, editTask, archiveTask, removeTask, addTask, setTaskLabel } = useTasks()
   const { projects } = useProjects()
   const { user } = useAuth()
 
@@ -646,7 +646,11 @@ export function TaskDetail() {
                 <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
                   Labels
                 </p>
-                <LabelPicker taskId={task!.id} workspaceId={task!.workspace_id} />
+                <LabelPicker
+                  taskId={task!.id}
+                  workspaceId={task!.workspace_id}
+                  onAssign={(labelId, assigned) => setTaskLabel(task!.id, labelId, assigned)}
+                />
               </div>
 
               {/* Dependencies */}

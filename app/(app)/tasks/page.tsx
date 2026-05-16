@@ -16,13 +16,13 @@ import { useUI } from '@/lib/context/UIContext'
 export default function TasksPage() {
   const { workspace, user } = useAuth()
   const { activeProject } = useProjects()
-  const { tasks, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
+  const { tasks, taskLabelIds, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
   const { activeView, setActiveView, openCreate } = useUI()
 
   const projectTasks = tasks.filter(t =>
     t.project_id === (activeProject?.id ?? '__none__') && !t.is_archived && t.parent_id === null
   )
-  const visibleTasks = filterTasks(projectTasks, filters)
+  const visibleTasks = filterTasks(projectTasks, filters, taskLabelIds)
 
   function handleToggleDone(id: string) {
     const task = tasks.find(t => t.id === id)

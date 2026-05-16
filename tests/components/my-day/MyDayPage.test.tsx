@@ -19,8 +19,20 @@ vi.mock('@/lib/context/AuthContext', () => ({
   useAuth: () => ({ workspace: { id: 'ws-1' }, user: null, profile: null, loading: false }),
 }))
 
+const activeProject = {
+  id: 'proj-1',
+  workspace_id: 'ws-1',
+  name: 'Alpha',
+  color: '#00B6EC',
+  description: null,
+  status: 'active',
+  default_view: 'board',
+  created_at: '',
+  updated_at: '',
+}
+
 vi.mock('@/lib/context/ProjectsContext', () => ({
-  useProjects: () => ({ activeProject: null, projects: [] }),
+  useProjects: () => ({ activeProject, projects: [activeProject] }),
 }))
 
 vi.mock('@/components/filters/FilterBar', () => ({
@@ -83,7 +95,7 @@ function makeTask(n: number, overrides: Partial<Task> = {}): Task {
   return {
     id: `task-${n}`,
     workspace_id: 'ws-1',
-    project_id: null,
+    project_id: 'proj-1',
     parent_id: null,
     title: `Task ${n}`,
     description: null,
@@ -114,6 +126,8 @@ describe('MyDayPage', () => {
         makeTask(1, { due_date: TODAY }),
         makeTask(2, { due_date: '2026-06-01' }),
       ],
+      taskLabelIds: {},
+      setTaskLabel: vi.fn(),
       addTask: vi.fn(),
       editTask: vi.fn(),
       removeTask: vi.fn(),

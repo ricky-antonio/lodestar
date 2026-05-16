@@ -21,7 +21,11 @@ function hasLabels(task: Task): task is TaskWithRelations {
   return 'labels' in task && Array.isArray((task as TaskWithRelations).labels)
 }
 
-export function filterTasks(tasks: Task[], filters: FilterState): Task[] {
+export function filterTasks(
+  tasks: Task[],
+  filters: FilterState,
+  taskLabelIds?: Record<string, string[]>
+): Task[] {
   return tasks.filter(task => {
     if (filters.status?.length && !filters.status.includes(task.status)) return false
     if (filters.priority?.length && !filters.priority.includes(task.priority)) return false
@@ -36,9 +40,11 @@ export function filterTasks(tasks: Task[], filters: FilterState): Task[] {
     if (filters.due_after && (!task.due_date || task.due_date < filters.due_after)) return false
     if (filters.search && !task.title.toLowerCase().includes(filters.search.toLowerCase())) return false
     if (filters.label_ids?.length) {
-      if (!hasLabels(task)) return false
-      const taskLabelIds = task.labels.map(l => l.id)
-      if (!filters.label_ids.some(id => taskLabelIds.includes(id))) return false
+      // Use the workspace-wide label map when available; fall back to task.labels for tests
+      const assignedIds: string[] = taskLabelIds
+        ? (taskLabelIds[task.id] ?? [])
+        : hasLabels(task) ? task.labels.map(l => l.id) : []
+      if (!filters.label_ids.some(id => assignedIds.includes(id))) return false
     }
     return true
   })

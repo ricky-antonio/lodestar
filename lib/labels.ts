@@ -79,3 +79,20 @@ export async function removeLabelFromTask(taskId: string, labelId: string): Prom
     .eq('label_id', labelId)
   if (error) throw error
 }
+
+// workspaceId is unused directly — RLS scopes task_labels to the user's workspace via task_id
+export async function getWorkspaceTaskLabelIds(
+  _workspaceId: string
+): Promise<Record<string, string[]>> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('task_labels')
+    .select('task_id, label_id')
+  if (error) throw error
+  const map: Record<string, string[]> = {}
+  for (const row of (data ?? []) as { task_id: string; label_id: string }[]) {
+    if (!map[row.task_id]) map[row.task_id] = []
+    map[row.task_id].push(row.label_id)
+  }
+  return map
+}

@@ -31,7 +31,7 @@ function formatHeaderDate(): string {
 }
 
 export default function MyDayPage() {
-  const { tasks, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
+  const { tasks, taskLabelIds, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
   const { workspace, user } = useAuth()
   const { activeProject } = useProjects()
   const { openCreate } = useUI()
@@ -49,6 +49,7 @@ export default function MyDayPage() {
   const dueTodayTasks = filterTasks(
     scopedTasks.filter(t => t.due_date === todayStr && !t.is_archived && t.parent_id === null && !pinnedTaskIds.has(t.id)),
     filters,
+    taskLabelIds,
   )
 
   const pinnedTasks = scopedTasks.filter(

@@ -17,9 +17,10 @@ const PRESET_COLORS = ['#00B6EC', '#EF4444', '#EA6400', '#22C55E', '#A855F7', '#
 interface LabelPickerProps {
   taskId: string
   workspaceId: string
+  onAssign?: (labelId: string, assigned: boolean) => void
 }
 
-export function LabelPicker({ taskId, workspaceId }: LabelPickerProps) {
+export function LabelPicker({ taskId, workspaceId, onAssign }: LabelPickerProps) {
   const [allLabels, setAllLabels] = useState<Label[]>([])
   const [taskLabelIds, setTaskLabelIds] = useState<Set<string>>(new Set())
   const [newName, setNewName] = useState('')
@@ -52,6 +53,7 @@ export function LabelPicker({ taskId, workspaceId }: LabelPickerProps) {
       } else {
         await addLabelToTask(taskId, label.id)
       }
+      onAssign?.(label.id, !wasChecked)
     } catch {
       setTaskLabelIds(prev => {
         const next = new Set(prev)

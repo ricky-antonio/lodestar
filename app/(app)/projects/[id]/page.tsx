@@ -21,7 +21,7 @@ export default function ProjectPage() {
 
   const { workspace, user } = useAuth()
   const { projects, setActiveProject } = useProjects()
-  const { tasks, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
+  const { tasks, taskLabelIds, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
   const { activeView, setActiveView, openCreate } = useUI()
 
   const project = projects.find(p => p.id === projectId)
@@ -33,7 +33,7 @@ export default function ProjectPage() {
   }, [projects, projectId, setActiveProject])
 
   const projectTasks = tasks.filter(t => t.project_id === projectId && !t.is_archived && t.parent_id === null)
-  const visibleTasks = filterTasks(projectTasks, filters)
+  const visibleTasks = filterTasks(projectTasks, filters, taskLabelIds)
 
   function handleToggleDone(id: string) {
     const task = tasks.find(t => t.id === id)

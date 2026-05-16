@@ -18,10 +18,13 @@ import {
   archiveTask as archiveTaskInDB,
   getFractionalPosition,
 } from '@/lib/tasks'
+import { getWorkspaceTaskLabelIds } from '@/lib/labels'
 import type { Task, FilterState } from '@/lib/types'
 
 interface TasksContextValue {
   tasks: Task[]
+  taskLabelIds: Record<string, string[]>
+  setTaskLabel: (taskId: string, labelId: string, assigned: boolean) => void
   filters: FilterState
   setFilters: (filters: FilterState) => void
   addTask: (fields: Partial<Omit<Task, 'id' | 'workspace_id' | 'created_at' | 'updated_at'>>) => Promise<string | null>
@@ -38,6 +41,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   const { activeProject } = useProjects()
   const [allTasks, setAllTasks] = useState<Task[]>([])
   const [searchOverride, setSearchOverride] = useState<Task[] | null>(null)
+  const [taskLabelIds, setTaskLabelIds] = useState<Record<string, string[]>>({})
   const [filters, setFilters] = useState<FilterState>({})
   const [loading, setLoading] = useState(true)
 
@@ -53,8 +57,14 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     async function load() {
       setLoading(true)
       try {
-        const data = await getAllTasks(ws.id)
-        if (!cancelled) setAllTasks(data)
+        const [data, labelMap] = await Promise.all([
+          getAllTasks(ws.id),
+          getWorkspaceTaskLabelIds(ws.id),
+        ])
+        if (!cancelled) {
+          setAllTasks(data)
+          setTaskLabelIds(labelMap)
+        }
       } catch {
         // Leave tasks as empty array on error
       } finally {
@@ -65,6 +75,16 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     load()
     return () => { cancelled = true }
   }, [workspace, authLoading])
+
+  const setTaskLabel = useCallback((taskId: string, labelId: string, assigned: boolean) => {
+    setTaskLabelIds(prev => {
+      const current = prev[taskId] ?? []
+      const next = assigned
+        ? current.includes(labelId) ? current : [...current, labelId]
+        : current.filter(id => id !== labelId)
+      return { ...prev, [taskId]: next }
+    })
+  }, [])
 
   // Debounced server-side search — replaces displayed list while active
   useEffect(() => {
@@ -177,7 +197,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <TasksContext.Provider
-      value={{ tasks, filters, setFilters, addTask, editTask, removeTask, archiveTask, loading }}
+      value={{ tasks, taskLabelIds, setTaskLabel, filters, setFilters, addTask, editTask, removeTask, archiveTask, loading }}
     >
       {children}
     </TasksContext.Provider>

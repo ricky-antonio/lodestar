@@ -53,7 +53,7 @@ function StatusIcon({ status }: { status: TaskStatus }) {
 }
 
 export function TaskDetail() {
-  const { detailTaskId, isCreating, createDefaults, closeDetail } = useUI()
+  const { detailTaskId, isCreating, createDefaults, closeDetail, openDetail } = useUI()
   const { tasks, editTask, archiveTask, removeTask, addTask } = useTasks()
   const { projects } = useProjects()
   const { user } = useAuth()
@@ -177,7 +177,7 @@ export function TaskDetail() {
     if (!trimmed || !draftProjectId || submitting) return
     setSubmitting(true)
     try {
-      await addTask({
+      const newId = await addTask({
         title: trimmed,
         status: draftStatus,
         priority: draftPriority,
@@ -186,7 +186,11 @@ export function TaskDetail() {
         description: draftDescription.trim() || null,
         estimated_mins: draftEstimatedMins,
       })
-      handleClose()
+      if (newId) {
+        openDetail(newId)
+      } else {
+        handleClose()
+      }
     } finally {
       setSubmitting(false)
     }

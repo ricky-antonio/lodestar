@@ -24,7 +24,7 @@ interface TasksContextValue {
   tasks: Task[]
   filters: FilterState
   setFilters: (filters: FilterState) => void
-  addTask: (fields: Partial<Omit<Task, 'id' | 'workspace_id' | 'created_at' | 'updated_at'>>) => Promise<void>
+  addTask: (fields: Partial<Omit<Task, 'id' | 'workspace_id' | 'created_at' | 'updated_at'>>) => Promise<string | null>
   editTask: (id: string, updates: Partial<Omit<Task, 'id' | 'workspace_id' | 'created_at' | 'updated_at'>>) => Promise<void>
   removeTask: (id: string) => Promise<void>
   archiveTask: (id: string) => Promise<void>
@@ -87,7 +87,7 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
   const addTask = useCallback(async (
     fields: Partial<Omit<Task, 'id' | 'workspace_id' | 'created_at' | 'updated_at'>>
   ) => {
-    if (!workspace) return
+    if (!workspace) return null
     const wsId = workspace.id
     const maxPosition = allTasks.reduce((m, t) => Math.max(m, t.position), 0)
     const position = getFractionalPosition(maxPosition || null, null)
@@ -117,8 +117,10 @@ export function TasksProvider({ children }: { children: React.ReactNode }) {
     try {
       const created = await createTaskInDB(wsId, { ...fields, position })
       setAllTasks(prev => prev.map(t => t.id === optimistic.id ? created : t))
+      return created.id
     } catch {
       setAllTasks(previousAll)
+      return null
     }
   }, [workspace, activeProject, allTasks])
 

@@ -1,5 +1,6 @@
 'use client'
 
+import { useCallback, useState } from 'react'
 import { IconPlus, IconList, IconLayoutKanban } from '@tabler/icons-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -18,6 +19,8 @@ export default function TasksPage() {
   const { activeProject } = useProjects()
   const { tasks, taskLabelIds, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
   const { activeView, setActiveView, openCreate } = useUI()
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
+  const handleSelectionChange = useCallback((ids: string[]) => setSelectedTaskIds(ids), [])
 
   const projectTasks = tasks.filter(t =>
     t.project_id === (activeProject?.id ?? '__none__') && !t.is_archived && t.parent_id === null
@@ -100,7 +103,7 @@ export default function TasksPage() {
 
       {/* Filter bar */}
       {workspace && (
-        <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} userId={user?.id} />
+        <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} userId={user?.id} selectedTaskIds={selectedTaskIds} />
       )}
 
       {/* View */}
@@ -120,6 +123,7 @@ export default function TasksPage() {
             onArchive={id => archiveTask(id)}
             onDelete={id => removeTask(id)}
             onAddTask={activeProject ? () => openCreate({ project_id: activeProject.id }) : undefined}
+            onSelectionChange={handleSelectionChange}
           />
         ) : (
           <ListView

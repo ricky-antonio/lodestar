@@ -158,6 +158,7 @@ export interface FilterState {
   due_before?: string | null
   due_after?: string | null
   search?: string
+  taskIds?: string[] // include-only: show only tasks whose id is in this list
 }
 
 export interface SavedFilter {

@@ -38,6 +38,7 @@ export function filterTasks(
     }
     if (filters.due_before && (!task.due_date || task.due_date > filters.due_before)) return false
     if (filters.due_after && (!task.due_date || task.due_date < filters.due_after)) return false
+    if (filters.taskIds?.length && !filters.taskIds.includes(task.id)) return false
     if (filters.search && !task.title.toLowerCase().includes(filters.search.toLowerCase())) return false
     if (filters.label_ids?.length) {
       // Use the workspace-wide label map when available; fall back to task.labels for tests

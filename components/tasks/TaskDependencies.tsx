@@ -67,7 +67,12 @@ export function TaskDependencies({ taskId, allTasks, onBlockersChange }: Props) 
       !t.is_archived
   )
   const availableForLink = allTasks.filter(
-    t => t.id !== taskId && !linkedIds.has(t.id) && !t.is_archived
+    t =>
+      t.id !== taskId &&
+      t.project_id === projectId &&
+      t.parent_id === null &&
+      !linkedIds.has(t.id) &&
+      !t.is_archived
   )
 
   async function handleAddDep(dependsOnId: string) {

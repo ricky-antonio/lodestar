@@ -309,6 +309,7 @@ interface Props {
   onBulkMove?: (ids: string[], newStatus: TaskStatus) => void
   onBulkSetPriority?: (ids: string[], priority: TaskPriority) => void
   onBulkArchive?: (ids: string[]) => void
+  onSelectionChange?: (ids: string[]) => void
 }
 
 export function BoardView({
@@ -320,6 +321,7 @@ export function BoardView({
   onBulkMove,
   onBulkSetPriority,
   onBulkArchive,
+  onSelectionChange,
 }: Props) {
   const { openDetail } = useUI()
 
@@ -343,6 +345,12 @@ export function BoardView({
       done: active.filter(t => t.status === 'done').sort((a, b) => a.position - b.position),
     })
   }, [tasks])
+
+  useEffect(() => {
+    onSelectionChange?.(Array.from(selectedIds))
+  // onSelectionChange intentionally omitted — stable via parent useCallback
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedIds])
 
   const sensors = useSensors(
     useSensor(MouseSensor, {

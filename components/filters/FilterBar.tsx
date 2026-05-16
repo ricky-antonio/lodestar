@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { IconSearch, IconX, IconChevronDown, IconBookmark, IconTrash } from '@tabler/icons-react'
+import { IconSearch, IconX, IconChevronDown, IconBookmark, IconTrash, IconShare3 } from '@tabler/icons-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { getLabels } from '@/lib/labels'
+import { getLinkedTasks } from '@/lib/links'
 import { getSavedFilters, createSavedFilter, deleteSavedFilter } from '@/lib/saved-filters'
 import type { FilterState, TaskPriority, TaskStatus, Label, SavedFilter } from '@/lib/types'
 
@@ -12,6 +13,7 @@ interface Props {
   onChange: (filters: FilterState) => void
   workspaceId: string
   userId?: string
+  selectedTaskIds?: string[]
 }
 
 const PRIORITIES: TaskPriority[] = ['urgent', 'high', 'medium', 'low']
@@ -48,13 +50,14 @@ function toggleArr<T extends string>(current: T[] | undefined, val: T): T[] | un
 const btnCls =
   'inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border border-[var(--border-2)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors'
 
-export function FilterBar({ filters, onChange, workspaceId, userId }: Props) {
+export function FilterBar({ filters, onChange, workspaceId, userId, selectedTaskIds }: Props) {
   const [labels, setLabels] = useState<Label[]>([])
   const [labelPopoverOpen, setLabelPopoverOpen] = useState(false)
   const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([])
   const [savedOpen, setSavedOpen] = useState(false)
   const [saveName, setSaveName] = useState('')
   const [saving, setSaving] = useState(false)
+  const [relatedLoading, setRelatedLoading] = useState(false)
 
   useEffect(() => {
     getLabels(workspaceId).then(setLabels).catch(() => {})
@@ -87,7 +90,8 @@ export function FilterBar({ filters, onChange, workspaceId, userId }: Props) {
 
   const hasFilters = !!(
     filters.search || filters.priority?.length || filters.status?.length ||
-    filters.label_ids?.length || filters.due_before || filters.due_after
+    filters.label_ids?.length || filters.due_before || filters.due_after ||
+    filters.taskIds?.length
   )
 
   async function handleSave() {
@@ -99,6 +103,20 @@ export function FilterBar({ filters, onChange, workspaceId, userId }: Props) {
       setSaveName('')
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleRelatedTasks() {
+    if (!selectedTaskIds?.length) return
+    setRelatedLoading(true)
+    try {
+      const results = await Promise.all(selectedTaskIds.map(id => getLinkedTasks(id)))
+      const allRelated = results.flat()
+      // Union of selected tasks + their related tasks
+      const relatedIds = [...new Set([...selectedTaskIds, ...allRelated.map(t => t.id)])]
+      onChange({ ...filters, taskIds: relatedIds.length ? relatedIds : undefined })
+    } finally {
+      setRelatedLoading(false)
     }
   }
 
@@ -129,6 +147,11 @@ export function FilterBar({ filters, onChange, workspaceId, userId }: Props) {
     ...(activeDue ? [{
       key: 'due', label: { today: 'Due: Today', this_week: 'Due: This week', overdue: 'Overdue' }[activeDue],
       onRemove: () => setDue(null),
+    }] : []),
+    ...(filters.taskIds?.length ? [{
+      key: 'related',
+      label: `Related to ${selectedTaskIds?.length ?? filters.taskIds.length} task${(selectedTaskIds?.length ?? filters.taskIds.length) !== 1 ? 's' : ''}`,
+      onRemove: () => onChange({ ...filters, taskIds: undefined }),
     }] : []),
   ]
 
@@ -334,6 +357,24 @@ export function FilterBar({ filters, onChange, workspaceId, userId }: Props) {
             ) : null}
           </PopoverContent>
         </Popover>
+      )}
+
+      {/* Related tasks — appears at end when board cards are selected */}
+      {!!selectedTaskIds?.length && (
+        <button
+          type="button"
+          onClick={handleRelatedTasks}
+          disabled={relatedLoading}
+          className={btnCls}
+          style={{
+            color: filters.taskIds?.length ? 'var(--accent)' : 'var(--tx-1)',
+            borderColor: filters.taskIds?.length ? 'var(--accent-border)' : undefined,
+          }}
+          aria-label="Filter by related tasks"
+        >
+          <IconShare3 size={14} aria-hidden />
+          {relatedLoading ? 'Loading…' : 'Related tasks'}
+        </button>
       )}
 
       {/* Active chips */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { IconList, IconLayoutKanban, IconPlus } from '@tabler/icons-react'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,8 @@ export default function ProjectPage() {
   const { projects, setActiveProject } = useProjects()
   const { tasks, taskLabelIds, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
   const { activeView, setActiveView, openCreate } = useUI()
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
+  const handleSelectionChange = useCallback((ids: string[]) => setSelectedTaskIds(ids), [])
 
   const project = projects.find(p => p.id === projectId)
 
@@ -113,7 +115,7 @@ export default function ProjectPage() {
 
       {/* Filter bar */}
       {workspace && (
-        <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} userId={user?.id} />
+        <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} userId={user?.id} selectedTaskIds={selectedTaskIds} />
       )}
 
       {/* View */}
@@ -138,6 +140,7 @@ export default function ProjectPage() {
             onBulkArchive={async (ids) => {
               for (const id of ids) await archiveTask(id)
             }}
+            onSelectionChange={handleSelectionChange}
           />
         ) : (
           <ListView

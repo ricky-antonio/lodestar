@@ -152,6 +152,28 @@ describe('TaskForm', () => {
     expect(screen.getByLabelText('Project')).toHaveValue('proj-2')
   })
 
+  it('form stays open and re-enables submit when onSubmit rejects', async () => {
+    const user = userEvent.setup()
+    const onSubmit = vi.fn().mockRejectedValueOnce(new Error('server error'))
+    const onClose = vi.fn()
+
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} />)
+
+    await waitFor(() => expect(screen.getByRole('dialog')).toBeInTheDocument())
+
+    await user.type(screen.getByLabelText('Title'), 'Task title')
+    await user.click(screen.getByRole('button', { name: 'Create task' }))
+
+    await waitFor(() => {
+      // Form must stay open — onClose must not have been called
+      expect(onClose).not.toHaveBeenCalled()
+    })
+    // Submit button should be re-enabled after the rejection settles
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Create task' })).not.toBeDisabled()
+    })
+  })
+
   it('submit button is disabled while onSubmit is pending', async () => {
     const user = userEvent.setup()
     let resolveSubmit!: () => void

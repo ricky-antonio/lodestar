@@ -9,6 +9,7 @@ import '@/tests/mocks/supabase'
 // ── context mocks ──────────────────────────────────────────────────────────────
 
 const mockCloseDetail = vi.fn()
+const mockOpenDetail = vi.fn()
 const mockEditTask = vi.fn()
 const mockArchiveTask = vi.fn()
 const mockRemoveTask = vi.fn()
@@ -25,7 +26,9 @@ vi.mock('@/lib/context/UIContext', () => ({
     isCreating: mockIsCreating,
     createDefaults: mockCreateDefaults,
     openCreate: vi.fn(),
+    openDetail: mockOpenDetail,
     closeDetail: mockCloseDetail,
+    pushUndo: vi.fn(),
   }),
 }))
 
@@ -174,6 +177,46 @@ describe('TaskDetail', () => {
     expect(mockArchiveTask).toHaveBeenCalledWith('task-1')
   })
 
+  it('calls closeDetail when task disappears from the task list', () => {
+    mockDetailTaskId = 'task-1'
+    mockTasks = [baseTask]
+    const { rerender } = render(<TaskDetail />)
+    expect(mockCloseDetail).not.toHaveBeenCalled()
+
+    // Simulate task being deleted / archived elsewhere
+    mockTasks = []
+    rerender(<TaskDetail />)
+
+    expect(mockCloseDetail).toHaveBeenCalled()
+  })
+
+  it('pressing Escape during title edit cancels without saving', async () => {
+    mockDetailTaskId = 'task-1'
+    mockTasks = [baseTask]
+    render(<TaskDetail />)
+
+    fireEvent.click(screen.getByRole('heading', { name: /design the onboarding flow/i }))
+    const input = screen.getByRole('textbox', { name: 'Edit task title' })
+    fireEvent.change(input, { target: { value: 'Cancelled title' } })
+    fireEvent.keyDown(input, { key: 'Escape' })
+
+    expect(mockEditTask).not.toHaveBeenCalled()
+    expect(screen.queryByRole('textbox', { name: 'Edit task title' })).not.toBeInTheDocument()
+  })
+
+  it('pressing Enter during title edit saves the title', async () => {
+    mockDetailTaskId = 'task-1'
+    mockTasks = [baseTask]
+    render(<TaskDetail />)
+
+    fireEvent.click(screen.getByRole('heading', { name: /design the onboarding flow/i }))
+    const input = screen.getByRole('textbox', { name: 'Edit task title' })
+    fireEvent.change(input, { target: { value: 'Saved via enter' } })
+    fireEvent.keyDown(input, { key: 'Enter' })
+
+    expect(mockEditTask).toHaveBeenCalledWith('task-1', { title: 'Saved via enter' })
+  })
+
   it('delete option in gear menu shows confirmation strip, then calls removeTask', async () => {
     mockDetailTaskId = 'task-1'
     mockTasks = [baseTask]
@@ -223,6 +266,28 @@ describe('TaskDetail', () => {
         project_id: 'proj-1',
         due_date: '2026-05-15',
       }))
+    })
+
+    it('transitions to edit mode via openDetail when addTask returns a real ID', async () => {
+      mockAddTask.mockResolvedValueOnce('new-task-id')
+      render(<TaskDetail />)
+      await userEvent.type(screen.getByRole('textbox', { name: 'Task title' }), 'My new task')
+      await userEvent.click(screen.getByRole('button', { name: 'Create task' }))
+      await vi.waitFor(() => {
+        expect(mockOpenDetail).toHaveBeenCalledWith('new-task-id')
+      })
+    })
+
+    it('calls closeDetail when addTask returns null', async () => {
+      mockAddTask.mockResolvedValueOnce(null)
+      render(<TaskDetail />)
+      await userEvent.type(screen.getByRole('textbox', { name: 'Task title' }), 'My new task')
+      await userEvent.click(screen.getByRole('button', { name: 'Create task' }))
+      await vi.waitFor(() => {
+        // handleClose sets isClosing=true and schedules closeDetail via setTimeout(200)
+        // closeDetail is called directly here since we're not testing animation
+        expect(mockCloseDetail).toHaveBeenCalled()
+      })
     })
   })
 

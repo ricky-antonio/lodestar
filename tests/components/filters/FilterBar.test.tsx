@@ -87,6 +87,100 @@ describe('FilterBar', () => {
     expect(onChange).toHaveBeenCalledWith({})
   })
 
+  // ─── Status filter ────────────────────────────────────────────────────────────
+
+  it('selecting "To do" status calls onChange with status: [todo]', () => {
+    const { onChange } = renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /^filter$/i }))
+    const todoCheckbox = screen.getByRole('checkbox', { name: /to do/i })
+    fireEvent.click(todoCheckbox)
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ status: ['todo'] }))
+  })
+
+  it('selecting multiple statuses accumulates them', () => {
+    const { onChange } = renderBar({ status: ['todo'] })
+    fireEvent.click(screen.getByRole('button', { name: /^filter$/i }))
+    const doneCheckbox = screen.getByRole('checkbox', { name: /^done$/i })
+    fireEvent.click(doneCheckbox)
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ status: ['todo', 'done'] }))
+  })
+
+  it('removing a status chip removes it from filters', () => {
+    const { onChange } = renderBar({ status: ['todo'] })
+    fireEvent.click(screen.getByRole('button', { name: /remove status: to do filter/i }))
+    const call = onChange.mock.calls[0][0] as FilterState
+    expect(call.status).toBeUndefined()
+  })
+
+  // ─── Due date filter ──────────────────────────────────────────────────────────
+
+  it('clicking "Today" in Due date popover calls onChange with today\'s date range', () => {
+    const { onChange } = renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /due date/i }))
+    fireEvent.click(screen.getByText('Today'))
+    const call = onChange.mock.calls[0][0] as FilterState
+    expect(call.due_after).toBeTruthy()
+    expect(call.due_before).toEqual(call.due_after)
+  })
+
+  it('clicking "This week" in Due date popover calls onChange with due_after and due_before', () => {
+    const { onChange } = renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /due date/i }))
+    fireEvent.click(screen.getByText('This week'))
+    const call = onChange.mock.calls[0][0] as FilterState
+    // due_after = today, due_before = end of week (may equal today on Saturdays)
+    expect(call.due_after).toBeTruthy()
+    expect(call.due_before).toBeTruthy()
+  })
+
+  it('clicking "Overdue" in Due date popover sets due_before to yesterday', () => {
+    const { onChange } = renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /due date/i }))
+    fireEvent.click(screen.getByText('Overdue'))
+    const call = onChange.mock.calls[0][0] as FilterState
+    expect(call.due_before).toBeTruthy()
+    expect(call.due_after).toBeUndefined()
+  })
+
+  it('removing the due date chip clears the due date filter', () => {
+    const today = new Date()
+    const ymd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+    const { onChange } = renderBar({ due_after: ymd, due_before: ymd })
+    fireEvent.click(screen.getByRole('button', { name: /remove due: today filter/i }))
+    const call = onChange.mock.calls[0][0] as FilterState
+    expect(call.due_before).toBeUndefined()
+    expect(call.due_after).toBeUndefined()
+  })
+
+  // ─── Label filter ─────────────────────────────────────────────────────────────
+
+  it('checking a label in the Label popover calls onChange with label_ids', async () => {
+    const { onChange } = renderBar()
+    fireEvent.click(screen.getByRole('button', { name: /^label$/i }))
+    await waitFor(() => expect(screen.getByText('Bug')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('checkbox', { name: /bug/i }))
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ label_ids: ['label-1'] }))
+  })
+
+  it('unchecking a label removes it from label_ids', async () => {
+    const { onChange } = renderBar({ label_ids: ['label-1'] })
+    fireEvent.click(screen.getByRole('button', { name: /^label$/i }))
+    await waitFor(() => expect(screen.getByText('Bug')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('checkbox', { name: /bug/i }))
+    const call = onChange.mock.calls[0][0] as FilterState
+    expect(call.label_ids).toBeUndefined()
+  })
+
+  it('removing a label chip clears that label from filters', async () => {
+    const { onChange } = renderBar({ label_ids: ['label-1'] })
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /remove label: bug filter/i })).toBeInTheDocument()
+    )
+    fireEvent.click(screen.getByRole('button', { name: /remove label: bug filter/i }))
+    const call = onChange.mock.calls[0][0] as FilterState
+    expect(call.label_ids).toBeUndefined()
+  })
+
   // ─── Saved filters ────────────────────────────────────────────────────────
 
   it('Saved button is not rendered without userId', () => {

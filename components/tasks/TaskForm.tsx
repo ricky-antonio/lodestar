@@ -92,6 +92,8 @@ function FormBody({
         estimated_mins: estimatedMins ? Number(estimatedMins) : null,
       })
       onClose()
+    } catch {
+      // submission failed — form stays open for retry
     } finally {
       setSubmitting(false)
     }

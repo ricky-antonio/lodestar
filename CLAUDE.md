@@ -132,5 +132,40 @@ npx @sentry/wizard@latest -i nextjs
 
 ---
 
+## Loading & responsiveness (UX-first rule)
+
+Every user action must produce **immediate visible feedback**. Silence after a click is a bug.
+
+### Navigation
+- All internal navigation must use `<Link href="...">` — never `router.push()` for user-visible nav items. `<Link>` triggers `NavigationProgress` automatically.
+- If `router.push()` is unavoidable (e.g. inside a callback), call `startNavigationProgress()` before it.
+- `NavigationProgress` (`components/ui/NavigationProgress.tsx`) is mounted once in `app/providers.tsx` and covers every route including auth pages.
+
+### Page / data loading
+- Every page that reads from a context with a `loading` flag must gate its content area behind that flag. Show `<ViewSkeleton />` while loading; never show an empty list or a flash of empty state.
+- `app/(app)/loading.tsx` handles the Next.js Suspense boundary for route transitions.
+- `AppShell` gates the entire shell chrome behind `authLoading` — no sidebar, topbar, or nav renders until auth resolves. `ShellSkeleton` is shown instead and must visually match the real shell dimensions so layout does not shift on swap.
+
+### Buttons and forms
+- Every button that triggers async work must show a loading/disabled state **before** the first `await`. Set `setLoading(true)` as the first statement in the handler, before any async call.
+- Submit buttons: change label to a present-participle ("Saving…", "Creating…", "Signing in…") and set `disabled={true}`.
+- OAuth / redirect buttons: set `loading=true` and change label to "Redirecting…". Never reset loading — the browser navigates away.
+- Destructive actions (Delete, Archive): require a confirmation step; do not start loading until the user confirms.
+
+### Logout
+- `signOut()` in `AuthContext` sets `loading=true` as its first statement so `ShellSkeleton` appears before Supabase resolves.
+
+### Keyboard shortcuts
+- `KeyboardManager` calls `e.preventDefault()` on every matched shortcut so the key character never lands in a subsequently-focused input.
+
+### Checklist — before marking any UI task done
+- [ ] Every nav link is a `<Link>` (not `router.push`)
+- [ ] Every async button sets loading state before the first await
+- [ ] Every page with a context `loading` flag shows a skeleton while loading
+- [ ] No empty-state content flashes before data arrives
+- [ ] Logout shows the shell skeleton immediately
+
+---
+
 ## Non-goals for v1
 No real-time collaboration · No email notifications · No file attachments · No GitHub OAuth · No native mobile app (responsive web only) · No public project sharing

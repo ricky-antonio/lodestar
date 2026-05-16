@@ -188,6 +188,28 @@ Phase 2 — Views + Organization (**in progress**)
 - coverage: **81.91% statements / 84.97% lines / 74.55% branches / 75.23% functions** (all above Phase 1 config thresholds 70/70/65; all Phase 2 targets met — lines ≥75% ✓, functions ≥75% ✓, branches ≥70% ✓)
 - build: **PASS** (warnings only — all pre-existing)
 
+- **Loading & responsiveness overhaul (session 2026-05-16)** — UX-first loading pass across the entire app:
+  - `components/ui/ViewSkeleton.tsx` — 8 shimmer task rows (priority dot + title bar + date pill) using design system CSS vars; shown by Tasks, My Day, and Projects pages while `TasksContext.loading === true`
+  - `app/(app)/loading.tsx` — Next.js route-segment Suspense skeleton (header + filter bar + rows)
+  - `components/ui/NavigationProgress.tsx` — cerulean `var(--accent)` top bar with glow; intercepts `<a>` clicks immediately, crawls to 85%, completes when `usePathname` changes; moved to `app/providers.tsx` (root level) so it covers auth pages too
+  - `components/layout/AppShell.tsx` — client wrapper that gates all shell chrome behind `authLoading`; renders `ShellSkeleton` (pixel-accurate dark sidebar + topbar + content rows) until auth resolves — eliminates project/profile flash on hard refresh
+  - `AuthContext.signOut` — sets `loading=true` as first statement so `ShellSkeleton` shows on logout click before Supabase resolves
+  - Login + signup Google buttons — `setLoading(true)` before `signInWithGoogle()`; button shows "Redirecting…" and disables immediately
+  - `ProjectSwitcher` — converted all `router.push` buttons to `<Link>` (project list items + "View all projects"); triggers nav progress bar automatically; "New project" button calls `openProjectCreate()` from UIContext
+  - `CreateProjectDialog` — extracted from `ProjectSwitcher` into standalone global component mounted in `AppShell`; controlled via `UIContext.projectCreateOpen / openProjectCreate / closeProjectCreate`
+  - `Sidebar` — hides Tasks / My Day / Matrix when `projects.length === 0`; only Dashboard visible until first project is created. Settings link pinned to bottom with `IconSettings`, active state on `/settings/*`
+  - My Day "New task" — `disabled={!activeProject}` + tooltip, matching Tasks page
+  - `QuickCapture` (Q shortcut) — opens `CreateProjectDialog` when `projects.length === 0`; opens task create otherwise
+  - `Topbar` Settings dropdown item converted to `<Link asChild>` for nav progress
+  - `KeyboardManager` — `e.preventDefault()` added to direct shortcut matches (was already on chord matches); prevents shortcut characters from typing into auto-focused dialog inputs
+  - CLAUDE.md updated with "Loading & responsiveness" section: rules for nav links, page/data loading, buttons/forms, logout, keyboard shortcuts, and a pre-ship checklist
+
+## Session 2026-05-16 end-of-session checklist (session 9)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (388 tests, 48 files)
+- coverage: **80.81% statements / 83.78% lines / 73.67% branches / 73.92% functions** (all above Phase 1 config thresholds 70/70/65; lines/statements/branches above Phase 2 targets; functions 73.92% just under Phase 2 target of 75% — not raising config yet)
+- build: **PASS** (warnings only — all pre-existing)
+
 ## Next task
 RLS verification (two-account test: sign in as User A, confirm User B's data is invisible)
 
@@ -254,6 +276,14 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - `profiles` join in `task_comments` queries does not work via PostgREST embedded resource syntax — `task_comments.user_id → auth.users.id ← profiles.id` is an indirect relationship PostgREST cannot traverse; use two-step app-code join: fetch comment rows, then `.in('id', userIds)` on profiles, merge in application code
 - `screen.queryByText('Failing comment')` in RTL also matches textarea value when React sets it as controlled value in jsdom — use `{ selector: 'p' }` to restrict text search to paragraph elements, or check for empty-state sentinel text ("No comments yet.") to verify optimistic rollback instead
 - `relativeTime` uses `Math.floor(diffMs / DAY)` for day comparison — 25 hours → diffDays=1 → "yesterday" (not "1 day ago"); this is the intended behavior matching the UX spec
+- `NavigationProgress` is mounted in `app/providers.tsx` (root), not in `AppShell` — one instance covers all routes including auth pages; `AppShell` no longer needs to import it
+- All internal nav must use `<Link>` not `router.push` — `router.push` bypasses `NavigationProgress`'s click listener; if `router.push` is unavoidable, call `startNavigationProgress()` first
+- `AppShell` gates all shell chrome behind `authLoading` from `AuthContext`; `ShellSkeleton` must match real shell dimensions (240px sidebar, 46px topbar) so layout does not shift on swap
+- `signOut` sets `loading=true` as its first statement — this triggers `ShellSkeleton` before Supabase `signOut()` resolves, making logout feel instant
+- `KeyboardManager` calls `e.preventDefault()` on all matched shortcuts (both direct and chord) — prevents the shortcut character from typing into an auto-focused input that opens as a result of the shortcut
+- `CreateProjectDialog` is a global component mounted in `AppShell`, controlled via `UIContext.projectCreateOpen` — any component can open it via `openProjectCreate()` without prop drilling
+- Sidebar nav restriction: `projects.length === 0` hides Tasks/My Day/Matrix (not `!activeProject`) — `!activeProject` alone would lock out users who have projects but whose localStorage was cleared
+- Q shortcut checks `projects.length === 0` (via ref) to decide whether to open the project dialog or the task create panel — same ref pattern as `activeProject` to avoid stale closures
 
 ## Known issues / one-time setup required
 

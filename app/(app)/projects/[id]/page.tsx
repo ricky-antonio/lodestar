@@ -1,13 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { IconList, IconLayoutKanban, IconPlus } from '@tabler/icons-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BoardView } from '@/components/views/BoardView'
 import { ListView } from '@/components/views/ListView'
-import { TaskForm, type TaskFormValues } from '@/components/tasks/TaskForm'
 import { FilterBar } from '@/components/filters/FilterBar'
 import { filterTasks } from '@/lib/tasks'
 import { useTasks } from '@/lib/context/TasksContext'
@@ -21,10 +20,8 @@ export default function ProjectPage() {
 
   const { workspace } = useAuth()
   const { projects, setActiveProject } = useProjects()
-  const { tasks, filters, setFilters, addTask, editTask, removeTask, archiveTask } = useTasks()
-  const { activeView, setActiveView } = useUI()
-
-  const [formOpen, setFormOpen] = useState(false)
+  const { tasks, filters, setFilters, editTask, removeTask, archiveTask } = useTasks()
+  const { activeView, setActiveView, openCreate } = useUI()
 
   const project = projects.find(p => p.id === projectId)
 
@@ -41,14 +38,6 @@ export default function ProjectPage() {
     const task = tasks.find(t => t.id === id)
     if (!task) return
     editTask(id, { status: task.status === 'done' ? 'todo' : 'done' })
-  }
-
-  async function handleFormSubmit(values: TaskFormValues) {
-    await addTask({ ...values, project_id: projectId })
-  }
-
-  function handleCloseForm() {
-    setFormOpen(false)
   }
 
   return (
@@ -114,7 +103,7 @@ export default function ProjectPage() {
             </button>
           </div>
 
-          <Button onClick={() => setFormOpen(true)} className="flex items-center gap-1.5">
+          <Button onClick={() => openCreate({ project_id: projectId })} className="flex items-center gap-1.5">
             <IconPlus size={16} aria-hidden />
             New task
           </Button>
@@ -136,7 +125,7 @@ export default function ProjectPage() {
             }}
             onArchive={id => archiveTask(id)}
             onDelete={id => removeTask(id)}
-            onAddTask={() => setFormOpen(true)}
+            onAddTask={() => openCreate({ project_id: projectId })}
           />
         ) : (
           <ListView
@@ -150,11 +139,6 @@ export default function ProjectPage() {
         )}
       </div>
 
-      <TaskForm
-        open={formOpen}
-        onClose={handleCloseForm}
-        onSubmit={handleFormSubmit}
-      />
     </div>
   )
 }

@@ -6,12 +6,12 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { TaskList } from '@/components/tasks/TaskList'
 import { ListView } from '@/components/views/ListView'
-import { TaskForm, type TaskFormValues } from '@/components/tasks/TaskForm'
 import { FilterBar } from '@/components/filters/FilterBar'
 import { filterTasks } from '@/lib/tasks'
 import { useTasks } from '@/lib/context/TasksContext'
 import { useAuth } from '@/lib/context/AuthContext'
 import { useProjects } from '@/lib/context/ProjectsContext'
+import { useUI } from '@/lib/context/UIContext'
 
 function getTodayStr(): string {
   const d = new Date()
@@ -30,12 +30,12 @@ function formatHeaderDate(): string {
 }
 
 export default function MyDayPage() {
-  const { tasks, filters, setFilters, addTask, editTask, removeTask, archiveTask } = useTasks()
+  const { tasks, filters, setFilters, editTask, removeTask, archiveTask } = useTasks()
   const { workspace } = useAuth()
   const { activeProject } = useProjects()
+  const { openCreate } = useUI()
 
   const [pinnedTaskIds, setPinnedTaskIds] = useState<Set<string>>(new Set())
-  const [formOpen, setFormOpen] = useState(false)
   const [tableView, setTableView] = useState(false)
 
   const todayStr = getTodayStr()
@@ -51,6 +51,7 @@ export default function MyDayPage() {
   )
 
   const totalCount = dueTodayTasks.length + pinnedTasks.length
+
   function addToMyDay(id: string) {
     setPinnedTaskIds(prev => new Set([...prev, id]))
   }
@@ -67,14 +68,6 @@ export default function MyDayPage() {
     const task = tasks.find(t => t.id === id)
     if (!task) return
     editTask(id, { status: task.status === 'done' ? 'todo' : 'done' })
-  }
-
-  async function handleFormSubmit(values: TaskFormValues) {
-    await addTask({ ...values, due_date: values.due_date ?? todayStr, project_id: activeProject?.id ?? null })
-  }
-
-  function handleCloseForm() {
-    setFormOpen(false)
   }
 
   return (
@@ -136,7 +129,10 @@ export default function MyDayPage() {
                 <IconTable size={16} aria-hidden />
               </button>
             </div>
-            <Button onClick={() => setFormOpen(true)} className="flex items-center gap-1.5">
+            <Button
+              onClick={() => openCreate({ project_id: activeProject?.id ?? null, due_date: todayStr })}
+              className="flex items-center gap-1.5"
+            >
               <IconPlus size={16} aria-hidden />
               New task
             </Button>
@@ -213,12 +209,6 @@ export default function MyDayPage() {
         )}
       </div>
 
-      <TaskForm
-        open={formOpen}
-        onClose={handleCloseForm}
-        initialValues={{ due_date: todayStr }}
-        onSubmit={handleFormSubmit}
-      />
     </div>
   )
 }

@@ -10,11 +10,19 @@ export interface UndoItem {
   canUndo?: boolean
 }
 
+export interface CreateDefaults {
+  project_id?: string | null
+  due_date?: string | null
+}
+
 interface UIContextValue {
   activeView: ProjectDefaultView
   setActiveView: (view: ProjectDefaultView) => void
   detailTaskId: string | null
+  isCreating: boolean
+  createDefaults: CreateDefaults | null
   openDetail: (taskId: string) => void
+  openCreate: (defaults?: CreateDefaults) => void
   closeDetail: () => void
   commandPaletteOpen: boolean
   setCommandPaletteOpen: (open: boolean) => void
@@ -25,17 +33,34 @@ interface UIContextValue {
   setSidebarCollapsed: (collapsed: boolean) => void
 }
 
+const CREATE_SENTINEL = '__create__'
+
 const UIContext = createContext<UIContextValue | null>(null)
 
 export function UIProvider({ children }: { children: React.ReactNode }) {
   const [activeView, setActiveView] = useState<ProjectDefaultView>('board')
   const [detailTaskId, setDetailTaskId] = useState<string | null>(null)
+  const [createDefaults, setCreateDefaults] = useState<CreateDefaults | null>(null)
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
   const [undoStack, setUndoStack] = useState<UndoItem[]>([])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
-  const openDetail = useCallback((taskId: string) => setDetailTaskId(taskId), [])
-  const closeDetail = useCallback(() => setDetailTaskId(null), [])
+  const isCreating = detailTaskId === CREATE_SENTINEL
+
+  const openDetail = useCallback((taskId: string) => {
+    setCreateDefaults(null)
+    setDetailTaskId(taskId)
+  }, [])
+
+  const openCreate = useCallback((defaults?: CreateDefaults) => {
+    setCreateDefaults(defaults ?? null)
+    setDetailTaskId(CREATE_SENTINEL)
+  }, [])
+
+  const closeDetail = useCallback(() => {
+    setCreateDefaults(null)
+    setDetailTaskId(null)
+  }, [])
 
   const pushUndo = useCallback((item: UndoItem) => {
     setUndoStack(prev => [...prev, item])
@@ -51,7 +76,10 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
         activeView,
         setActiveView,
         detailTaskId,
+        isCreating,
+        createDefaults,
         openDetail,
+        openCreate,
         closeDetail,
         commandPaletteOpen,
         setCommandPaletteOpen,

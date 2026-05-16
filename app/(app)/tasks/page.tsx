@@ -1,12 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { IconPlus, IconList, IconLayoutKanban } from '@tabler/icons-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BoardView } from '@/components/views/BoardView'
 import { ListView } from '@/components/views/ListView'
-import { TaskForm, type TaskFormValues } from '@/components/tasks/TaskForm'
 import { FilterBar } from '@/components/filters/FilterBar'
 import { filterTasks } from '@/lib/tasks'
 import { useTasks } from '@/lib/context/TasksContext'
@@ -17,10 +15,8 @@ import { useUI } from '@/lib/context/UIContext'
 export default function TasksPage() {
   const { workspace } = useAuth()
   const { activeProject } = useProjects()
-  const { tasks, filters, setFilters, addTask, editTask, removeTask, archiveTask } = useTasks()
-  const { activeView, setActiveView } = useUI()
-
-  const [formOpen, setFormOpen] = useState(false)
+  const { tasks, filters, setFilters, editTask, removeTask, archiveTask } = useTasks()
+  const { activeView, setActiveView, openCreate } = useUI()
 
   const allTasks = tasks.filter(t => !t.is_archived)
   const visibleTasks = filterTasks(allTasks, filters)
@@ -29,14 +25,6 @@ export default function TasksPage() {
     const task = tasks.find(t => t.id === id)
     if (!task) return
     editTask(id, { status: task.status === 'done' ? 'todo' : 'done' })
-  }
-
-  async function handleFormSubmit(values: TaskFormValues) {
-    await addTask({ ...values, project_id: activeProject?.id ?? null })
-  }
-
-  function handleCloseForm() {
-    setFormOpen(false)
   }
 
   return (
@@ -96,7 +84,7 @@ export default function TasksPage() {
           </div>
 
           <Button
-            onClick={() => setFormOpen(true)}
+            onClick={() => openCreate({ project_id: activeProject?.id ?? null })}
             disabled={!activeProject}
             title={!activeProject ? 'Select a project first' : undefined}
             className="flex items-center gap-1.5"
@@ -122,7 +110,7 @@ export default function TasksPage() {
             }}
             onArchive={id => archiveTask(id)}
             onDelete={id => removeTask(id)}
-            onAddTask={activeProject ? () => setFormOpen(true) : undefined}
+            onAddTask={activeProject ? () => openCreate({ project_id: activeProject.id }) : undefined}
           />
         ) : (
           <ListView
@@ -136,11 +124,6 @@ export default function TasksPage() {
         )}
       </div>
 
-      <TaskForm
-        open={formOpen}
-        onClose={handleCloseForm}
-        onSubmit={handleFormSubmit}
-      />
     </div>
   )
 }

@@ -26,8 +26,19 @@ describe('UIContext', () => {
     const { result } = renderHook(() => useUI(), { wrapper })
     act(() => result.current.openDetail('t-123'))
     expect(result.current.detailTaskId).toBe('t-123')
+    expect(result.current.isCreating).toBe(false)
     act(() => result.current.closeDetail())
     expect(result.current.detailTaskId).toBeNull()
+  })
+
+  it('openCreate sets isCreating and stores defaults', () => {
+    const { result } = renderHook(() => useUI(), { wrapper })
+    act(() => result.current.openCreate({ project_id: 'proj-1', due_date: '2026-05-15' }))
+    expect(result.current.isCreating).toBe(true)
+    expect(result.current.createDefaults).toEqual({ project_id: 'proj-1', due_date: '2026-05-15' })
+    act(() => result.current.closeDetail())
+    expect(result.current.isCreating).toBe(false)
+    expect(result.current.createDefaults).toBeNull()
   })
 
   it('setCommandPaletteOpen toggles the palette', () => {

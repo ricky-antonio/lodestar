@@ -72,6 +72,9 @@ beforeEach(() => {
     setCommandPaletteOpen: vi.fn(),
     sidebarCollapsed: false,
     setSidebarCollapsed: vi.fn(),
+    isCreating: false,
+    createDefaults: null,
+    openCreate: vi.fn(),
   })
 })
 

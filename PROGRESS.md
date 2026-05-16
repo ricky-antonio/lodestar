@@ -116,6 +116,13 @@ Phase 2 — Views + Organization (**in progress**)
   - `TaskDetail` priority buttons redesigned — all four options always show tinted background + colored text + tinted border (urgent/red, high/amber, medium/cerulean, low/steel); selected button gets stronger border color + `fontWeight: 600` + outer ring shadow
   - 7 test files updated (TaskRow, TaskList, BoardView, ListView all drop `onEdit`; BoardView/ListView get `useUI` mock for `openDetail`); 310 tests, type-check clean, build clean
 
+- **Unified task creation via TaskDetail + QuickCapture defaults** — removed TaskForm from all page-level creation flows; all task creation now opens the TaskDetail slide-in panel in create mode:
+  - `UIContext` gains `isCreating` (bool), `createDefaults` (`{ project_id?, due_date? }`), and `openCreate(defaults?)` — sentinel `'__create__'` stored in `detailTaskId`
+  - `TaskDetail` extended with create mode: title input (auto-focus), status select, priority buttons, DueDatePicker, project select, description, estimated mins, "Create task" button; header shows "New task" label + × in create mode; Archive/Delete buttons moved to left side of header in edit mode (away from the × close button)
+  - `QuickCapture` rewritten — no inline form; Q shortcut calls `openCreate({ project_id: activeProject?.id ?? null, due_date: today })` via `useRef` to avoid stale closure on project change
+  - `my-day/page.tsx`, `tasks/page.tsx`, `projects/[id]/page.tsx` all cleaned up: TaskForm removed, `openCreate` wired to "New task" buttons and board column buttons
+  - 6 test files updated (UIContext, TaskDetail, QuickCapture, TasksPage, MyDayPage, two settings pages); 314 tests total, type-check clean, build clean
+
 ## Next task
 Keyboard reference sheet
 

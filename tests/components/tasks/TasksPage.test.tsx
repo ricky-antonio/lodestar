@@ -49,14 +49,6 @@ vi.mock('@/components/views/ListView', () => ({
   ),
 }))
 
-vi.mock('@/components/tasks/TaskForm', () => ({
-  TaskForm: ({ open, onClose }: { open: boolean; onClose: () => void }) =>
-    open ? (
-      <div data-testid="task-form">
-        <button onClick={onClose}>Close form</button>
-      </div>
-    ) : null,
-}))
 
 const activeProject: Project = {
   id: 'proj-1',
@@ -114,7 +106,10 @@ function defaultTasksContext() {
 function defaultUIContext() {
   return {
     detailTaskId: null,
+    isCreating: false,
+    createDefaults: null,
     openDetail: vi.fn(),
+    openCreate: vi.fn(),
     closeDetail: vi.fn(),
     activeView: 'board' as const,
     setActiveView: vi.fn(),
@@ -162,12 +157,13 @@ describe('TasksPage', () => {
     expect(screen.getByRole('button', { name: /new task/i })).not.toBeDisabled()
   })
 
-  it('clicking "New task" opens TaskForm when project is active', async () => {
+  it('clicking "New task" calls openCreate when project is active', async () => {
     const user = userEvent.setup()
+    const openCreate = vi.fn()
     mockUseProjects.mockReturnValue({ activeProject, projects: [activeProject] })
+    mockUseUI.mockReturnValue({ ...defaultUIContext(), openCreate })
     render(<TasksPage />)
-    expect(screen.queryByTestId('task-form')).not.toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /new task/i }))
-    expect(screen.getByTestId('task-form')).toBeInTheDocument()
+    expect(openCreate).toHaveBeenCalledWith({ project_id: 'proj-1' })
   })
 })

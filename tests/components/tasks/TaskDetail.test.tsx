@@ -11,13 +11,19 @@ const mockCloseDetail = vi.fn()
 const mockEditTask = vi.fn()
 const mockArchiveTask = vi.fn()
 const mockRemoveTask = vi.fn()
+const mockAddTask = vi.fn()
 
 let mockDetailTaskId: string | null = null
+let mockIsCreating = false
+let mockCreateDefaults: { project_id?: string | null; due_date?: string | null } | null = null
 let mockTasks: Task[] = []
 
 vi.mock('@/lib/context/UIContext', () => ({
   useUI: () => ({
     detailTaskId: mockDetailTaskId,
+    isCreating: mockIsCreating,
+    createDefaults: mockCreateDefaults,
+    openCreate: vi.fn(),
     closeDetail: mockCloseDetail,
   }),
 }))
@@ -28,6 +34,7 @@ vi.mock('@/lib/context/TasksContext', () => ({
     editTask: mockEditTask,
     archiveTask: mockArchiveTask,
     removeTask: mockRemoveTask,
+    addTask: mockAddTask,
   }),
 }))
 
@@ -92,6 +99,8 @@ describe('TaskDetail', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockDetailTaskId = null
+    mockIsCreating = false
+    mockCreateDefaults = null
     mockTasks = []
   })
 
@@ -167,5 +176,42 @@ describe('TaskDetail', () => {
     // Second click (now labelled "Confirm delete") executes
     await userEvent.click(screen.getByRole('button', { name: 'Confirm delete' }))
     expect(mockRemoveTask).toHaveBeenCalledWith('task-1')
+  })
+
+  describe('create mode', () => {
+    beforeEach(() => {
+      mockDetailTaskId = '__create__'
+      mockIsCreating = true
+      mockCreateDefaults = { project_id: 'proj-1', due_date: '2026-05-15' }
+    })
+
+    it('shows create form with title input and Create task button', () => {
+      render(<TaskDetail />)
+      expect(screen.getByRole('textbox', { name: 'Task title' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Create task' })).toBeInTheDocument()
+    })
+
+    it('Create task button is disabled when title is empty', () => {
+      render(<TaskDetail />)
+      expect(screen.getByRole('button', { name: 'Create task' })).toBeDisabled()
+    })
+
+    it('typing a title enables the Create task button', async () => {
+      render(<TaskDetail />)
+      await userEvent.type(screen.getByRole('textbox', { name: 'Task title' }), 'My new task')
+      expect(screen.getByRole('button', { name: 'Create task' })).not.toBeDisabled()
+    })
+
+    it('clicking Create task calls addTask with correct fields', async () => {
+      mockAddTask.mockResolvedValueOnce(undefined)
+      render(<TaskDetail />)
+      await userEvent.type(screen.getByRole('textbox', { name: 'Task title' }), 'My new task')
+      await userEvent.click(screen.getByRole('button', { name: 'Create task' }))
+      expect(mockAddTask).toHaveBeenCalledWith(expect.objectContaining({
+        title: 'My new task',
+        project_id: 'proj-1',
+        due_date: '2026-05-15',
+      }))
+    })
   })
 })

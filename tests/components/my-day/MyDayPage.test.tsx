@@ -125,7 +125,10 @@ describe('MyDayPage', () => {
 
     mockUseUI.mockReturnValue({
       detailTaskId: null,
+      isCreating: false,
+      createDefaults: null,
       openDetail: vi.fn(),
+      openCreate: vi.fn(),
       closeDetail: vi.fn(),
       activeView: 'list' as const,
       setActiveView: vi.fn(),

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import {
   IconX,
   IconArchive,
@@ -29,7 +29,7 @@ import { useUI } from '@/lib/context/UIContext'
 import { useTasks } from '@/lib/context/TasksContext'
 import { useProjects } from '@/lib/context/ProjectsContext'
 import { useAuth } from '@/lib/context/AuthContext'
-import type { TaskStatus, TaskPriority } from '@/lib/types'
+import type { Task, TaskStatus, TaskPriority } from '@/lib/types'
 
 const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: 'todo', label: 'To do' },
@@ -53,7 +53,7 @@ function StatusIcon({ status }: { status: TaskStatus }) {
 }
 
 export function TaskDetail() {
-  const { detailTaskId, isCreating, createDefaults, closeDetail, openDetail } = useUI()
+  const { detailTaskId, isCreating, createDefaults, closeDetail, openDetail, pushUndo } = useUI()
   const { tasks, editTask, archiveTask, removeTask, addTask, setTaskLabel } = useTasks()
   const { projects } = useProjects()
   const { user } = useAuth()
@@ -78,6 +78,10 @@ export function TaskDetail() {
   const [draftEstimatedMins, setDraftEstimatedMins] = useState<number | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const createTitleRef = useRef<HTMLInputElement>(null)
+  const blockersRef = useRef<Task[]>([])
+  const handleBlockersChange = useCallback((blockers: Task[]) => {
+    blockersRef.current = blockers
+  }, [])
 
   const task = (!isCreating && detailTaskId) ? tasks.find(t => t.id === detailTaskId) ?? null : null
 
@@ -497,7 +501,20 @@ export function TaskDetail() {
                 <div className="relative">
                   <select
                     value={task!.status}
-                    onChange={e => editTask(task!.id, { status: e.target.value as TaskStatus })}
+                    onChange={e => {
+                      const newStatus = e.target.value as TaskStatus
+                      if (newStatus === 'done') {
+                        const active = blockersRef.current.filter(b => b.status !== 'done')
+                        if (active.length > 0) {
+                          const names = active.length === 1
+                            ? `"${active[0].title}"`
+                            : `${active.length} tasks`
+                          pushUndo({ label: `Blocked by ${names}`, canUndo: false })
+                          return
+                        }
+                      }
+                      editTask(task!.id, { status: newStatus })
+                    }}
                     className={[
                       'w-full h-9 pl-3 pr-8 rounded-[var(--radius)]',
                       'border border-[var(--border-2)] bg-[var(--surface)]',
@@ -658,7 +675,11 @@ export function TaskDetail() {
                 <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
                   Dependencies
                 </p>
-                <TaskDependencies taskId={task!.id} allTasks={tasks} />
+                <TaskDependencies
+                  taskId={task!.id}
+                  allTasks={tasks}
+                  onBlockersChange={handleBlockersChange}
+                />
               </div>
 
               {/* Comments */}

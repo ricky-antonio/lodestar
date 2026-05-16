@@ -23,14 +23,17 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
 interface Props {
   taskId: string
   allTasks: Task[]
+  onBlockersChange?: (blockers: Task[]) => void
 }
 
-export function TaskDependencies({ taskId, allTasks }: Props) {
+export function TaskDependencies({ taskId, allTasks, onBlockersChange }: Props) {
   const [blockedBy, setBlockedBy] = useState<Task[]>([])
   const [blocking, setBlocking] = useState<Task[]>([])
   const [linkedTasks, setLinkedTasks] = useState<Task[]>([])
 
-  const workspaceId = allTasks.find(t => t.id === taskId)?.workspace_id ?? ''
+  const currentTask = allTasks.find(t => t.id === taskId)
+  const workspaceId = currentTask?.workspace_id ?? ''
+  const projectId = currentTask?.project_id ?? null
 
   useEffect(() => {
     let active = true
@@ -38,20 +41,30 @@ export function TaskDependencies({ taskId, allTasks }: Props) {
       if (!active) return
       setBlockedBy(bb)
       setBlocking(bl)
+      onBlockersChange?.(bb)
     })
     getLinkedTasks(taskId).then(linked => {
       if (!active) return
       setLinkedTasks(linked)
     })
     return () => { active = false }
+  // onBlockersChange intentionally omitted — stable ref via parent useRef pattern
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId])
 
   const blockedByIds = new Set(blockedBy.map(t => t.id))
   const blockingIds = new Set(blocking.map(t => t.id))
   const linkedIds = new Set(linkedTasks.map(t => t.id))
 
+  // Only show tasks from the same project in the "Blocked by" picker
   const availableForDep = allTasks.filter(
-    t => t.id !== taskId && !blockedByIds.has(t.id) && !blockingIds.has(t.id) && !t.is_archived
+    t =>
+      t.id !== taskId &&
+      t.project_id === projectId &&
+      t.parent_id === null &&
+      !blockedByIds.has(t.id) &&
+      !blockingIds.has(t.id) &&
+      !t.is_archived
   )
   const availableForLink = allTasks.filter(
     t => t.id !== taskId && !linkedIds.has(t.id) && !t.is_archived
@@ -61,21 +74,26 @@ export function TaskDependencies({ taskId, allTasks }: Props) {
     if (!dependsOnId) return
     const task = allTasks.find(t => t.id === dependsOnId)
     if (!task) return
-    setBlockedBy(prev => [...prev, task])
+    const next = [...blockedBy, task]
+    setBlockedBy(next)
+    onBlockersChange?.(next)
     try {
       await addDependency(workspaceId, taskId, dependsOnId)
     } catch {
-      setBlockedBy(prev => prev.filter(t => t.id !== dependsOnId))
+      setBlockedBy(blockedBy)
+      onBlockersChange?.(blockedBy)
     }
   }
 
   async function handleRemoveDep(dependsOnId: string) {
-    setBlockedBy(prev => prev.filter(t => t.id !== dependsOnId))
+    const next = blockedBy.filter(t => t.id !== dependsOnId)
+    setBlockedBy(next)
+    onBlockersChange?.(next)
     try {
       await removeDependency(taskId, dependsOnId)
     } catch {
-      const task = allTasks.find(t => t.id === dependsOnId)
-      if (task) setBlockedBy(prev => [...prev, task])
+      setBlockedBy(blockedBy)
+      onBlockersChange?.(blockedBy)
     }
   }
 

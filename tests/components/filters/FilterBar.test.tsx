@@ -1,28 +1,52 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { FilterBar } from '@/components/filters/FilterBar'
-import type { FilterState } from '@/lib/types'
+import type { FilterState, SavedFilter } from '@/lib/types'
 
-vi.mock('@/lib/labels', () => ({
-  getLabels: vi.fn().mockResolvedValue([
-    { id: 'label-1', workspace_id: 'ws-1', name: 'Bug', color: '#EF4444' },
-    { id: 'label-2', workspace_id: 'ws-1', name: 'Feature', color: '#00B6EC' },
-  ]),
+const mockGetLabels = vi.fn().mockResolvedValue([
+  { id: 'label-1', workspace_id: 'ws-1', name: 'Bug', color: '#EF4444' },
+  { id: 'label-2', workspace_id: 'ws-1', name: 'Feature', color: '#00B6EC' },
+])
+
+const mockGetSavedFilters = vi.fn().mockResolvedValue([])
+const mockCreateSavedFilter = vi.fn()
+const mockDeleteSavedFilter = vi.fn()
+
+vi.mock('@/lib/labels', () => ({ getLabels: (...args: unknown[]) => mockGetLabels(...args) }))
+vi.mock('@/lib/saved-filters', () => ({
+  getSavedFilters: (...args: unknown[]) => mockGetSavedFilters(...args),
+  createSavedFilter: (...args: unknown[]) => mockCreateSavedFilter(...args),
+  deleteSavedFilter: (...args: unknown[]) => mockDeleteSavedFilter(...args),
 }))
 
 vi.mock('@/lib/supabase/client', () => ({ createClient: () => ({}) }))
 
 const defaultFilters: FilterState = {}
 
-function renderBar(filters: FilterState = defaultFilters, onChange = vi.fn()) {
-  return { onChange, ...render(<FilterBar filters={filters} onChange={onChange} workspaceId="ws-1" />) }
+function renderBar(filters: FilterState = defaultFilters, onChange = vi.fn(), userId?: string) {
+  return {
+    onChange,
+    ...render(
+      <FilterBar
+        filters={filters}
+        onChange={onChange}
+        workspaceId="ws-1"
+        userId={userId}
+      />,
+    ),
+  }
 }
 
-beforeEach(() => {
-  vi.clearAllMocks()
-})
-
 describe('FilterBar', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockGetSavedFilters.mockResolvedValue([])
+    mockGetLabels.mockResolvedValue([
+      { id: 'label-1', workspace_id: 'ws-1', name: 'Bug', color: '#EF4444' },
+      { id: 'label-2', workspace_id: 'ws-1', name: 'Feature', color: '#00B6EC' },
+    ])
+  })
+
   it('renders search input', () => {
     renderBar()
     expect(screen.getByRole('textbox', { name: /search tasks/i })).toBeInTheDocument()
@@ -44,7 +68,6 @@ describe('FilterBar', () => {
 
   it('selecting urgent priority calls onChange with priority: [urgent]', () => {
     const { onChange } = renderBar()
-    // Open the Filter dropdown
     fireEvent.click(screen.getByRole('button', { name: /^filter$/i }))
     const urgentCheckbox = screen.getByRole('checkbox', { name: /urgent/i })
     fireEvent.click(urgentCheckbox)
@@ -62,5 +85,112 @@ describe('FilterBar', () => {
     const { onChange } = renderBar({ priority: ['high'], search: 'foo' })
     fireEvent.click(screen.getByRole('button', { name: /clear all/i }))
     expect(onChange).toHaveBeenCalledWith({})
+  })
+
+  // ─── Saved filters ────────────────────────────────────────────────────────
+
+  it('Saved button is not rendered without userId', () => {
+    renderBar()
+    expect(screen.queryByRole('button', { name: /saved filters/i })).not.toBeInTheDocument()
+  })
+
+  it('Saved button is rendered when userId is provided', async () => {
+    renderBar({}, vi.fn(), 'user-1')
+    expect(screen.getByRole('button', { name: /saved filters/i })).toBeInTheDocument()
+  })
+
+  it('shows empty state message when no saved filters and no active filters', async () => {
+    mockGetSavedFilters.mockResolvedValue([])
+    renderBar({}, vi.fn(), 'user-1')
+    fireEvent.click(screen.getByRole('button', { name: /saved filters/i }))
+    await waitFor(() => {
+      expect(screen.getByText(/no saved filters yet/i)).toBeInTheDocument()
+    })
+  })
+
+  it('shows save input when filters are active', async () => {
+    renderBar({ priority: ['high'] }, vi.fn(), 'user-1')
+    fireEvent.click(screen.getByRole('button', { name: /saved filters/i }))
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: /filter name/i })).toBeInTheDocument()
+    })
+  })
+
+  it('saving a filter calls createSavedFilter and adds it to the list', async () => {
+    const newFilter: SavedFilter = {
+      id: 'sf-1',
+      workspace_id: 'ws-1',
+      user_id: 'user-1',
+      name: 'High priority',
+      filters: { priority: ['high'] },
+      created_at: '2026-01-01T00:00:00Z',
+    }
+    mockCreateSavedFilter.mockResolvedValueOnce(newFilter)
+
+    renderBar({ priority: ['high'] }, vi.fn(), 'user-1')
+    fireEvent.click(screen.getByRole('button', { name: /saved filters/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('textbox', { name: /filter name/i })).toBeInTheDocument()
+    })
+
+    fireEvent.change(screen.getByRole('textbox', { name: /filter name/i }), {
+      target: { value: 'High priority' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+
+    await waitFor(() => {
+      expect(mockCreateSavedFilter).toHaveBeenCalledWith('ws-1', 'user-1', 'High priority', { priority: ['high'] })
+      expect(screen.getByText('High priority')).toBeInTheDocument()
+    })
+  })
+
+  it('applying a saved filter calls onChange with its filter state', async () => {
+    const savedFilter: SavedFilter = {
+      id: 'sf-1',
+      workspace_id: 'ws-1',
+      user_id: 'user-1',
+      name: 'My filter',
+      filters: { status: ['todo'] },
+      created_at: '2026-01-01T00:00:00Z',
+    }
+    mockGetSavedFilters.mockResolvedValue([savedFilter])
+
+    const onChange = vi.fn()
+    renderBar({}, onChange, 'user-1')
+    fireEvent.click(screen.getByRole('button', { name: /saved filters/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('My filter')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('My filter'))
+    expect(onChange).toHaveBeenCalledWith({ status: ['todo'] })
+  })
+
+  it('deleting a saved filter calls deleteSavedFilter', async () => {
+    const savedFilter: SavedFilter = {
+      id: 'sf-1',
+      workspace_id: 'ws-1',
+      user_id: 'user-1',
+      name: 'My filter',
+      filters: { status: ['todo'] },
+      created_at: '2026-01-01T00:00:00Z',
+    }
+    mockGetSavedFilters.mockResolvedValue([savedFilter])
+    mockDeleteSavedFilter.mockResolvedValue(undefined)
+
+    renderBar({}, vi.fn(), 'user-1')
+    fireEvent.click(screen.getByRole('button', { name: /saved filters/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('My filter')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /delete saved filter my filter/i }))
+    expect(mockDeleteSavedFilter).toHaveBeenCalledWith('sf-1')
+    await waitFor(() => {
+      expect(screen.queryByText('My filter')).not.toBeInTheDocument()
+    })
   })
 })

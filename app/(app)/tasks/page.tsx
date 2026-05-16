@@ -13,7 +13,7 @@ import { useProjects } from '@/lib/context/ProjectsContext'
 import { useUI } from '@/lib/context/UIContext'
 
 export default function TasksPage() {
-  const { workspace } = useAuth()
+  const { workspace, user } = useAuth()
   const { activeProject } = useProjects()
   const { tasks, filters, setFilters, editTask, removeTask, archiveTask } = useTasks()
   const { activeView, setActiveView, openCreate } = useUI()
@@ -97,7 +97,7 @@ export default function TasksPage() {
 
       {/* Filter bar */}
       {workspace && (
-        <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} />
+        <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} userId={user?.id} />
       )}
 
       {/* View */}

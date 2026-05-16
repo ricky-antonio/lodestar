@@ -1,15 +1,17 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { IconSearch, IconX, IconChevronDown } from '@tabler/icons-react'
+import { IconSearch, IconX, IconChevronDown, IconBookmark, IconTrash } from '@tabler/icons-react'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { getLabels } from '@/lib/labels'
-import type { FilterState, TaskPriority, TaskStatus, Label } from '@/lib/types'
+import { getSavedFilters, createSavedFilter, deleteSavedFilter } from '@/lib/saved-filters'
+import type { FilterState, TaskPriority, TaskStatus, Label, SavedFilter } from '@/lib/types'
 
 interface Props {
   filters: FilterState
   onChange: (filters: FilterState) => void
   workspaceId: string
+  userId?: string
 }
 
 const PRIORITIES: TaskPriority[] = ['urgent', 'high', 'medium', 'low']
@@ -46,12 +48,21 @@ function toggleArr<T extends string>(current: T[] | undefined, val: T): T[] | un
 const btnCls =
   'inline-flex items-center gap-1.5 h-8 px-3 text-sm rounded-lg border border-[var(--border-2)] bg-[var(--surface)] hover:bg-[var(--surface-2)] transition-colors'
 
-export function FilterBar({ filters, onChange, workspaceId }: Props) {
+export function FilterBar({ filters, onChange, workspaceId, userId }: Props) {
   const [labels, setLabels] = useState<Label[]>([])
+  const [savedFilters, setSavedFilters] = useState<SavedFilter[]>([])
+  const [savedOpen, setSavedOpen] = useState(false)
+  const [saveName, setSaveName] = useState('')
+  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     getLabels(workspaceId).then(setLabels).catch(() => {})
   }, [workspaceId])
+
+  useEffect(() => {
+    if (!userId) return
+    getSavedFilters(workspaceId, userId).then(setSavedFilters).catch(() => {})
+  }, [workspaceId, userId])
 
   const { today, endOfWeek, yesterday } = getDatePresets()
 
@@ -72,6 +83,28 @@ export function FilterBar({ filters, onChange, workspaceId }: Props) {
     filters.search || filters.priority?.length || filters.status?.length ||
     filters.label_ids?.length || filters.due_before || filters.due_after
   )
+
+  async function handleSave() {
+    if (!userId || !saveName.trim()) return
+    setSaving(true)
+    try {
+      const created = await createSavedFilter(workspaceId, userId, saveName.trim(), filters)
+      setSavedFilters(prev => [...prev, created])
+      setSaveName('')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setSavedFilters(prev => prev.filter(f => f.id !== id))
+    try {
+      await deleteSavedFilter(id)
+    } catch {
+      // re-fetch on failure
+      if (userId) getSavedFilters(workspaceId, userId).then(setSavedFilters).catch(() => {})
+    }
+  }
 
   type Chip = { key: string; label: string; onRemove: () => void }
   const chips: Chip[] = [
@@ -205,6 +238,97 @@ export function FilterBar({ filters, onChange, workspaceId }: Props) {
           ))}
         </PopoverContent>
       </Popover>
+
+      {/* Saved filters */}
+      {userId && (
+        <Popover open={savedOpen} onOpenChange={setSavedOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              aria-label="Saved filters"
+              className={btnCls}
+              style={{ color: 'var(--tx-1)' }}
+            >
+              <IconBookmark size={14} aria-hidden />
+              Saved
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-64 p-3 space-y-3">
+            {/* Save current filters */}
+            {hasFilters && (
+              <div>
+                <p className="text-[11px] font-medium uppercase tracking-widest mb-1.5" style={{ color: 'var(--tx-3)' }}>
+                  Save current filters
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Filter name…"
+                    value={saveName}
+                    onChange={e => setSaveName(e.target.value)}
+                    aria-label="Filter name"
+                    onKeyDown={e => { if (e.key === 'Enter') handleSave() }}
+                    className="flex-1 h-7 px-2 text-sm rounded border focus:outline-none"
+                    style={{
+                      background: 'var(--surface)',
+                      borderColor: 'var(--border-2)',
+                      color: 'var(--tx-1)',
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving || !saveName.trim()}
+                    className="h-7 px-2.5 text-sm rounded font-medium disabled:opacity-40 transition-opacity"
+                    style={{ background: 'var(--accent)', color: '#fff' }}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Saved filter list */}
+            {savedFilters.length > 0 ? (
+              <div>
+                {(hasFilters) && (
+                  <div className="mb-1.5" style={{ borderTop: '0.5px solid var(--border-2)' }} />
+                )}
+                <p className="text-[11px] font-medium uppercase tracking-widest mb-1" style={{ color: 'var(--tx-3)' }}>
+                  Your saved filters
+                </p>
+                <div className="space-y-0.5">
+                  {savedFilters.map(sf => (
+                    <div key={sf.id} className="flex items-center gap-1 group">
+                      <button
+                        type="button"
+                        onClick={() => { onChange(sf.filters); setSavedOpen(false) }}
+                        className="flex-1 text-left px-2 py-1.5 text-sm rounded hover:bg-[var(--surface-2)] truncate"
+                        style={{ color: 'var(--tx-1)' }}
+                      >
+                        {sf.name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(sf.id)}
+                        aria-label={`Delete saved filter ${sf.name}`}
+                        className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-[var(--surface-2)] transition-opacity"
+                        style={{ color: 'var(--tx-3)' }}
+                      >
+                        <IconTrash size={12} aria-hidden />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : !hasFilters ? (
+              <p className="text-sm py-1" style={{ color: 'var(--tx-3)' }}>
+                No saved filters yet. Apply some filters first, then save them here.
+              </p>
+            ) : null}
+          </PopoverContent>
+        </Popover>
+      )}
 
       {/* Active chips */}
       {chips.map(chip => (

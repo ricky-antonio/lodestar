@@ -18,7 +18,7 @@ export default function ProjectPage() {
   const params = useParams()
   const projectId = params.id as string
 
-  const { workspace } = useAuth()
+  const { workspace, user } = useAuth()
   const { projects, setActiveProject } = useProjects()
   const { tasks, filters, setFilters, editTask, removeTask, archiveTask } = useTasks()
   const { activeView, setActiveView, openCreate } = useUI()
@@ -112,7 +112,7 @@ export default function ProjectPage() {
 
       {/* Filter bar */}
       {workspace && (
-        <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} />
+        <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} userId={user?.id} />
       )}
 
       {/* View */}

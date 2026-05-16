@@ -31,7 +31,7 @@ function formatHeaderDate(): string {
 
 export default function MyDayPage() {
   const { tasks, filters, setFilters, editTask, removeTask, archiveTask } = useTasks()
-  const { workspace } = useAuth()
+  const { workspace, user } = useAuth()
   const { activeProject } = useProjects()
   const { openCreate } = useUI()
 
@@ -141,7 +141,7 @@ export default function MyDayPage() {
 
         {/* Filter bar */}
         {workspace && (
-          <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} />
+          <FilterBar filters={filters} onChange={setFilters} workspaceId={workspace.id} userId={user?.id} />
         )}
 
         {tableView ? (

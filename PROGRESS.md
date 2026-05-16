@@ -157,8 +157,22 @@ Phase 2 — Views + Organization (**in progress**)
 - coverage: **80.93% statements / 84.13% lines / 73.89% branches / 74.06% functions** (all above Phase 1 config thresholds 70/70/65; lines/statements/branches above Phase 2 targets; functions 74.06% just under Phase 2 target of 75% — not raising config yet)
 - build: **PASS** (warnings only — all pre-existing: `<img>` in profile/page.tsx, `_userId` unused in auth.ts, `_taskId` unused in SnoozeMenu.tsx, useEffect missing deps in TaskDetail.tsx, unused expression in ListView.tsx)
 
+- **Saved filters** —
+  - `lib/saved-filters.ts` — `getSavedFilters(workspaceId, userId)`, `createSavedFilter(workspaceId, userId, name, filters)`, `deleteSavedFilter(id)`; all query the `saved_filters` table (RLS: personal, per user_id)
+  - `FilterBar` extended with optional `userId` prop; when provided: "Saved" bookmark-icon button renders; popover shows "Save current filters" name input (only when filters are active) + list of saved filters (apply on click, delete with trash icon); saving optimistically adds to list, deleting optimistically removes then re-fetches on failure
+  - Tasks page, My Day page, and Projects page all updated to pass `userId={user?.id}` to FilterBar
+  - `tests/lib/saved-filters.test.ts` — 8 tests covering getSavedFilters (happy + empty + error), createSavedFilter (happy + error), deleteSavedFilter (happy + error)
+  - `tests/components/filters/FilterBar.test.tsx` — 6 new tests: Saved button absent without userId, present with userId, empty state, save input visible when filters active, saving calls createSavedFilter + shows result, applying a saved filter calls onChange, deleting calls deleteSavedFilter + removes from list; total 12 FilterBar tests
+  - 14 new tests; 357 total; type-check clean, build clean
+
+## Session 2026-05-15 end-of-session checklist (session 7)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (357 tests, 45 files)
+- coverage: **81.24% statements / 84.48% lines / 74.41% branches / 74.49% functions** (all above Phase 1 config thresholds 70/70/65; lines/statements/branches above Phase 2 targets; functions 74.49% just under Phase 2 target of 75% — not raising config yet)
+- build: **PASS** (warnings only — all pre-existing)
+
 ## Next task
-Saved filters
+Relative timestamps in activity feed and comments
 
 Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - Set up custom SMTP in Supabase Dashboard → Auth → SMTP Settings, then verify:
@@ -217,6 +231,9 @@ Remaining P1.10 items (complete in parallel, do not block Phase 2):
 - BoardView card click model: single click selects (adds to `selectedIds`); double click opens TaskDetail via `openDetail`; three-dot "Edit" also opens TaskDetail; drag still works (MouseSensor distance:5px means static clicks never activate drag)
 - Date-only comparisons against `due_date` (YYYY-MM-DD strings) must use local date components, not `toISOString()` (UTC) — `toISOString()` can return tomorrow's date in timezones ahead of UTC, making today's tasks appear overdue
 - Gear dropdown for Archive/Delete: delete confirmation uses a panel strip (not a second button state) because shadcn DropdownMenu closes on item click — the strip renders below the header and persists until Cancel or Confirm is clicked
+- `saved_filters` RLS is personal (user_id = auth.uid()) not workspace-shared — intentional; saved filters are a personal productivity tool, not shared state
+- `FilterBar` receives optional `userId` prop; when omitted (e.g. tests that don't need saved filters) the Saved button is hidden entirely — backwards-compatible
+- `deleteSavedFilter` in FilterBar does an optimistic removal and re-fetches on failure (rather than rollback) — re-fetch is simpler since the list is short and the failure path is rare
 
 ## Known issues / one-time setup required
 

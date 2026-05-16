@@ -125,7 +125,8 @@ export default function DashboardPage() {
     )
   }
 
-  const today = new Date().toISOString().split('T')[0]
+  const _d = new Date()
+  const today = `${_d.getFullYear()}-${String(_d.getMonth() + 1).padStart(2, '0')}-${String(_d.getDate()).padStart(2, '0')}`
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
 
   const stats: { label: string; value: number }[] = [

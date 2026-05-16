@@ -11,19 +11,24 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/lib/context/AuthContext'
+import { useProjects } from '@/lib/context/ProjectsContext'
 import { useUI } from '@/lib/context/UIContext'
 
 const VIEW_LABELS: Record<string, string> = {
   '/dashboard': 'Dashboard',
-  '/inbox':     'Inbox',
-  '/my-day':   'My Day',
-  '/matrix':   'Matrix',
+  '/tasks':     'Tasks',
+  '/inbox':     'Tasks',
+  '/my-day':    'My Day',
+  '/matrix':    'Matrix',
+  '/projects':  'Projects',
+  '/settings':  'Settings',
 }
 
 export function Topbar() {
   const pathname = usePathname()
   const router = useRouter()
   const { profile, workspace, signOut } = useAuth()
+  const { projects } = useProjects()
   const { setCommandPaletteOpen } = useUI()
 
   async function handleSignOut() {
@@ -31,7 +36,13 @@ export function Topbar() {
     router.push('/login')
   }
 
+  const projectMatch = pathname.match(/^\/projects\/([^/]+)/)
+  const activeProject = projectMatch
+    ? projects.find(p => p.id === projectMatch[1])
+    : null
+
   const viewTitle =
+    activeProject?.name ??
     VIEW_LABELS[pathname] ??
     Object.entries(VIEW_LABELS).find(([k]) => pathname.startsWith(k + '/'))?.at(1) ??
     'lodestar'

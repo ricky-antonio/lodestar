@@ -15,6 +15,11 @@ vi.mock('@/lib/context/AuthContext', () => ({
   }),
 }))
 
+vi.mock('@/lib/context/ProjectsContext', () => ({
+  ProjectsProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  useProjects: () => ({ projects: [], activeProject: null, loading: false }),
+}))
+
 function renderTopbar() {
   return render(<UIProvider><Topbar /></UIProvider>)
 }

@@ -7,7 +7,7 @@ import { useUI } from '@/lib/context/UIContext'
 
 export function AppShortcuts() {
   const router = useRouter()
-  const { setActiveView } = useUI()
+  const { setActiveView, toggleAiBar } = useUI()
 
   useEffect(() => {
     const unregisters = [
@@ -21,9 +21,10 @@ export function AppShortcuts() {
         description: 'Focus search',
         handler: () => document.querySelector<HTMLInputElement>('[data-search-input]')?.focus(),
       }),
+      keyboard.register({ key: 'n', alt: true, description: 'Toggle AI task bar', handler: toggleAiBar }),
     ]
     return () => unregisters.forEach(u => u())
-  }, [router, setActiveView])
+  }, [router, setActiveView, toggleAiBar])
 
   return null
 }

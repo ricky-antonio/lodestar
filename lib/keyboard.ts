@@ -4,6 +4,7 @@ export interface Shortcut {
   key: string
   meta?: boolean
   shift?: boolean
+  alt?: boolean
   chord?: string  // key that must be pressed immediately before this one
   description: string
   handler: ShortcutHandler
@@ -23,7 +24,7 @@ export class KeyboardManager {
   }
 
   private buildMapKey(shortcut: Shortcut): string {
-    const suffix = `${shortcut.meta ? 'meta+' : ''}${shortcut.shift ? 'shift+' : ''}${shortcut.key}`
+    const suffix = `${shortcut.alt ? 'alt+' : ''}${shortcut.meta ? 'meta+' : ''}${shortcut.shift ? 'shift+' : ''}${shortcut.key}`
     return shortcut.chord ? `${shortcut.chord}>${suffix}` : suffix
   }
 
@@ -35,7 +36,7 @@ export class KeyboardManager {
       (target as HTMLElement).isContentEditable
     ) return
 
-    const rawKey = `${(e.metaKey || e.ctrlKey) ? 'meta+' : ''}${e.shiftKey ? 'shift+' : ''}${e.key}`
+    const rawKey = `${e.altKey ? 'alt+' : ''}${(e.metaKey || e.ctrlKey) ? 'meta+' : ''}${e.shiftKey ? 'shift+' : ''}${e.key}`
 
     // Try chord completion first
     if (this.pendingChord) {

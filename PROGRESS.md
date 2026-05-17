@@ -385,16 +385,16 @@ Without this, the service role client gets "permission denied for table workspac
 
 - **P3.0 — AI infrastructure** — `lib/ai/client.ts` (Anthropic singleton + AI_MODEL constant), `lib/ai/parse.ts` (extractJSON strips fences + JSON.parse + throws on failure), `lib/rate-limit.ts` (aiRatelimit sliding window 10/min + checkRateLimit helper returning 429 Response); 6 new tests (4 parse + 2 rate-limit); 53 files, 445 tests total, type-check clean
 
+- **P3.1 — Natural language task creation** — `lib/ai/tasks.ts` (`createTaskFromPrompt` with one retry on JSON parse failure); `app/api/ai/create-task/route.ts` (POST: auth → rate limit → validate → AI → 200); `components/ai/AICommandBar.tsx` (textarea + Generate button + inline AIPreviewCard with priority badge, title, description, due date, est. mins; "Create task" calls `addTask` + closes, "Cancel" discards); AI button in Tasks page header; Alt+N keyboard shortcut (registered in AppShortcuts via new `alt` modifier support in KeyboardManager); `aiBarOpen`/`toggleAiBar`/`closeAiBar` added to UIContext; 16 new tests (4 lib + 6 api + 6 component); 56 files, 461 tests total, type-check clean
+
 ## In progress
 None.
 
 ## Next task
-P3.1 — Natural language task creation:
-- `lib/ai/tasks.ts` — `createTaskFromPrompt(prompt): Promise<AITaskPreview>` (with retry on JSON parse failure)
-- `app/api/ai/create-task/route.ts` — POST: auth → rate limit → validate → createTaskFromPrompt → 200
-- `components/ai/AICommandBar.tsx` — floating input + AIPreviewCard + confirm flow
-- Wire into Tasks page header ("AI" button)
-- Tests: tasks.test.ts (4 cases), ai-create-task.test.ts (6 cases), AICommandBar.test.tsx (6 cases)
+P3.2 — Task breakdown:
+- `lib/ai/tasks.ts` — `breakdownTask(taskId): Promise<AISubtaskSuggestion[]>`
+- `app/api/ai/breakdown/route.ts` — POST: auth → rate limit → fetch task → AI → subtask array
+- `components/ai/AITaskBreakdown.tsx` — "Break this down" button in TaskDetail, subtask checkboxes (all checked by default), confirm creates only checked subtasks
 
 ## Decisions made (continued)
 - Board card priority dot removed — priority is already communicated by the left-border color; the dot was redundant; replaced by label dots (one per assigned label, using the label's own color)
@@ -402,6 +402,9 @@ P3.1 — Natural language task creation:
 - `Ratelimit.slidingWindow` is a static method — `vi.mock('@upstash/ratelimit')` must include it via `Object.assign` on the mock constructor, or use a regular `function MockRatelimit()` with `MockRatelimit.slidingWindow = vi.fn()` — arrow function mocks cannot be used as constructors (`new`) so `vi.fn().mockImplementation(() => ({...}))` fails; a regular function returning an object works
 - `mockLimit` (mock for `aiRatelimit.limit`) must be defined at module scope with the `mock` prefix so Vitest's hoisting allows it to be referenced inside the `vi.mock` factory
 - `lib/ai/client.ts` is excluded from meaningful coverage (0% statements) because the module only exports an Anthropic singleton and a constant — there is no callable logic to test; the singleton is always mocked in tests that use it
+- `createTaskFromPrompt` retry: outer try/catch calls `attempt()` twice — first failure is silently swallowed, second failure propagates; `extractJSON` throws on bad JSON so parse failure always triggers the retry path
+- `Shortcut` interface gained `alt?: boolean`; `KeyboardManager` `buildMapKey` prefixes `alt+` and `listener` reads `e.altKey`; Alt+N toggles the AI bar globally via `toggleAiBar` from UIContext
+- `aiBarOpen`/`toggleAiBar`/`closeAiBar` live in UIContext (not Tasks page local state) so the Alt+N global shortcut can control the bar from AppShortcuts without prop drilling
 
 ## Test status (Phase 2 close-out — 2026-05-16)
 - `npm run type-check`: PASS (0 errors)
@@ -419,4 +422,10 @@ P3.1 — Natural language task creation:
 - type-check: **PASS** (0 errors)
 - tests: **PASS** (53 files, 445 tests)
 - coverage: **86.73% statements (1536/1771) / 89.50% lines (1331/1487) / 77.88% branches (845/1085) / 79.49% functions (438/551)** — all above Phase 2 thresholds; Phase 3 targets (Lines ≥ 80%, Functions ≥ 80%, Branches ≥ 75%) not yet required
+- build: **PASS** (warnings only — all pre-existing, non-breaking)
+
+## Session 2026-05-17 end-of-session checklist (session 14 — P3.1)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (56 files, 461 tests)
+- coverage: **86.71% statements (1599/1844) / 89.69% lines (1392/1552) / 77.83% branches (885/1137) / 79.29% functions (448/565)** — all above Phase 2 thresholds; Phase 3 targets (Lines ≥ 80%, Functions ≥ 80%, Branches ≥ 75%): lines ✓ branches ✓ functions just under (79.29% vs 80%)
 - build: **PASS** (warnings only — all pre-existing, non-breaking)

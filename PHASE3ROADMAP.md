@@ -122,6 +122,8 @@ Step 5 — Tests:
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
 Update PROGRESS.md: mark AI infrastructure complete, next = Natural language task creation.
+
+provide a summary of what you build here, speak in plain English, confirm before starting
 ```
 
 ---
@@ -216,6 +218,8 @@ Step 5 — Tests:
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
 Update PROGRESS.md: mark natural language task creation complete, next = Task breakdown.
+
+provide a summary of what you build here, speak in plain English, confirm before starting
 ```
 
 ---
@@ -293,6 +297,8 @@ Step 5 — Tests:
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
 Update PROGRESS.md: mark task breakdown complete, next = Description editor + slash commands.
+
+provide a summary of what you build here, speak in plain English, confirm before starting
 ```
 
 ---
@@ -380,6 +386,8 @@ Step 4 — Tests:
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
 Update PROGRESS.md: mark description editor complete, next = AI description writer.
+
+provide a summary of what you build here, speak in plain English, confirm before starting
 ```
 
 ---
@@ -435,6 +443,8 @@ Step 4 — Tests:
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
 Update PROGRESS.md: mark AI description writer complete, next = Weekly digest.
+
+provide a summary of what you build here, speak in plain English, confirm before starting
 ```
 
 ---
@@ -531,6 +541,8 @@ Step 6 — Tests:
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
 Update PROGRESS.md: mark weekly digest complete, next = Priority suggester.
+
+provide a summary of what you build here, speak in plain English, confirm before starting
 ```
 
 ---
@@ -609,6 +621,8 @@ Step 5 — Tests:
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
 Update PROGRESS.md: mark priority suggester complete, next = Stale task detector.
+
+provide a summary of what you build here, speak in plain English, confirm before starting
 ```
 
 ---
@@ -683,6 +697,8 @@ Step 6 — Tests:
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
 Update PROGRESS.md: mark stale task detector complete, next = Workload advisor.
+
+provide a summary of what you build here, speak in plain English, confirm before starting
 ```
 
 ---
@@ -737,6 +753,8 @@ Step 4 — Tests:
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
 Update PROGRESS.md: mark workload advisor complete, next = Meeting agenda builder.
+
+provide a summary of what you build here, speak in plain English, confirm before starting
 ```
 
 ---
@@ -801,6 +819,8 @@ Step 5 — Tests:
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
 Update PROGRESS.md: mark meeting agenda builder complete, next = Smart daily scheduler.
+
+provide a summary of what you build here, speak in plain English, confirm before starting
 ```
 
 ---
@@ -867,6 +887,8 @@ Step 4 — Tests:
 
 Run `npm test` — all must pass. Run `npm run type-check` — zero errors.
 Update PROGRESS.md: mark smart daily scheduler complete, next = Phase 3 close-out.
+
+provide a summary of what you build here, speak in plain English, confirm before starting
 ```
 
 ---
@@ -911,6 +933,8 @@ After all four pass, update PROGRESS.md:
     — this informs prompt tuning in Phase 5
 
 Do not commit — leave that for the user.
+
+provide a summary of what you build here, speak in plain English, confirm before starting
 ```
 
 ---

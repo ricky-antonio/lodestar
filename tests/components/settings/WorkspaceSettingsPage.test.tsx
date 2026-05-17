@@ -88,6 +88,9 @@ beforeEach(() => {
     projectCreateOpen: false,
     openProjectCreate: vi.fn(),
     closeProjectCreate: vi.fn(),
+    aiBarOpen: false,
+    toggleAiBar: vi.fn(),
+    closeAiBar: vi.fn(),
   })
 })
 

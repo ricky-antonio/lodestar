@@ -34,6 +34,9 @@ interface UIContextValue {
   projectCreateOpen: boolean
   openProjectCreate: () => void
   closeProjectCreate: () => void
+  aiBarOpen: boolean
+  toggleAiBar: () => void
+  closeAiBar: () => void
 }
 
 const CREATE_SENTINEL = '__create__'
@@ -48,9 +51,12 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
   const [undoStack, setUndoStack] = useState<UndoItem[]>([])
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [projectCreateOpen, setProjectCreateOpen] = useState(false)
+  const [aiBarOpen, setAiBarOpen] = useState(false)
 
   const openProjectCreate = useCallback(() => setProjectCreateOpen(true), [])
   const closeProjectCreate = useCallback(() => setProjectCreateOpen(false), [])
+  const toggleAiBar = useCallback(() => setAiBarOpen(v => !v), [])
+  const closeAiBar = useCallback(() => setAiBarOpen(false), [])
 
   const isCreating = detailTaskId === CREATE_SENTINEL
 
@@ -98,6 +104,9 @@ export function UIProvider({ children }: { children: React.ReactNode }) {
         projectCreateOpen,
         openProjectCreate,
         closeProjectCreate,
+        aiBarOpen,
+        toggleAiBar,
+        closeAiBar,
       }}
     >
       {children}

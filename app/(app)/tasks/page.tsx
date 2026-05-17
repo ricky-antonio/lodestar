@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import { IconPlus, IconList, IconLayoutKanban } from '@tabler/icons-react'
+import { IconPlus, IconList, IconLayoutKanban, IconSparkles } from '@tabler/icons-react'
+import { AICommandBar } from '@/components/ai/AICommandBar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BoardView } from '@/components/views/BoardView'
@@ -18,7 +19,7 @@ export default function TasksPage() {
   const { workspace, user } = useAuth()
   const { activeProject } = useProjects()
   const { tasks, taskLabelIds, labels, filters, setFilters, editTask, removeTask, archiveTask, loading } = useTasks()
-  const { activeView, setActiveView, openCreate } = useUI()
+  const { activeView, setActiveView, openCreate, aiBarOpen, toggleAiBar, closeAiBar } = useUI()
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([])
   const handleSelectionChange = useCallback((ids: string[]) => setSelectedTaskIds(ids), [])
 
@@ -90,6 +91,17 @@ export default function TasksPage() {
           </div>
 
           <Button
+            onClick={toggleAiBar}
+            disabled={!activeProject}
+            title={!activeProject ? 'Select a project first' : undefined}
+            variant="outline"
+            className="flex items-center gap-1.5"
+            aria-label="AI task creation"
+          >
+            <IconSparkles size={16} aria-hidden />
+            AI
+          </Button>
+          <Button
             onClick={() => openCreate({ project_id: activeProject?.id ?? null })}
             disabled={!activeProject}
             title={!activeProject ? 'Select a project first' : undefined}
@@ -100,6 +112,15 @@ export default function TasksPage() {
           </Button>
         </div>
       </div>
+
+      {/* AI command bar */}
+      {aiBarOpen && (
+        <AICommandBar
+          open={aiBarOpen}
+          projectId={activeProject?.id ?? null}
+          onClose={closeAiBar}
+        />
+      )}
 
       {/* Filter bar */}
       {workspace && (

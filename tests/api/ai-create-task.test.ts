@@ -70,18 +70,20 @@ describe('POST /api/ai/create-task', () => {
     expect(res.status).toBe(400)
   })
 
-  it('returns 200 with AITaskPreview on valid input', async () => {
+  it('returns 200 with AITaskResult on valid input', async () => {
     mockSupabase.auth.getUser.mockResolvedValueOnce({
       data: { user: { id: 'user-1' } },
       error: null,
     })
-    const preview = { title: 'Fix bug', priority: 'high', due_date: null, estimated_mins: 60 }
-    mockCreateTaskFromPrompt.mockResolvedValueOnce(preview)
+    const taskResult = {
+      tasks: [{ title: 'Fix bug', priority: 'high', due_date: null, estimated_mins: 60, subtasks: [] }],
+    }
+    mockCreateTaskFromPrompt.mockResolvedValueOnce(taskResult)
 
     const res = await POST({ prompt: 'Fix the login bug today' })
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body).toEqual(preview)
+    expect(body).toEqual(taskResult)
   })
 
   it('returns 500 with message on AI failure', async () => {

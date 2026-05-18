@@ -387,16 +387,29 @@ Without this, the service role client gets "permission denied for table workspac
 
 - **P3.1 — Natural language task creation** — `lib/ai/tasks.ts` (`createTaskFromPrompt` with one retry on JSON parse failure); `app/api/ai/create-task/route.ts` (POST: auth → rate limit → validate → AI → 200); `components/ai/AICommandBar.tsx` (textarea + Generate button + inline AIPreviewCard with priority badge, title, description, due date, est. mins; "Create task" calls `addTask` + closes, "Cancel" discards); AI button in Tasks page header; Alt+N keyboard shortcut (registered in AppShortcuts via new `alt` modifier support in KeyboardManager); `aiBarOpen`/`toggleAiBar`/`closeAiBar` added to UIContext; 16 new tests (4 lib + 6 api + 6 component); 56 files, 461 tests total, type-check clean
 
+- **P3.2 — Task breakdown** — `lib/ai/tasks.ts` extended with `AISubtaskSuggestion` + `breakdownTask(task)`: sends title+description to Claude, validates 3–6 items, throws on invalid count; `app/api/ai/breakdown/route.ts` (POST: auth → rate limit → taskId validation → fetch task → workspace member check → AI → subtasks array); `components/ai/AITaskBreakdown.tsx` (inline panel: loading spinner → checkbox list all pre-checked, estimated_mins badge when present, "Add subtasks" creates only checked items via createSubtask + info toast, "Cancel" dismisses); wired into TaskDetail via ✨ sparkle icon button in edit-mode header, breakdown panel renders between header and delete strip, `subtaskReloadKey` increments on confirm to remount SubtaskList; 18 new tests (5 lib + 6 api + 7 component); 58 files, 479 tests total, type-check clean
+
+## Session 2026-05-17 end-of-session checklist (session 15 — P3.2)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (58 files, 479 tests)
+- coverage: **86.63% statements (1672/1930) / 89.63% lines (1462/1631) / 77.48% branches (919/1186) / 78.97% functions (462/585)** — all above Phase 2 thresholds; Phase 3 targets (Lines ≥ 80% ✓, Branches ≥ 75% ✓, Functions ≥ 80% — functions 78.97% just under, not raising config yet mid-phase)
+- build: **PASS** (warnings only — all pre-existing, non-breaking)
+
 ## In progress
 None.
 
 ## Next task
-P3.2 — Task breakdown:
-- `lib/ai/tasks.ts` — `breakdownTask(taskId): Promise<AISubtaskSuggestion[]>`
-- `app/api/ai/breakdown/route.ts` — POST: auth → rate limit → fetch task → AI → subtask array
-- `components/ai/AITaskBreakdown.tsx` — "Break this down" button in TaskDetail, subtask checkboxes (all checked by default), confirm creates only checked subtasks
+P3.3 — Description editor + slash commands:
+- Rich textarea with `/date`, `/task`, `/ai` slash commands
+- `/ai` continues description from current text using AI
 
 ## Decisions made (continued)
+- `createTaskFromPrompt` system prompt updated to require specific, concrete titles and to put multi-step inputs into the description as a `- ` bullet list — original prompt allowed the model to over-abstract (e.g., "Go downtown, coffee in Bucktown, Ventra pass" → "Run downtown errands"), losing information the user typed; the new rules explicitly prohibit summarization and give a bad/good example
+- `breakdownTask` takes `{ title, description }` (not a full `Task`) — the route fetches only those columns from Supabase, and the lib function only needs those two fields; passing a partial avoids coupling the lib to the full Task shape
+- `AITaskBreakdown` fetches on mount (no lazy trigger) — the sparkle button only renders the component when clicked, so the fetch fires at exactly the right moment without an extra "load" step
+- `subtaskReloadKey` counter on `SubtaskList` forces a full remount after breakdown confirms — simpler than threading a reload callback through SubtaskList; React remount is cheap for a short list
+- `showBreakdown` resets to `false` in the `detailTaskId` effect — prevents stale breakdown panel carrying over when switching to a different task without closing the panel
+- `AITaskBreakdown` continues on individual `createSubtask` failures (per-subtask try/catch) — partial success is better than aborting; the toast count reflects how many actually created
 - Board card priority dot removed — priority is already communicated by the left-border color; the dot was redundant; replaced by label dots (one per assigned label, using the label's own color)
 - `labels: Label[]` lifted into `TasksContext` alongside `taskLabelIds` — both are needed at the same level (board cards) and fetching once in context avoids duplicate `getLabels()` calls per component
 - `Ratelimit.slidingWindow` is a static method — `vi.mock('@upstash/ratelimit')` must include it via `Object.assign` on the mock constructor, or use a regular `function MockRatelimit()` with `MockRatelimit.slidingWindow = vi.fn()` — arrow function mocks cannot be used as constructors (`new`) so `vi.fn().mockImplementation(() => ({...}))` fails; a regular function returning an object works

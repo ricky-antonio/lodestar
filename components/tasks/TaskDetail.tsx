@@ -6,6 +6,7 @@ import {
   IconArchive,
   IconTrash,
   IconSettings,
+  IconSparkles,
   IconCircle,
   IconCircleDashed,
   IconCircleCheck,
@@ -19,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { SubtaskList } from '@/components/tasks/SubtaskList'
+import { AITaskBreakdown } from '@/components/ai/AITaskBreakdown'
 import { LabelPicker } from '@/components/tasks/LabelPicker'
 import { TaskDependencies } from '@/components/tasks/TaskDependencies'
 import { CommentThread } from '@/components/tasks/CommentThread'
@@ -61,6 +63,8 @@ export function TaskDetail() {
   const [isClosing, setIsClosing] = useState(false)
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showBreakdown, setShowBreakdown] = useState(false)
+  const [subtaskReloadKey, setSubtaskReloadKey] = useState(0)
 
   // Edit mode state
   const [editingTitle, setEditingTitle] = useState(false)
@@ -90,9 +94,10 @@ export function TaskDetail() {
     closeTimerRef.current = setTimeout(closeDetail, 200)
   }
 
-  // Reset closing state and cancel any pending timer when panel changes
+  // Reset closing state, cancel any pending timer, and hide breakdown when panel changes
   useEffect(() => {
     setIsClosing(false)
+    setShowBreakdown(false)
     clearTimeout(closeTimerRef.current)
   }, [detailTaskId])
 
@@ -102,7 +107,12 @@ export function TaskDetail() {
     setDraftTitle('')
     setDraftStatus('todo')
     setDraftPriority('medium')
-    setDraftDueDate(createDefaults?.due_date ?? null)
+    if (createDefaults?.due_date) {
+      setDraftDueDate(createDefaults.due_date)
+    } else {
+      const d = new Date()
+      setDraftDueDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+    }
     setDraftProjectId(createDefaults?.project_id ?? projects[0]?.id ?? null)
     setDraftDescription('')
     setDraftEstimatedMins(null)
@@ -272,6 +282,19 @@ export function TaskDetail() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <button
+                onClick={() => setShowBreakdown(v => !v)}
+                className={[
+                  'p-1.5 rounded transition-colors',
+                  showBreakdown
+                    ? 'text-[var(--accent)] bg-[var(--surface-2)]'
+                    : 'text-[var(--tx-3)] hover:bg-[var(--surface-2)] hover:text-[var(--accent)]',
+                ].join(' ')}
+                aria-label="Break this down"
+                aria-pressed={showBreakdown}
+              >
+                <IconSparkles size={16} />
+              </button>
               <div className="flex-1" />
             </>
           )}
@@ -283,6 +306,19 @@ export function TaskDetail() {
             <IconX size={16} />
           </button>
         </div>
+
+        {/* AI breakdown panel */}
+        {showBreakdown && !isCreating && task && (
+          <AITaskBreakdown
+            taskId={task.id}
+            workspaceId={task.workspace_id}
+            onDone={() => {
+              setShowBreakdown(false)
+              setSubtaskReloadKey(k => k + 1)
+            }}
+            onCancel={() => setShowBreakdown(false)}
+          />
+        )}
 
         {/* Delete confirmation strip */}
         {confirmDelete && !isCreating && (
@@ -655,7 +691,7 @@ export function TaskDetail() {
                 <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
                   Subtasks
                 </p>
-                <SubtaskList parentId={task!.id} workspaceId={task!.workspace_id} />
+                <SubtaskList key={subtaskReloadKey} parentId={task!.id} workspaceId={task!.workspace_id} />
               </div>
 
               {/* Labels */}

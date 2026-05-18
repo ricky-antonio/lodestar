@@ -25,8 +25,8 @@ export async function POST(request: Request) {
   }
 
   try {
-    const preview = await createTaskFromPrompt(prompt.trim())
-    return Response.json(preview)
+    const result = await createTaskFromPrompt(prompt.trim())
+    return Response.json(result)
   } catch (err) {
     const message = err instanceof Error ? err.message : 'AI request failed'
     return Response.json({ message }, { status: 500 })

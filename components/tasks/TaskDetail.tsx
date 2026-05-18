@@ -618,7 +618,7 @@ export function TaskDetail() {
                 </label>
                 <select
                   value={task!.project_id ?? ''}
-                  onChange={e => editTask(task!.id, { project_id: e.target.value || null })}
+                  onChange={e => editTask(task!.id, { project_id: e.target.value })}
                   className={[
                     'h-9 px-3 rounded-[var(--radius)]',
                     'border border-[var(--border-2)] bg-[var(--surface)]',
@@ -628,7 +628,6 @@ export function TaskDetail() {
                   ].join(' ')}
                   aria-label="Project"
                 >
-                  <option value="">Inbox</option>
                   {projects.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
                   ))}

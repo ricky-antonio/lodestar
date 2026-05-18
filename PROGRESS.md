@@ -395,6 +395,14 @@ Without this, the service role client gets "permission denied for table workspac
 - coverage: **86.63% statements (1672/1930) / 89.63% lines (1462/1631) / 77.48% branches (919/1186) / 78.97% functions (462/585)** — all above Phase 2 thresholds; Phase 3 targets (Lines ≥ 80% ✓, Branches ≥ 75% ✓, Functions ≥ 80% — functions 78.97% just under, not raising config yet mid-phase)
 - build: **PASS** (warnings only — all pre-existing, non-breaking)
 
+- **AI task creation overhaul (post-session fixes)** — `createTaskFromPrompt` now returns `AITaskResult { tasks: AITaskItem[] }` instead of a flat `AITaskPreview`; AI groups related items under one task with subtasks, or splits unrelated items into multiple linked tasks; `AICommandBar` updated to show grouped preview (task + subtask bullet list) or split preview (N tasks · will be linked); on confirm, grouped: creates task + subtasks via `createSubtask`; split: creates each task then links all pairs via `addLink`; system prompt hardened to ban title stuffing with + / — separators and require action-verb subtasks; `normalizeTask` post-processor extracts pure bullet-list descriptions into subtasks when model ignores the prompt; `due_date` defaults to today when AI returns null; manual task creation (TaskDetail create mode) also defaults due_date to today; "Inbox" option removed from project dropdown in edit mode — only real projects shown; `AITaskPreview` type replaced by `AITaskItem` + `AITaskResult`
+
+## Session 2026-05-17 end-of-session checklist (session 16 — AI creation overhaul + UX fixes)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (58 files, 490 tests)
+- coverage: **86.87% statements (1721/1981) / 89.80% lines (1506/1677) / 77.94% branches (965/1238) / 79.32% functions (472/595)** — all above Phase 2 thresholds; Phase 3 targets: lines ✓ branches ✓ functions 79.32% just under 80% — not raising config yet
+- build: **PASS** (warnings only — all pre-existing, non-breaking)
+
 ## In progress
 None.
 
@@ -404,6 +412,11 @@ P3.3 — Description editor + slash commands:
 - `/ai` continues description from current text using AI
 
 ## Decisions made (continued)
+- `AITaskPreview` replaced by `AITaskItem` + `AITaskResult` — the flat single-task shape couldn't express grouping or splitting; the new shape is `{ tasks: AITaskItem[] }` where each item carries a `subtasks: string[]`; the route and component both updated to use the new shape
+- `normalizeTask` runs server-side after every AI response — defensive post-processor that (1) extracts a pure bullet-list description into subtasks when the model ignores the subtasks rule, (2) defaults `due_date` to today's local date when null; only extracts bullets if ALL non-empty description lines start with `- ` (mixed prose+bullets are left alone)
+- AI task creation defaults `due_date` to today server-side in `normalizeTask` — keeps the client simple; same default applied in TaskDetail create mode (client-side) for manual task creation
+- "Inbox" option removed from TaskDetail edit-mode project dropdown — every task must belong to a project (established in Phase 2); the `|| null` fallback in `onChange` cleaned up alongside it
+- `next start` serves the last compiled build — changes to server-side code (API routes, lib) require `npm run build` before they take effect; use `npm run dev` during active development to avoid this
 - `createTaskFromPrompt` system prompt updated to require specific, concrete titles and to put multi-step inputs into the description as a `- ` bullet list — original prompt allowed the model to over-abstract (e.g., "Go downtown, coffee in Bucktown, Ventra pass" → "Run downtown errands"), losing information the user typed; the new rules explicitly prohibit summarization and give a bad/good example
 - `breakdownTask` takes `{ title, description }` (not a full `Task`) — the route fetches only those columns from Supabase, and the lib function only needs those two fields; passing a partial avoids coupling the lib to the full Task shape
 - `AITaskBreakdown` fetches on mount (no lazy trigger) — the sparkle button only renders the component when clicked, so the fetch fires at exactly the right moment without an extra "load" step

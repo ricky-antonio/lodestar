@@ -403,13 +403,20 @@ Without this, the service role client gets "permission denied for table workspac
 - coverage: **86.87% statements (1721/1981) / 89.80% lines (1506/1677) / 77.94% branches (965/1238) / 79.32% functions (472/595)** — all above Phase 2 thresholds; Phase 3 targets: lines ✓ branches ✓ functions 79.32% just under 80% — not raising config yet
 - build: **PASS** (warnings only — all pre-existing, non-breaking)
 
+- **P3.3 — Description editor + slash command infrastructure** — `components/editor/SlashCommandMenu.tsx` (floating popover card, 3 commands, query filtering, keyboard nav via window listener); `components/editor/SlashTextarea.tsx` (drop-in controlled textarea, intercepts '/' keydown, strips /query on select, calls `onCommand`); `DueDatePicker` made partially controllable via optional `open`/`onOpenChange` props; `TaskDetail` updated in both create and edit modes — description `<textarea>` replaced with `<SlashTextarea>`, `/date` opens DueDatePicker, `/task` scrolls to dependencies section, `/ai` sets `aiSlashActive` flag (P3.4 hook); `descriptionDraft` controlled state added to edit mode; 17 new tests (9 SlashCommandMenu + 8 SlashTextarea); 60 files, 507 tests total, type-check clean
+
+## Session 2026-05-19 end-of-session checklist (session 17 — P3.3)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (60 files, 507 tests)
+- coverage: **86.70% statements (1807/2084) / 89.64% lines (1585/1768) / 77.65% branches (1008/1298) / 79.34% functions (488/615)** — all above Phase 2 thresholds; Phase 3 targets: lines ✓ branches ✓ functions 79.34% just under 80% — not raising config yet
+- build: **PASS** (warnings only — all pre-existing, non-breaking)
+
 ## In progress
 None.
 
 ## Next task
-P3.3 — Description editor + slash commands:
-- Rich textarea with `/date`, `/task`, `/ai` slash commands
-- `/ai` continues description from current text using AI
+P3.4 — AI description writer:
+- `/ai` slash command continues description from current text using AI
 
 ## Decisions made (continued)
 - `AITaskPreview` replaced by `AITaskItem` + `AITaskResult` — the flat single-task shape couldn't express grouping or splitting; the new shape is `{ tasks: AITaskItem[] }` where each item carries a `subtasks: string[]`; the route and component both updated to use the new shape
@@ -431,6 +438,10 @@ P3.3 — Description editor + slash commands:
 - `createTaskFromPrompt` retry: outer try/catch calls `attempt()` twice — first failure is silently swallowed, second failure propagates; `extractJSON` throws on bad JSON so parse failure always triggers the retry path
 - `Shortcut` interface gained `alt?: boolean`; `KeyboardManager` `buildMapKey` prefixes `alt+` and `listener` reads `e.altKey`; Alt+N toggles the AI bar globally via `toggleAiBar` from UIContext
 - `aiBarOpen`/`toggleAiBar`/`closeAiBar` live in UIContext (not Tasks page local state) so the Alt+N global shortcut can control the bar from AppShortcuts without prop drilling
+- `SlashCommandMenu` handles keyboard navigation via `window.addEventListener` (stable refs for filtered/selectedIndex prevent re-registration on every render); `SlashTextarea`'s keydown calls `e.preventDefault()` for ArrowUp/Down/Enter (prevents cursor movement/newline) and `e.stopPropagation()` for Escape (prevents TaskDetail's Escape handler from also closing the panel)
+- `DueDatePicker` made partially controlled: optional `open`/`onOpenChange` props allow external callers to programmatically open the picker; uncontrolled behavior preserved when those props are omitted
+- `descriptionDraft` controlled state in TaskDetail edit mode replaces `defaultValue`+`key` uncontrolled pattern — required to make description controlled for SlashTextarea; synced via `task?.id` effect on task switch
+- `/task` slash command uses `document.querySelector('[data-section="dependencies"]')` + `scrollIntoView` to navigate the panel — avoids prop drilling or refs into TaskDependencies
 
 ## Test status (Phase 2 close-out — 2026-05-16)
 - `npm run type-check`: PASS (0 errors)

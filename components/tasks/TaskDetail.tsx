@@ -19,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import { SlashTextarea } from '@/components/editor/SlashTextarea'
 import { SubtaskList } from '@/components/tasks/SubtaskList'
 import { AITaskBreakdown } from '@/components/ai/AITaskBreakdown'
 import { LabelPicker } from '@/components/tasks/LabelPicker'
@@ -65,6 +66,9 @@ export function TaskDetail() {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [subtaskReloadKey, setSubtaskReloadKey] = useState(0)
+  const [aiSlashActive, setAiSlashActive] = useState(false)
+  const [dueDatePickerOpen, setDueDatePickerOpen] = useState(false)
+  const [descriptionDraft, setDescriptionDraft] = useState('')
 
   // Edit mode state
   const [editingTitle, setEditingTitle] = useState(false)
@@ -98,8 +102,15 @@ export function TaskDetail() {
   useEffect(() => {
     setIsClosing(false)
     setShowBreakdown(false)
+    setAiSlashActive(false)
+    setDueDatePickerOpen(false)
     clearTimeout(closeTimerRef.current)
   }, [detailTaskId])
+
+  // Sync description draft when switching tasks
+  useEffect(() => {
+    setDescriptionDraft(task?.description ?? '')
+  }, [task?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Initialize create form from defaults when entering create mode
   useEffect(() => {
@@ -430,7 +441,12 @@ export function TaskDetail() {
                 <label className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
                   Due date
                 </label>
-                <DueDatePicker value={draftDueDate} onChange={setDraftDueDate} />
+                <DueDatePicker
+                  value={draftDueDate}
+                  onChange={setDraftDueDate}
+                  open={dueDatePickerOpen}
+                  onOpenChange={setDueDatePickerOpen}
+                />
               </div>
 
               {/* Project */}
@@ -456,9 +472,13 @@ export function TaskDetail() {
                 <label className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
                   Description
                 </label>
-                <textarea
+                <SlashTextarea
                   value={draftDescription}
-                  onChange={e => setDraftDescription(e.target.value)}
+                  onChange={setDraftDescription}
+                  onCommand={command => {
+                    if (command.id === 'date') setDueDatePickerOpen(true)
+                    if (command.id === 'ai') setAiSlashActive(true)
+                  }}
                   rows={3}
                   placeholder="Add a description…"
                   className={[
@@ -608,6 +628,8 @@ export function TaskDetail() {
                 <DueDatePicker
                   value={task!.due_date}
                   onChange={date => editTask(task!.id, { due_date: date })}
+                  open={dueDatePickerOpen}
+                  onOpenChange={setDueDatePickerOpen}
                 />
               </div>
 
@@ -639,12 +661,20 @@ export function TaskDetail() {
                 <label className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
                   Description
                 </label>
-                <textarea
-                  defaultValue={task!.description ?? ''}
-                  key={task!.id}
-                  onBlur={e => {
-                    const val = e.target.value.trim() || null
-                    if (val !== task!.description) editTask(task!.id, { description: val })
+                <SlashTextarea
+                  value={descriptionDraft}
+                  onChange={setDescriptionDraft}
+                  onBlur={val => {
+                    const trimmed = val.trim() || null
+                    if (trimmed !== task!.description) editTask(task!.id, { description: trimmed })
+                  }}
+                  onCommand={command => {
+                    if (command.id === 'date') setDueDatePickerOpen(true)
+                    if (command.id === 'task') {
+                      const depsSection = document.querySelector('[data-section="dependencies"]')
+                      depsSection?.scrollIntoView({ behavior: 'smooth' })
+                    }
+                    if (command.id === 'ai') setAiSlashActive(true)
                   }}
                   rows={4}
                   placeholder="Add a description…"
@@ -706,7 +736,7 @@ export function TaskDetail() {
               </div>
 
               {/* Dependencies */}
-              <div className="flex flex-col gap-2 pt-2 border-t border-[var(--border)]">
+              <div data-section="dependencies" className="flex flex-col gap-2 pt-2 border-t border-[var(--border)]">
                 <p className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
                   Dependencies
                 </p>

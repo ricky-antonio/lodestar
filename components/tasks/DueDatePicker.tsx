@@ -7,6 +7,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 interface DueDatePickerProps {
   value: string | null
   onChange: (date: string | null) => void
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 function pad(n: number): string {
@@ -55,8 +57,13 @@ function formatDisplayDate(value: string): string {
   return `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`
 }
 
-export function DueDatePicker({ value, onChange }: DueDatePickerProps) {
-  const [open, setOpen] = useState(false)
+export function DueDatePicker({ value, onChange, open: controlledOpen, onOpenChange }: DueDatePickerProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = controlledOpen ?? internalOpen
+  function setOpen(val: boolean) {
+    setInternalOpen(val)
+    onOpenChange?.(val)
+  }
 
   function pick(date: Date) {
     onChange(toDateString(date))

@@ -96,6 +96,32 @@ export async function createTaskFromPrompt(prompt: string): Promise<AITaskResult
   }
 }
 
+const CONTINUE_DESCRIPTION_SYSTEM_PROMPT =
+  "You are a writing assistant for a task management app. Given a task title and " +
+  "partial description, continue or expand the description in a clear, concise, " +
+  "professional tone. Return only the continued text (not the original) — do not " +
+  "repeat the existing content. Maximum 3 sentences."
+
+export async function continueDescription(title: string, currentText: string): Promise<string> {
+  const userMessage = currentText.trim()
+    ? `Task: ${title}\nDescription so far: ${currentText}`
+    : `Task: ${title}\nDescription so far: (empty)`
+
+  const message = await anthropic.messages.create({
+    model: AI_MODEL,
+    max_tokens: 512,
+    system: CONTINUE_DESCRIPTION_SYSTEM_PROMPT,
+    messages: [{ role: 'user', content: userMessage }],
+  })
+
+  const text = message.content
+    .filter(b => b.type === 'text')
+    .map(b => (b as { type: 'text'; text: string }).text)
+    .join('')
+
+  return text.trim()
+}
+
 const BREAKDOWN_SYSTEM_PROMPT =
   "You are a task decomposition assistant. Given a task title and optional " +
   "description, suggest 3 to 6 concrete subtasks needed to complete it. Return a " +

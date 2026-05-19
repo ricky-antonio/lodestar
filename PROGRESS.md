@@ -411,14 +411,28 @@ Without this, the service role client gets "permission denied for table workspac
 - coverage: **86.70% statements (1807/2084) / 89.64% lines (1585/1768) / 77.65% branches (1008/1298) / 79.34% functions (488/615)** — all above Phase 2 thresholds; Phase 3 targets: lines ✓ branches ✓ functions 79.34% just under 80% — not raising config yet
 - build: **PASS** (warnings only — all pre-existing, non-breaking)
 
+- **P3.4 — AI description writer** — `continueDescription(title, currentText)` added to `lib/ai/tasks.ts` (returns plain string, max 512 tokens, writes continuation only — not a repeat); `app/api/ai/continue-description/route.ts` (POST: auth → rate limit → validate title → AI → `{ continuation }`); `TaskDetail` wired: `aiSlashActive` effect fetches continuation, appends with newline separator to either `draftDescription` (create mode) or `descriptionDraft` + `editTask` save (edit mode); loading spinner overlay on description area during fetch; error toast via `pushUndo` on failure; 9 new tests (3 lib + 6 api); 62 files, 516 tests total, type-check clean
+
+## Session 2026-05-19 end-of-session checklist (session 18 — P3.4)
+- type-check: **PASS** (0 errors)
+- tests: **PASS** (61 files, 516 tests)
+- coverage: **86.16% statements (1837/2132) / 89.07% lines (1614/1812) / 76.57% branches (1023/1336) / 79.13% functions (493/623)** — all above Phase 2 thresholds; Phase 3 targets: lines ✓ branches ✓ functions 79.13% just under 80% — not raising config yet
+- build: **PASS** (warnings only — all pre-existing, non-breaking)
+
 ## In progress
 None.
 
 ## Next task
-P3.4 — AI description writer:
-- `/ai` slash command continues description from current text using AI
+P3.5 — Weekly digest:
+- AI-generated wins, concerns, focus for next week
+- Saved to localStorage per week
 
 ## Decisions made (continued)
+- `continueDescription` returns a plain string (not JSON) — the response is used verbatim as appended text; no parse step needed, no retry logic needed
+- `aiSlashActive` effect captures `descriptionDraft` / `draftDescription` at render time (no ref needed) — both states are updated synchronously in the same React batch as `setAiSlashActive(true)` (the SlashTextarea calls `onChange` before `onCommand`), so the effect always sees the post-strip description value
+- In edit mode, `continueDescription` saves immediately via `editTask` after appending — consistent with how all other description edits save (on blur); the `/ai` command is an explicit user action so immediate save is appropriate
+- Loading overlay uses `bg-[var(--surface)]/70` over the SlashTextarea's relative container — prevents interaction during the fetch without disabling the underlying textarea element (which would require adding a `disabled` prop to SlashTextarea)
+- `continueDescription` passes `"(empty)"` as the user message marker when `currentText` is blank — signals to the model that there is no existing text to avoid, rather than sending an empty string which could confuse the model
 - `AITaskPreview` replaced by `AITaskItem` + `AITaskResult` — the flat single-task shape couldn't express grouping or splitting; the new shape is `{ tasks: AITaskItem[] }` where each item carries a `subtasks: string[]`; the route and component both updated to use the new shape
 - `normalizeTask` runs server-side after every AI response — defensive post-processor that (1) extracts a pure bullet-list description into subtasks when the model ignores the subtasks rule, (2) defaults `due_date` to today's local date when null; only extracts bullets if ALL non-empty description lines start with `- ` (mixed prose+bullets are left alone)
 - AI task creation defaults `due_date` to today server-side in `normalizeTask` — keeps the client simple; same default applied in TaskDetail create mode (client-side) for manual task creation

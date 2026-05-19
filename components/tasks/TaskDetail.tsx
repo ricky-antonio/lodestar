@@ -67,6 +67,7 @@ export function TaskDetail() {
   const [showBreakdown, setShowBreakdown] = useState(false)
   const [subtaskReloadKey, setSubtaskReloadKey] = useState(0)
   const [aiSlashActive, setAiSlashActive] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
   const [dueDatePickerOpen, setDueDatePickerOpen] = useState(false)
   const [descriptionDraft, setDescriptionDraft] = useState('')
 
@@ -111,6 +112,43 @@ export function TaskDetail() {
   useEffect(() => {
     setDescriptionDraft(task?.description ?? '')
   }, [task?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // /ai slash command — fetch continuation and append to description
+  useEffect(() => {
+    if (!aiSlashActive) return
+
+    const title = isCreating ? draftTitle : task?.title ?? ''
+    const currentText = isCreating ? draftDescription : descriptionDraft
+
+    setAiLoading(true)
+    fetch('/api/ai/continue-description', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, currentText }),
+    })
+      .then(async res => {
+        if (!res.ok) throw new Error('AI request failed')
+        const data = await res.json() as { continuation: string }
+        const continuation = data.continuation?.trim()
+        if (continuation) {
+          const separator = currentText.trim() ? '\n' : ''
+          const newText = currentText + separator + continuation
+          if (isCreating) {
+            setDraftDescription(newText)
+          } else {
+            setDescriptionDraft(newText)
+            if (task) editTask(task.id, { description: newText.trim() || null })
+          }
+        }
+      })
+      .catch(() => {
+        pushUndo({ label: 'Could not continue description. Please try again.', canUndo: false })
+      })
+      .finally(() => {
+        setAiLoading(false)
+        setAiSlashActive(false)
+      })
+  }, [aiSlashActive]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Initialize create form from defaults when entering create mode
   useEffect(() => {
@@ -472,24 +510,31 @@ export function TaskDetail() {
                 <label className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
                   Description
                 </label>
-                <SlashTextarea
-                  value={draftDescription}
-                  onChange={setDraftDescription}
-                  onCommand={command => {
-                    if (command.id === 'date') setDueDatePickerOpen(true)
-                    if (command.id === 'ai') setAiSlashActive(true)
-                  }}
-                  rows={3}
-                  placeholder="Add a description…"
-                  className={[
-                    'px-3 py-2 rounded-[var(--radius)] resize-none',
-                    'border border-[var(--border-2)] bg-[var(--surface)]',
-                    'text-sm text-[var(--tx-1)] placeholder:text-[var(--tx-3)]',
-                    'focus:outline-none focus:border-[var(--accent)]',
-                    'focus:shadow-[0_0_0_3px_var(--focus-ring)]',
-                  ].join(' ')}
-                  aria-label="Description"
-                />
+                <div className="relative">
+                  <SlashTextarea
+                    value={draftDescription}
+                    onChange={setDraftDescription}
+                    onCommand={command => {
+                      if (command.id === 'date') setDueDatePickerOpen(true)
+                      if (command.id === 'ai') setAiSlashActive(true)
+                    }}
+                    rows={3}
+                    placeholder="Add a description…"
+                    className={[
+                      'px-3 py-2 rounded-[var(--radius)] resize-none',
+                      'border border-[var(--border-2)] bg-[var(--surface)]',
+                      'text-sm text-[var(--tx-1)] placeholder:text-[var(--tx-3)]',
+                      'focus:outline-none focus:border-[var(--accent)]',
+                      'focus:shadow-[0_0_0_3px_var(--focus-ring)]',
+                    ].join(' ')}
+                    aria-label="Description"
+                  />
+                  {aiLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[var(--surface)]/70 rounded-[var(--radius)]">
+                      <div className="w-4 h-4 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" aria-label="AI loading" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Estimated minutes */}
@@ -661,32 +706,39 @@ export function TaskDetail() {
                 <label className="text-[11px] font-medium uppercase tracking-[0.06em] text-[var(--tx-3)]">
                   Description
                 </label>
-                <SlashTextarea
-                  value={descriptionDraft}
-                  onChange={setDescriptionDraft}
-                  onBlur={val => {
-                    const trimmed = val.trim() || null
-                    if (trimmed !== task!.description) editTask(task!.id, { description: trimmed })
-                  }}
-                  onCommand={command => {
-                    if (command.id === 'date') setDueDatePickerOpen(true)
-                    if (command.id === 'task') {
-                      const depsSection = document.querySelector('[data-section="dependencies"]')
-                      depsSection?.scrollIntoView({ behavior: 'smooth' })
-                    }
-                    if (command.id === 'ai') setAiSlashActive(true)
-                  }}
-                  rows={4}
-                  placeholder="Add a description…"
-                  className={[
-                    'px-3 py-2 rounded-[var(--radius)] resize-none',
-                    'border border-[var(--border-2)] bg-[var(--surface)]',
-                    'text-sm text-[var(--tx-1)] placeholder:text-[var(--tx-3)]',
-                    'focus:outline-none focus:border-[var(--accent)]',
-                    'focus:shadow-[0_0_0_3px_var(--focus-ring)]',
-                  ].join(' ')}
-                  aria-label="Description"
-                />
+                <div className="relative">
+                  <SlashTextarea
+                    value={descriptionDraft}
+                    onChange={setDescriptionDraft}
+                    onBlur={val => {
+                      const trimmed = val.trim() || null
+                      if (trimmed !== task!.description) editTask(task!.id, { description: trimmed })
+                    }}
+                    onCommand={command => {
+                      if (command.id === 'date') setDueDatePickerOpen(true)
+                      if (command.id === 'task') {
+                        const depsSection = document.querySelector('[data-section="dependencies"]')
+                        depsSection?.scrollIntoView({ behavior: 'smooth' })
+                      }
+                      if (command.id === 'ai') setAiSlashActive(true)
+                    }}
+                    rows={4}
+                    placeholder="Add a description…"
+                    className={[
+                      'px-3 py-2 rounded-[var(--radius)] resize-none',
+                      'border border-[var(--border-2)] bg-[var(--surface)]',
+                      'text-sm text-[var(--tx-1)] placeholder:text-[var(--tx-3)]',
+                      'focus:outline-none focus:border-[var(--accent)]',
+                      'focus:shadow-[0_0_0_3px_var(--focus-ring)]',
+                    ].join(' ')}
+                    aria-label="Description"
+                  />
+                  {aiLoading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[var(--surface)]/70 rounded-[var(--radius)]">
+                      <div className="w-4 h-4 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin" aria-label="AI loading" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Estimated minutes */}

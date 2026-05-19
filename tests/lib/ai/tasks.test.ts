@@ -205,6 +205,53 @@ describe('createTaskFromPrompt', () => {
   })
 })
 
+describe('continueDescription', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
+  it('sends title and currentText to Anthropic with correct system prompt', async () => {
+    mockCreate.mockResolvedValueOnce({
+      content: [{ type: 'text', text: 'This will help streamline the workflow.' }],
+    })
+
+    const { continueDescription } = await import('@/lib/ai/tasks')
+    await continueDescription('Deploy to staging', 'Set up the environment variables.')
+
+    expect(mockCreate).toHaveBeenCalledOnce()
+    const call = mockCreate.mock.calls[0][0]
+    expect(call.model).toBe('claude-sonnet-4-6')
+    expect(call.system).toContain('writing assistant')
+    expect(call.system).toContain('continue or expand')
+    expect(call.system).toContain('Maximum 3 sentences')
+    expect(call.messages[0].content).toContain('Deploy to staging')
+    expect(call.messages[0].content).toContain('Set up the environment variables.')
+  })
+
+  it('returns the AI text content as a plain string', async () => {
+    mockCreate.mockResolvedValueOnce({
+      content: [{ type: 'text', text: '  Ensure all dependencies are installed first.  ' }],
+    })
+
+    const { continueDescription } = await import('@/lib/ai/tasks')
+    const result = await continueDescription('Setup project', 'Clone the repo.')
+
+    expect(result).toBe('Ensure all dependencies are installed first.')
+  })
+
+  it('sends "(empty)" marker when currentText is blank', async () => {
+    mockCreate.mockResolvedValueOnce({
+      content: [{ type: 'text', text: 'Start by defining the scope.' }],
+    })
+
+    const { continueDescription } = await import('@/lib/ai/tasks')
+    await continueDescription('Write project plan', '')
+
+    const call = mockCreate.mock.calls[0][0]
+    expect(call.messages[0].content).toContain('(empty)')
+  })
+})
+
 describe('breakdownTask', () => {
   beforeEach(() => {
     vi.clearAllMocks()
